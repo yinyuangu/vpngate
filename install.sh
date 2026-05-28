@@ -678,7 +678,7 @@ def main():
                         print_status()
                         print("\n提示: 正在实时监控状态，自动更新。按 Ctrl+C 退出...")
                         last_state = current_state
-                    time.sleep(0.5)
+                    time.sleep(2.0)
             except KeyboardInterrupt:
                 pass
         elif cmd == "logs":
@@ -733,12 +733,9 @@ def main():
             last_state = current_state
             
         try:
-            key = getch_timeout(0.5)
+            key = getch()
         except KeyboardInterrupt:
             break
-            
-        if key is None:
-            continue
             
         if key == '\x03':
             break
