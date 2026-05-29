@@ -40,12 +40,15 @@ CHECK_INTERVAL_SECONDS = int(os.environ.get("CHECK_INTERVAL_SECONDS", "960"))
 TARGET_VALID_NODES = int(os.environ.get("TARGET_VALID_NODES", "3"))
 MAX_SCAN_ROWS = int(os.environ.get("MAX_SCAN_ROWS", "300"))
 OPENVPN_TEST_TIMEOUT_SECONDS = int(os.environ.get("OPENVPN_TEST_TIMEOUT_SECONDS", "35"))
+NODE_PROBE_TIMEOUT_SECONDS = int(os.environ.get("NODE_PROBE_TIMEOUT_SECONDS", "7"))
+MAX_BATCH_TEST_NODES = int(os.environ.get("MAX_BATCH_TEST_NODES", "12"))
+NODE_PROBE_WORKERS = int(os.environ.get("NODE_PROBE_WORKERS", "8"))
 OPENVPN_CMD = os.environ.get("OPENVPN_CMD", "openvpn")
 OPENVPN_AUTH_USER = os.environ.get("OPENVPN_AUTH_USER", "vpn")
 OPENVPN_AUTH_PASS = os.environ.get("OPENVPN_AUTH_PASS", "vpn")
 LOCAL_PROXY_HOST = os.environ.get("LOCAL_PROXY_HOST", "127.0.0.1")
 LOCAL_PROXY_PORT = int(os.environ.get("LOCAL_PROXY_PORT", "7928"))
-CHANNEL_COUNT = max(1, int(os.environ.get("CHANNEL_COUNT", "8")))
+CHANNEL_COUNT = max(1, int(os.environ.get("CHANNEL_COUNT", "6")))
 PROXY_BASE_PORT = int(os.environ.get("PROXY_BASE_PORT", str(LOCAL_PROXY_PORT)))
 UI_HOST = os.environ.get("UI_HOST", "0.0.0.0")
 UI_PORT = int(os.environ.get("UI_PORT", "8787"))
@@ -744,7 +747,7 @@ def test_node_by_id(node_id: str) -> dict[str, Any]:
     
     idx = get_free_test_index()
     try:
-        ok, message, _ = run_openvpn_until_ready(config_file, keep_alive=False, route_nopull=True, timeout=12, dev=f"tun{idx}")
+        ok, message, _ = run_openvpn_until_ready(config_file, keep_alive=False, route_nopull=True, timeout=NODE_PROBE_TIMEOUT_SECONDS, dev=f"tun{idx}")
     finally:
         release_test_index(idx)
     
@@ -795,7 +798,8 @@ def test_node_by_id(node_id: str) -> dict[str, Any]:
 def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
     with lock:
         nodes = read_json(NODES_FILE, [])
-        to_test = [n for n in nodes if n.get("id") in node_ids]
+        limited_ids = set(node_ids[:MAX_BATCH_TEST_NODES])
+        to_test = [n for n in nodes if n.get("id") in limited_ids]
         
     def test_worker(args: tuple[int, dict[str, Any]]) -> dict[str, Any]:
         idx, n_info = args
@@ -814,8 +818,11 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
             pass
             
         latency = vpn_utils.ping_latency_ms(h, p, fallback_ping)
-        dev_name = f"tun{idx + 1}"
-        ok, message, _ = run_openvpn_until_ready(config_file, keep_alive=False, route_nopull=True, timeout=12, dev=dev_name)
+        test_idx = get_free_test_index()
+        try:
+            ok, message, _ = run_openvpn_until_ready(config_file, keep_alive=False, route_nopull=True, timeout=NODE_PROBE_TIMEOUT_SECONDS, dev=f"tun{test_idx}")
+        finally:
+            release_test_index(test_idx)
         
         try:
             if temp_path.exists():
@@ -852,7 +859,8 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
         return temp_node
 
     updated_nodes_map = {}
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, len(to_test))) as executor:
+    max_workers = max(1, min(NODE_PROBE_WORKERS, len(to_test)))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(test_worker, (idx, n)): n["id"] for idx, n in enumerate(to_test)}
         for future in concurrent.futures.as_completed(futures):
             nid = futures[future]
@@ -1523,7 +1531,7 @@ INDEX_HTML = r"""<!doctype html>
       background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
+      letter-spacing: 0;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -1536,6 +1544,10 @@ INDEX_HTML = r"""<!doctype html>
       display: flex;
       align-items: center;
       gap: 8px;
+      max-width: min(760px, 52vw);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .status-dot {
@@ -2046,6 +2058,8 @@ INDEX_HTML = r"""<!doctype html>
     .table-actions {
       display: flex;
       gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
     .connect-btn {
@@ -2283,24 +2297,11 @@ INDEX_HTML = r"""<!doctype html>
       align-items: center;
     }
 
-    .theme-segment {
-      display: inline-flex;
-      height: 34px;
-      align-items: center;
-      gap: 4px;
-      padding: 0 8px;
-      border: 1px solid rgba(120, 143, 180, 0.18);
-      border-radius: 8px;
-      background: rgba(26, 37, 58, 0.74);
-      color: #aab7cf;
-      font-size: 12px;
-    }
-
     .channels-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(360px, 1fr));
-      gap: 16px;
-      margin-bottom: 22px;
+      gap: 12px;
+      margin-bottom: 18px;
     }
 
     .channel-card {
@@ -2309,8 +2310,8 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 8px;
       background: rgba(3, 31, 36, 0.76);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-      padding: 16px;
-      min-height: 196px;
+      padding: 12px;
+      min-height: 0;
     }
 
     .channel-card.connecting {
@@ -2328,7 +2329,7 @@ INDEX_HTML = r"""<!doctype html>
       justify-content: space-between;
       gap: 12px;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .channel-title {
@@ -2392,12 +2393,12 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      padding: 14px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 10px;
       border-radius: 6px;
       background: #202b40;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .metric-label {
@@ -2405,7 +2406,7 @@ INDEX_HTML = r"""<!doctype html>
       color: #aebbd0;
       font-size: 11px;
       font-weight: 700;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .metric-value {
@@ -2424,7 +2425,7 @@ INDEX_HTML = r"""<!doctype html>
       gap: 7px;
       align-items: center;
       min-height: 24px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .mini-pill.good {
@@ -2441,9 +2442,28 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-actions {
       display: grid;
-      grid-template-columns: 1.15fr 0.72fr 0.92fr 0.92fr 0.92fr 0.72fr;
+      grid-template-columns: 1.1fr 0.8fr 0.9fr;
       gap: 7px;
       align-items: center;
+    }
+
+    .channel-options {
+      display: grid;
+      grid-template-columns: minmax(130px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .country-lock-select {
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.72);
+      color: var(--text-primary);
+      font-size: 12px;
+      padding: 0 8px;
+      min-width: 0;
     }
 
     .channel-actions button,
@@ -2655,8 +2675,7 @@ INDEX_HTML = r"""<!doctype html>
         width: 100%;
       }
 
-      .dashboard-toolbar button,
-      .theme-segment {
+      .dashboard-toolbar button {
         height: 36px;
         justify-content: center;
         padding: 0 10px;
@@ -2696,7 +2715,7 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       .channel-metrics {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 9px;
         padding: 10px;
       }
@@ -2706,8 +2725,12 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       .channel-actions {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 6px;
+      }
+
+      .channel-options {
+        grid-template-columns: 1fr;
       }
 
       .channel-actions button,
@@ -2758,34 +2781,15 @@ INDEX_HTML = r"""<!doctype html>
     <div id="status" class="status"><span class="status-dot"></span>服务加载中...</div>
   </div>
   <div class="dashboard-toolbar">
-    <div class="theme-segment" title="界面模式">
-      <span>•</span><span>☾</span><span>•</span>
-    </div>
     <button id="refresh" class="btn-dark">
       <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5" /></svg>
       刷新节点
     </button>
-    <button id="add_channel" class="btn-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5" /></svg>
-      新增通道
+    <button id="admin_btn" class="btn-dark" onclick="openSettingsModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h3M7 12h10M9 18h6" /></svg>
+      设置
     </button>
-    <button id="check" class="btn-dark">诊断</button>
-    <div class="dropdown">
-      <button id="admin_btn" class="btn-dark">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-        设置
-      </button>
-      <div id="admin_dropdown" class="dropdown-content">
-        <a href="javascript:void(0)" onclick="openSettingsModal()">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width:14px; height:14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-          设置
-        </a>
-        <a href="javascript:void(0)" onclick="logoutAdmin()" style="color: var(--danger); border-top: 1px solid rgba(255,255,255,0.05);">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width:14px; height:14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-          退出
-        </a>
-      </div>
-    </div>
+    <button id="logout_btn" class="btn-rose" onclick="logoutAdmin()">退出登录</button>
   </div>
 </header>
 <main>
@@ -2938,11 +2942,10 @@ INDEX_HTML = r"""<!doctype html>
             <th style="width: 160px;">IP</th>
             <th style="width: 100px;">类型</th>
             <th style="width: 90px;">延迟</th>
-            <th style="width: 100px;">速度</th>
             <th style="width: 90px;">协议</th>
             <th style="width: 150px;">位置</th>
             <th style="width: 140px;">ASN</th>
-            <th style="width: 150px;">操作</th>
+            <th style="width: 220px;">操作</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -3031,6 +3034,7 @@ INDEX_HTML = r"""<!doctype html>
 </main>
 <script>
 let nodes=[], state={}, testingNodeIds = new Set(), selectedNodeIds = new Set(), testingChannelIds = new Set();
+let selectedManualChannel = 0;
 let currentPage = 1;
 let pageSize = 100;
 let currentPageNodes = [];
@@ -3416,10 +3420,21 @@ function activeIndexesForNode(node) {
   return [];
 }
 
+function channelSelectOptions(currentValue) {
+  const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
+  const normalized = currentValue || "";
+  const options = ['<option value="">国家模式：不限</option>'];
+  countries.forEach(country => {
+    const selected = country === normalized ? "selected" : "";
+    options.push(`<option value="${esc(country)}" ${selected}>${esc(translateCountry(country))}</option>`);
+  });
+  return options.join("");
+}
+
 function renderChannelCards() {
   const grid = $("channels_grid");
   if (!grid) return;
-  const count = state.channel_count || 8;
+  const count = state.channel_count || 6;
   const channels = state.channels && state.channels.length
     ? state.channels
     : Array.from({length: count}, (_, index) => ({index, port: (state.proxy_base_port || 7928) + index, device: `tun${index}`, auto_switch: true}));
@@ -3435,7 +3450,7 @@ function renderChannelCards() {
     const country = node ? translateCountry(node.country) : "-";
     const flag = node ? countryFlag(node.country_short) : "";
     const proto = node ? String(node.proto || "-").toUpperCase() : "-";
-    const activeText = ch.last_message || (node ? `已连接 (${ip})` : "等待分配节点");
+    const activeText = ch.last_message || (node ? `已连接 (${ip})` : "等待手动选择节点");
     const proxyClass = ch.proxy_ok === false ? "bad" : "good";
     const proxyText = ch.proxy_ok === false ? "出口异常" : (ch.proxy_ok === true ? "出口正常" : "待检测");
     return `
@@ -3449,42 +3464,41 @@ function renderChannelCards() {
         </div>
         <div class="channel-metrics">
           <div>
-            <span class="metric-label">出口 IP</span>
+            <span class="metric-label">出口</span>
             <span class="metric-value">${esc(ip)}</span>
           </div>
           <div>
-            <span class="metric-label">TUN 设备</span>
+            <span class="metric-label">TUN</span>
             <span class="metric-value">${esc(ch.device || `tun${idx}`)}</span>
           </div>
           <div>
-            <span class="metric-label">节点延迟</span>
+            <span class="metric-label">节点</span>
             <span class="metric-value">${nodeLatency ? `${nodeLatency} ms` : "-"}</span>
           </div>
           <div>
-            <span class="metric-label">代理延迟</span>
+            <span class="metric-label">代理</span>
             <span class="metric-value">${proxyLatency ? `${proxyLatency} ms` : "-"}</span>
           </div>
         </div>
         <div class="channel-tags">
-          <span class="node-pill">${node ? esc(node.id) : "未选择节点"}</span>
           <span class="mini-pill ${proxyClass}">${proxyText}</span>
-          <span class="mini-pill good">DNS</span>
-          <span class="mini-pill good">IPv6</span>
           <span class="mini-pill">${flag ? `${flag} ` : ""}${esc(country)}</span>
         </div>
         <div class="channel-actions">
-          <button class="btn-green" onclick="autoConnectChannel(${idx})" ${ch.is_connecting ? "disabled" : ""}>自动连接</button>
+          <button class="btn-green" onclick="selectChannelForManualConnect(${idx})" ${ch.is_connecting ? "disabled" : ""}>手动连接</button>
           <button class="btn-rose" onclick="disconnectChannel(${idx})" ${(!node && !ch.node_id) ? "disabled" : ""}>断开</button>
           <button class="btn-dark" onclick="testChannelProxy(${idx})" ${testingChannelIds.has(idx) ? "disabled" : ""}>${testingChannelIds.has(idx) ? "测试中" : "测试出口"}</button>
-          <button class="btn-dark" onclick="testChannelProxy(${idx})">重新诊断</button>
-          <button class="btn-dark" onclick="lockChannelCountry(${idx})">国家锁定</button>
-          <button class="btn-rose" onclick="clearChannel(${idx})">删除</button>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:10px;">
-          <span style="font-size:12px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(activeText)}</span>
+        <div class="channel-options">
+          <select class="country-lock-select" onchange="setChannelCountry(${idx}, this.value)">
+            ${channelSelectOptions(ch.country_lock || "")}
+          </select>
           <label class="switch-control">自动切换
             <input type="checkbox" ${ch.auto_switch !== false ? "checked" : ""} onchange="toggleChannelAuto(${idx}, this.checked)" />
           </label>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:8px;">
+          <span style="font-size:12px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(activeText)}</span>
         </div>
       </article>
     `;
@@ -3505,10 +3519,10 @@ function render(){
   $("total").textContent = nodes.length;
   if ($("visible_count")) $("visible_count").textContent = shown.length;
   if ($("selected_count")) $("selected_count").textContent = selectedNodeIds.size;
-  $("status").innerHTML = `<span class="status-dot"></span>代理端口 ${state.proxy_base_port || 7928}-${(state.proxy_base_port || 7928) + (state.channel_count || 8) - 1} | 通道 ${state.channel_count || 8} 个 | ${esc(state.last_check_message || "服务运行中")}`;
+  $("status").innerHTML = `<span class="status-dot"></span>代理端口 ${state.proxy_base_port || 7928}-${(state.proxy_base_port || 7928) + (state.channel_count || 6) - 1} | 通道 ${state.channel_count || 6} 个 | ${esc(state.last_check_message || "服务运行中")}`;
 
   if (currentPageNodes.length === 0) {
-    $("rows").innerHTML = `<tr><td colspan="11" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
+    $("rows").innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
   } else {
     $("rows").innerHTML = currentPageNodes.map(n => {
       const activeIndexes = activeIndexesForNode(n);
@@ -3525,6 +3539,7 @@ function render(){
       const connectLabel = isActive ? "已连接" : "连接";
       const connectDisabled = state.is_connecting || n.probe_status === "unavailable" ? "disabled" : "";
       const testBtnText = isTesting ? "检测中" : "测试";
+      const channelSelect = buildChannelChooser(n.id);
       return `<tr ${rowClass}>
         <td><input class="row-check node-select" type="checkbox" data-node-id="${esc(n.id)}" ${checked} onchange="toggleNodeSelection('${esc(n.id)}', this.checked)" /></td>
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
@@ -3532,14 +3547,14 @@ function render(){
         <td class="mono">${esc(n.ip||n.remote_host)}</td>
         <td>${esc(translateIpType(n.ip_type))}</td>
         <td>${latencyText}</td>
-        <td>${esc(speed(n.speed))}</td>
         <td><span class="mini-pill">${esc(String(n.proto || "-").toUpperCase())}${n.remote_port ? `/${esc(n.remote_port)}` : ""}</span></td>
         <td>${esc(displayLocation)}</td>
         <td class="mono" style="font-size:12px; color:var(--text-secondary);">${esc(n.asn || n.as_name || "-")}</td>
         <td>
           <div class="table-actions">
             <button class="test-btn" ${isTesting ? "disabled" : ""} onclick="testNode(this, '${esc(n.id)}', event)">${testBtnText}</button>
-            <button class="connect-btn" ${connectDisabled} onclick="connectNodeSmart('${esc(n.id)}')">${connectLabel}</button>
+            ${channelSelect}
+            ${isActive ? `<button class="connect-btn" disabled>${connectLabel}</button>` : `<button class="connect-btn" ${connectDisabled} onclick="connectNodeSmart('${esc(n.id)}')">${connectLabel}</button>`}
           </div>
         </td>
       </tr>`;
@@ -3696,8 +3711,29 @@ function firstAvailableChannel() {
   return 0;
 }
 
+function buildChannelChooser(nodeId) {
+  const channels = state.channels || [];
+  const count = state.channel_count || 6;
+  const list = channels.length ? channels : Array.from({length: count}, (_, index) => ({index}));
+  const options = list.map(ch => {
+    const idx = ch.index || 0;
+    const selected = idx === selectedManualChannel ? "selected" : "";
+    return `<option value="${idx}" ${selected}>通道 ${idx}</option>`;
+  }).join("");
+  return `<select class="country-lock-select" style="height:28px; min-width:78px;" onchange="selectedManualChannel=parseInt(this.value, 10); render();">${options}</select>`;
+}
+
+function selectChannelForManualConnect(channel) {
+  selectedManualChannel = channel;
+  const panel = document.querySelector(".nodes-panel-title");
+  if (panel) panel.scrollIntoView({behavior: "smooth", block: "start"});
+  render();
+}
+
 async function connectNodeSmart(id) {
-  const channel = firstAvailableChannel();
+  const channels = state.channels || [];
+  const selected = channels.find(ch => (ch.index || 0) === selectedManualChannel);
+  const channel = selected ? selectedManualChannel : firstAvailableChannel();
   await connectNodeToChannel(channel, id);
 }
 
@@ -3734,10 +3770,10 @@ async function autoConnectChannel(channel) {
     });
     const result = await r.json();
     if (!result.ok) {
-      alert("自动连接失败: " + (result.error || "没有可用节点"));
+      alert("自动切换失败: " + (result.error || "没有可用节点"));
     }
   } catch (e) {
-    alert("自动连接请求错误");
+    alert("自动切换请求错误");
   } finally {
     await load();
   }
@@ -3753,25 +3789,6 @@ async function disconnectChannel(channel) {
     });
   } catch (e) {
     alert("断开通道失败");
-  } finally {
-    await load();
-  }
-}
-
-async function clearChannel(channel) {
-  try {
-    await fetch("./api/channel/country_lock", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({channel, country: ""})
-    });
-    await fetch("./api/channel/disconnect", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({channel})
-    });
-  } catch (e) {
-    alert("清除通道失败");
   } finally {
     await load();
   }
@@ -3810,19 +3827,15 @@ async function toggleChannelAuto(channel, enabled) {
   }
 }
 
-async function lockChannelCountry(channel) {
-  const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
-  const current = ((state.channels || [])[channel] || {}).country_lock || "";
-  const country = prompt(`输入通道 ${channel} 的国家名称/代码，留空取消锁定：`, current || (countries[0] || ""));
-  if (country === null) return;
+async function setChannelCountry(channel, country) {
   try {
     await fetch("./api/channel/country_lock", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({channel, country: country.trim()})
+      body: JSON.stringify({channel, country: String(country || "").trim()})
     });
   } catch (e) {
-    alert("国家锁定保存失败");
+    alert("国家模式保存失败");
   } finally {
     await load();
   }
@@ -3882,10 +3895,14 @@ if (batchPageBtn) batchPageBtn.onclick = async () => {
 };
 
 async function batchTestSelectedNodes() {
-  const ids = selectedNodeIds.size ? Array.from(selectedNodeIds) : currentPageNodes.map(n => n.id);
+  let ids = selectedNodeIds.size ? Array.from(selectedNodeIds) : currentPageNodes.map(n => n.id);
   if (!ids.length) {
     alert("请先选择要测试的节点");
     return;
+  }
+  if (ids.length > 12) {
+    ids = ids.slice(0, 12);
+    alert("为避免检测过慢，本次先测试前 12 个节点。");
   }
   const btn = $("btn_batch_selected");
   const original = btn ? btn.textContent : "";
@@ -3896,24 +3913,22 @@ async function batchTestSelectedNodes() {
   ids.forEach(id => testingNodeIds.add(id));
   render();
   try {
-    await Promise.all(ids.map(async id => {
-      try {
-        const response = await fetch("./api/test_node", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id })
-        });
-        const result = await response.json();
-        if (result.ok && result.node) {
-          const idx = nodes.findIndex(item => item.id === id);
-          if (idx !== -1) nodes[idx] = result.node;
-        }
-      } catch (e) {
-      } finally {
-        testingNodeIds.delete(id);
-      }
-    }));
+    const response = await fetch("./api/test_nodes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids })
+    });
+    const result = await response.json();
+    if (result.ok && Array.isArray(result.nodes)) {
+      result.nodes.forEach(updated => {
+        const idx = nodes.findIndex(item => item.id === updated.id);
+        if (idx !== -1) nodes[idx] = {...nodes[idx], ...updated};
+      });
+    } else if (!result.ok) {
+      alert("批量测试失败: " + (result.error || "未知错误"));
+    }
   } finally {
+    ids.forEach(id => testingNodeIds.delete(id));
     if (btn) {
       btn.disabled = false;
       btn.textContent = original || "批量测试选中";
@@ -3962,11 +3977,6 @@ if ($("proto_filter")) $("proto_filter").onchange=()=>{ currentPage = 1; render(
 if ($("type_filter")) $("type_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("page_size")) $("page_size").onchange=()=>{ pageSize = parseInt($("page_size").value, 10) || 100; currentPage = 1; render(); };
 
-if ($("add_channel")) $("add_channel").onclick=async()=>{
-  const channel = firstAvailableChannel();
-  await autoConnectChannel(channel);
-};
-
 $("refresh").onclick=async()=>{ 
   $("refresh").disabled=true; 
   $("refresh").textContent="正在后台更新..."; 
@@ -3976,12 +3986,6 @@ $("refresh").onclick=async()=>{
     $("refresh").disabled=false; 
     $("refresh").textContent="刷新节点";
   }, 3000);
-};
-$("check").onclick=async()=>{ 
-  $("check").disabled=true; 
-  $("check").textContent="检测中..."; 
-  try{await fetch("./api/check",{method:"POST"}); await load();} 
-  finally{$("check").disabled=false; $("check").textContent="诊断";}
 };
 if ($("btn_test_proxy")) $("btn_test_proxy").onclick = async () => {
   const btn = $("btn_test_proxy");
@@ -4023,20 +4027,6 @@ if ($("btn_test_proxy")) $("btn_test_proxy").onclick = async () => {
   }
 };
 
-// Admin dropdown toggle
-const adminBtn = $("admin_btn");
-const adminDropdown = $("admin_dropdown");
-if (adminBtn && adminDropdown) {
-  adminBtn.onclick = (e) => {
-    e.stopPropagation();
-    const isShow = adminDropdown.style.display === "block";
-    adminDropdown.style.display = isShow ? "none" : "block";
-  };
-  document.addEventListener("click", () => {
-    adminDropdown.style.display = "none";
-  });
-}
-
 function openSettingsModal() {
   $("settings_error").style.display = "none";
   $("settings_success").style.display = "none";
@@ -4048,7 +4038,6 @@ function openSettingsModal() {
   }
   
   $("settings_modal").style.display = "flex";
-  $("admin_dropdown").style.display = "none";
 }
 
 function closeSettingsModal() {
@@ -4259,7 +4248,7 @@ def background_proxy_checker() -> None:
                     if idx == 0:
                         set_state(proxy_ok=False, proxy_ip="-", proxy_latency_ms=0, proxy_error=error_msg)
 
-                    if channel.get("auto_switch", True):
+                    if channel.get("auto_switch", False):
                         with lock:
                             nodes = read_json(NODES_FILE, [])
                             active_node = next((n for n in nodes if n.get("id") == node_id), None)
