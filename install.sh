@@ -32,13 +32,14 @@ echo -e "${BLUE}        欢迎使用 AimiliVPN 一键源码部署与管理脚本
 echo -e "${BLUE}==========================================================${PLAIN}"
 
 # 3. Configure GitHub Repository URL
-# Default to the official repository (baoweise-bot/aimili-vpngate)
-DEFAULT_USER="baoweise-bot"
-DEFAULT_REPO="aimili-vpngate"
+DEFAULT_USER="yinyuangu"
+DEFAULT_REPO="vpngate"
+DEFAULT_BRANCH="myself"
 
 # Allow custom repository override via command line arguments
 GITHUB_USER="${1:-${DEFAULT_USER}}"
 GITHUB_REPO="${2:-${DEFAULT_REPO}}"
+GITHUB_BRANCH="${3:-${DEFAULT_BRANCH}}"
 
 GITHUB_URL="https://github.com/${GITHUB_USER}/${GITHUB_REPO}.git"
 
@@ -58,11 +59,13 @@ else
         echo -e "  -> 目录 ${INSTALL_DIR} 已存在，正在更新并强制覆盖本地源码..."
         cd "${INSTALL_DIR}"
         git fetch --all || true
-        BRANCH="main"
-        if git rev-parse --verify origin/main >/dev/null 2>&1; then
-            BRANCH="main"
-        elif git rev-parse --verify origin/master >/dev/null 2>&1; then
-            BRANCH="master"
+        BRANCH="${GITHUB_BRANCH}"
+        if ! git rev-parse --verify "origin/${BRANCH}" >/dev/null 2>&1; then
+            if git rev-parse --verify origin/main >/dev/null 2>&1; then
+                BRANCH="main"
+            elif git rev-parse --verify origin/master >/dev/null 2>&1; then
+                BRANCH="master"
+            fi
         fi
         echo -e "  -> 正在强制重置本地源码至 origin/${BRANCH} ..."
         if git reset --hard "origin/${BRANCH}"; then
@@ -75,12 +78,17 @@ else
             fi
         fi
     else
-        echo -e "  -> 正在克隆 GitHub 仓库 ${GITHUB_URL} ..."
-        if git clone "${GITHUB_URL}" "${INSTALL_DIR}"; then
+        echo -e "  -> 正在克隆 GitHub 仓库 ${GITHUB_URL} (${GITHUB_BRANCH}) ..."
+        if git clone --branch "${GITHUB_BRANCH}" --single-branch "${GITHUB_URL}" "${INSTALL_DIR}"; then
             echo -e "${GREEN}  -> 克隆成功！${PLAIN}"
         else
-            echo -e "${RED}  -> 错误: 无法克隆仓库 ${GITHUB_URL}，请检查网络！${PLAIN}"
-            exit 1
+            echo -e "${YELLOW}  -> 指定分支克隆失败，尝试克隆仓库默认分支...${PLAIN}"
+            if git clone "${GITHUB_URL}" "${INSTALL_DIR}"; then
+                echo -e "${GREEN}  -> 克隆成功！${PLAIN}"
+            else
+                echo -e "${RED}  -> 错误: 无法克隆仓库 ${GITHUB_URL}，请检查网络！${PLAIN}"
+                exit 1
+            fi
         fi
     fi
 fi

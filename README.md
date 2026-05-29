@@ -23,7 +23,7 @@ Bilingual: [中文](#中文) | [English](#english)
 在您的 **Ubuntu / Debian** VPS 机器上，复制并运行以下一行指令即可完成自动安装部署：
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/baoweise-bot/aimili-vpngate/main/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/yinyuangu/vpngate/myself/install.sh)
 ```
 
 ---
@@ -125,7 +125,7 @@ sudo apt-get update
 To install and deploy AimiliVPN on your **Ubuntu / Debian** server, copy and paste the following command:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/baoweise-bot/aimili-vpngate/main/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/yinyuangu/vpngate/myself/install.sh)
 ```
 
 ---
