@@ -14,15 +14,16 @@ if [[ "$(id -u)" != "0" ]]; then
     exit 1
 fi
 
-# 2. Check OS distribution (Ubuntu only)
+# 2. Check OS distribution and package manager
 if [ -f /etc/os-release ]; then
     . /etc/os-release
-    if [[ "${ID:-}" != "ubuntu" ]]; then
-        echo -e "${RED}错误: 本系统不是 Ubuntu！目前 AimiliVPN 仅支持 Ubuntu 系统。${PLAIN}"
-        exit 1
-    fi
+    echo -e "${BLUE}检测到系统: ${PRETTY_NAME:-${ID:-未知 Linux}}${PLAIN}"
 else
-    echo -e "${RED}错误: 无法确定操作系统版本，缺少 /etc/os-release 文件。${PLAIN}"
+    echo -e "${YELLOW}警告: 无法确定操作系统版本，继续尝试安装。${PLAIN}"
+fi
+
+if ! command -v apt-get >/dev/null 2>&1; then
+    echo -e "${RED}错误: 未找到 apt-get。当前安装脚本需要 Debian/Ubuntu 系 apt 包管理器。${PLAIN}"
     exit 1
 fi
 
@@ -197,6 +198,73 @@ def get_active_node_info():
             pass
     return None, None
 
+def load_nodes_map():
+    import json
+    path = "/opt/aimilivpn/vpngate_data/nodes.json"
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            nodes = json.load(f)
+        return {str(n.get("id")): n for n in nodes if n.get("id")}
+    except Exception:
+        return {}
+
+def get_channel_rows(state):
+    channels = state.get("channels") or []
+    nodes_map = load_nodes_map()
+    rows = []
+    if not channels:
+        active_ip, active_loc = get_active_node_info()
+        if active_ip:
+            rows.append({
+                "index": 0,
+                "port": 7928,
+                "device": "tun0",
+                "ip": active_ip,
+                "country": active_loc or "未知",
+                "node_latency": state.get("active_node_latency") or "-",
+                "proxy_ip": state.get("proxy_ip") or "-",
+                "proxy_latency": state.get("proxy_latency_ms") or 0,
+                "running": True,
+                "is_connecting": state.get("is_connecting", False),
+                "message": state.get("last_check_message", "")
+            })
+        return rows
+
+    for ch in channels:
+        node = ch.get("node") or {}
+        if not node and ch.get("node_id"):
+            node = nodes_map.get(str(ch.get("node_id")), {})
+        ip = node.get("ip") or node.get("remote_host") or "-"
+        country = node.get("country") or node.get("country_short") or "-"
+        rows.append({
+            "index": ch.get("index", 0),
+            "port": ch.get("port", 7928 + int(ch.get("index", 0))),
+            "device": ch.get("device", f"tun{ch.get('index', 0)}"),
+            "ip": ip,
+            "country": country,
+            "node_latency": f"{ch.get('latency_ms')} ms" if ch.get("latency_ms") else "-",
+            "proxy_ip": ch.get("proxy_ip") or "-",
+            "proxy_latency": ch.get("proxy_latency_ms") or 0,
+            "running": ch.get("running", False) or bool(ch.get("node_id")),
+            "is_connecting": ch.get("is_connecting", False),
+            "message": ch.get("last_message") or ""
+        })
+    return rows
+
+def truncate_display(text, width):
+    text = str(text or "-")
+    out = ""
+    used = 0
+    for ch in text:
+        ch_width = 2 if ord(ch) > 127 else 1
+        if used + ch_width > width:
+            return out + "…"
+        out += ch
+        used += ch_width
+    return out
+
 def ping_ip(ip):
     if not ip:
         return None
@@ -355,7 +423,41 @@ def print_status():
     print_line(format_line("网页管理密码", masked_pwd))
     print_line()
     print_line("【活动节点状态】")
-    if is_connecting:
+    channel_rows = get_channel_rows(state)
+    active_rows = [r for r in channel_rows if r.get("running") or r.get("is_connecting")]
+    if channel_rows:
+        ready_count = len(active_rows)
+        total_count = len(channel_rows)
+        print_line(format_line("通道概览", f"{green}{ready_count}/{total_count} 已使用{reset}" if ready_count else f"{yellow}0/{total_count} 待连接{reset}"))
+        print_line("  通道   端口/TUN        节点 IP             节点延迟     出口 IP / 代理延迟")
+        print_line("  ----   ------------    ----------------    --------     --------------------")
+        for row in channel_rows:
+            if row.get("is_connecting"):
+                status_color = yellow
+                node_ip = truncate_display(row.get("message") or "连接中", 16)
+                node_latency = "连接中"
+            elif row.get("running"):
+                status_color = green
+                node_ip = truncate_display(row.get("ip"), 16)
+                node_latency = truncate_display(row.get("node_latency"), 8)
+            else:
+                status_color = red
+                node_ip = "-"
+                node_latency = "-"
+
+            port_tun = f"{row.get('port')}/{row.get('device')}"
+            proxy_ip = row.get("proxy_ip") or "-"
+            proxy_latency = row.get("proxy_latency") or 0
+            proxy_text = f"{proxy_ip} / {proxy_latency} ms" if proxy_ip != "-" and proxy_latency else proxy_ip
+            line = (
+                f"  {status_color}{str(row.get('index')).rjust(2)}{reset}     "
+                f"{truncate_display(port_tun, 12).ljust(12)}    "
+                f"{node_ip.ljust(16)}    "
+                f"{node_latency.ljust(8)}     "
+                f"{truncate_display(proxy_text, 22)}"
+            )
+            print_line(line)
+    elif is_connecting:
         connecting_msg = state.get('last_check_message') or '正在建立加密隧道并验证路由规则...'
         print_line(format_line("节点状态", f"{yellow}{connecting_msg}{reset}"))
     elif active_ip:
@@ -664,6 +766,7 @@ def get_status_state():
         state.get("proxy_ip", "-"),
         state.get("proxy_latency_ms", 0),
         state.get("proxy_ok", False),
+        str(state.get("channels", "")),
         check_port_listening(7928),
         check_service_active("aimilivpn.service"),
         check_openvpn_process(),

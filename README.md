@@ -14,13 +14,13 @@ Bilingual: [中文](#中文) | [English](#english)
 
 ---
 
-**AimiliVPN** 是一个专为 Linux VPS（如 Ubuntu）设计的智能 VPN 代理网关管理器。它能够自动采集 VPNGate 开放节点，进行多线程可用性测试与延迟过滤，利用 OpenVPN 隧道与策略路由（Policy Routing）实现出站网络，并在本地提供高性能的 HTTP/SOCKS5 代理网关服务，适合用作 Xray 的落地出站代理。
+**AimiliVPN** 是一个专为 Linux VPS（如 Ubuntu / Debian）设计的智能 VPN 代理网关管理器。它能够自动采集 VPNGate 开放节点，进行多线程可用性测试与延迟过滤，利用 OpenVPN 隧道与策略路由（Policy Routing）实现出站网络，并在本地提供高性能的 HTTP/SOCKS5 代理网关服务，适合用作 Xray 的落地出站代理。
 
 ---
 
 ### 🚀 快速开始
 
-在您的 **Ubuntu** VPS 机器上，复制并运行以下一行指令即可完成自动安装部署：
+在您的 **Ubuntu / Debian** VPS 机器上，复制并运行以下一行指令即可完成自动安装部署：
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/baoweise-bot/aimili-vpngate/main/install.sh)
@@ -49,13 +49,8 @@ bash <(curl -Ls https://raw.githubusercontent.com/baoweise-bot/aimili-vpngate/ma
 sudo apt-get update && sudo apt-get install -y curl ca-certificates
 ```
 
-##### 2. Debian 系统兼容运行方法
-本脚本一键包默认限制在 Ubuntu 系统运行。Debian 用户如需运行，可先下载并用 `sed` 临时将系统类型限制替换为 `"ubuntu"` 后再执行安装：
-```bash
-curl -Ls https://raw.githubusercontent.com/baoweise-bot/aimili-vpngate/main/install.sh -o install.sh
-sed -i 's/"${ID:-}"/"ubuntu"/g' install.sh
-sudo bash install.sh
-```
+##### 2. Debian 系统兼容说明
+安装脚本已取消 Ubuntu 专属限制。只要系统具备 `apt-get`、`systemd`、`iproute2` 与 OpenVPN 运行环境，即可直接执行一键安装命令。
 
 ##### 3. 包管理器被占用（Apt 锁冲突报错解决）
 若一键安装提示 `Could not get lock /var/lib/dpkg/lock-frontend` 等“无法获得锁”的报错，可运行以下命令解除占用并重新安装：
@@ -101,7 +96,7 @@ sudo apt-get update
 
 ---
 
-**AimiliVPN** is an intelligent VPN proxy gateway manager designed specifically for Linux VPS (e.g. Ubuntu). It automatically collects open VPNGate nodes, conducts multi-threaded availability testing and latency filtering, establishes secure out-of-band routing via OpenVPN and policy routing to **prevent VPS lockouts**, and hosts a high-performance local SOCKS5/HTTP proxy gateway. It is highly optimized to serve as a residential/unlocked egress node for upstream proxies like 3x-ui / Xray.
+**AimiliVPN** is an intelligent VPN proxy gateway manager designed specifically for Linux VPS (e.g. Ubuntu / Debian). It automatically collects open VPNGate nodes, conducts multi-threaded availability testing and latency filtering, establishes secure out-of-band routing via OpenVPN and policy routing to **prevent VPS lockouts**, and hosts a high-performance local SOCKS5/HTTP proxy gateway. It is highly optimized to serve as a residential/unlocked egress node for upstream proxies like 3x-ui / Xray.
 
 ### ✨ Key Features
 
@@ -127,7 +122,7 @@ sudo apt-get update
 
 ### 🚀 Quick Start
 
-To install and deploy AimiliVPN on your **Ubuntu** server, copy and paste the following command:
+To install and deploy AimiliVPN on your **Ubuntu / Debian** server, copy and paste the following command:
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/baoweise-bot/aimili-vpngate/main/install.sh)
@@ -156,13 +151,8 @@ If you are using a brand new minimal OS, the installation might fail due to miss
 sudo apt-get update && sudo apt-get install -y curl ca-certificates
 ```
 
-##### 2. Bypass OS Restrictions for Debian
-The script is restricted to Ubuntu by default. For Debian systems, run the following commands to download, patch, and install:
-```bash
-curl -Ls https://raw.githubusercontent.com/baoweise-bot/aimili-vpngate/main/install.sh -o install.sh
-sed -i 's/"${ID:-}"/"ubuntu"/g' install.sh
-sudo bash install.sh
-```
+##### 2. Debian Compatibility
+The installer no longer blocks non-Ubuntu systems. Debian-family systems with `apt-get`, `systemd`, `iproute2`, and OpenVPN support can run the one-line installer directly.
 
 ##### 3. Package Manager Locked (`apt`/`dpkg` Lock Errors)
 If you see `Could not get lock /var/lib/dpkg/lock-frontend` or similar busy errors, run these commands to unlock and retry:
