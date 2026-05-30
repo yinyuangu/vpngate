@@ -98,7 +98,6 @@ def get_channel(index: int) -> dict[str, Any]:
                 "last_message": "未连接",
                 "proxy_ok": None,
                 "proxy_ip": "-",
-                "proxy_latency_ms": 0,
                 "proxy_error": "",
             }
             channels[index] = channel
@@ -167,7 +166,6 @@ def serialize_channels(nodes: list[dict[str, Any]] | None = None) -> list[dict[s
                 "latency_ms": int(channel.get("last_latency") or node.get("latency_ms") or 0),
                 "proxy_ok": channel.get("proxy_ok"),
                 "proxy_ip": channel.get("proxy_ip", "-"),
-                "proxy_latency_ms": int(channel.get("proxy_latency_ms") or 0),
                 "proxy_error": channel.get("proxy_error", ""),
                 "node": node,
             }
@@ -697,7 +695,6 @@ def stop_channel_openvpn(channel_index: int) -> None:
     channel["last_message"] = "已断开"
     channel["proxy_ok"] = None
     channel["proxy_ip"] = "-"
-    channel["proxy_latency_ms"] = 0
     channel["proxy_error"] = ""
 
     with lock:
@@ -1106,13 +1103,11 @@ def connect_channel_node(channel_index: int, node_id: str) -> str:
         res = check_proxy_health(port=proxy_port, interface=device)
         channel["proxy_ok"] = bool(res.get("ok"))
         channel["proxy_ip"] = res.get("ip", "-") if res.get("ok") else "-"
-        channel["proxy_latency_ms"] = parse_int(res.get("latency_ms"))
         channel["proxy_error"] = "" if res.get("ok") else res.get("error", "未知错误")
         if channel_index == 0:
             set_state(
                 proxy_ok=channel["proxy_ok"],
                 proxy_ip=channel["proxy_ip"],
-                proxy_latency_ms=channel["proxy_latency_ms"],
                 proxy_error=channel["proxy_error"],
             )
 
@@ -1834,6 +1829,158 @@ INDEX_HTML = r"""<!doctype html>
       background: #0f172a;
     }
 
+    .filter-menu {
+      position: relative;
+      min-width: 0;
+    }
+
+    .filter-menu-btn {
+      width: 100%;
+      height: 38px;
+      border-radius: 6px;
+      border: 1px solid rgba(126, 146, 178, 0.16);
+      background: rgba(15, 23, 42, 0.78);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 0 28px 0 10px;
+      justify-content: flex-start;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .filter-menu-btn::after {
+      content: "";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid rgba(203, 213, 225, 0.75);
+      border-bottom: 2px solid rgba(203, 213, 225, 0.75);
+      transform: translateY(-65%) rotate(45deg);
+      pointer-events: none;
+    }
+
+    .filter-list-menu {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 42px;
+      z-index: 40;
+      max-height: 260px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid rgba(126, 146, 178, 0.2);
+      background: rgba(13, 24, 40, 0.98);
+      padding: 6px;
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+      scrollbar-width: none;
+    }
+
+    .filter-list-menu::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+    }
+
+    .filter-list-menu.open {
+      display: block;
+    }
+
+    .filter-menu.compact {
+      display: inline-block;
+      width: 74px;
+      min-width: 74px;
+    }
+
+    .filter-menu.compact .filter-menu-btn {
+      height: 30px;
+      width: 74px;
+      min-width: 74px;
+      padding: 0 6px;
+      color: #7dd3fc;
+      border-color: rgba(56, 189, 248, 0.38);
+      background: rgba(8, 24, 38, 0.72);
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .filter-menu.compact .filter-menu-btn::after {
+      display: none;
+    }
+
+    .filter-menu.compact .filter-list-menu {
+      top: 34px;
+      width: 98px;
+      right: auto;
+    }
+
+    .filter-option {
+      width: 100%;
+      min-height: 30px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #dbeafe;
+      display: block;
+      padding: 6px 8px;
+      text-align: left;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.35;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .filter-option:hover {
+      background: rgba(56, 189, 248, 0.08);
+      color: #e0f2fe;
+    }
+
+    .filter-option.active {
+      background: rgba(99, 102, 241, 0.24);
+      color: #f8fafc;
+    }
+
+    .app-toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 10000;
+      min-width: 220px;
+      max-width: min(360px, calc(100vw - 48px));
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: rgba(13, 24, 40, 0.96);
+      color: #e0f2fe;
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.45;
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .app-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .app-toast.error {
+      border-color: rgba(244, 63, 94, 0.34);
+      color: #fecdd3;
+    }
+
     .table-wrapper {
       background: var(--bg-surface);
       backdrop-filter: blur(12px);
@@ -2008,6 +2155,13 @@ INDEX_HTML = r"""<!doctype html>
       font-family: 'JetBrains Mono', Consolas, monospace;
       font-size: 13px;
       color: #e2e8f0;
+    }
+
+    .ip-cell {
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0;
     }
 
     .asn-cell {
@@ -2321,7 +2475,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: minmax(120px, 0.85fr) minmax(260px, 1.75fr) minmax(80px, 0.55fr) minmax(80px, 0.55fr);
+      grid-template-columns: minmax(120px, 0.9fr) minmax(260px, 1.8fr) minmax(90px, 0.6fr);
       gap: 8px;
       padding: 10px 12px;
       border-radius: 8px;
@@ -2570,37 +2724,6 @@ INDEX_HTML = r"""<!doctype html>
       accent-color: #10b981;
     }
 
-    .node-channel-select {
-      display: inline-block;
-      position: static;
-      height: 30px;
-      width: 74px;
-      min-width: 74px;
-      border-radius: 6px;
-      border: 1px solid rgba(56, 189, 248, 0.38);
-      background: rgba(8, 24, 38, 0.72);
-      color: #7dd3fc;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 0 6px;
-      text-align: center;
-      text-align-last: center;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .node-channel-select:hover,
-    .node-channel-select:focus {
-      border-color: rgba(56, 189, 248, 0.72);
-      background: rgba(14, 34, 52, 0.9);
-      color: #bae6fd;
-      outline: none;
-      box-shadow: 0 4px 10px rgba(56, 189, 248, 0.14);
-    }
-
     .channel-actions button,
     .nodes-actions button {
       height: 30px;
@@ -2692,6 +2815,11 @@ INDEX_HTML = r"""<!doctype html>
       height: 36px;
       border-radius: 6px;
       font-size: 13px;
+      box-sizing: border-box;
+    }
+
+    .filter-menu-btn {
+      height: 36px;
       box-sizing: border-box;
     }
 
@@ -2897,6 +3025,7 @@ INDEX_HTML = r"""<!doctype html>
   </style>
 </head>
 <body>
+<div id="app_toast" class="app-toast"></div>
 <header>
   <div class="brand">
     <h1>
@@ -2986,30 +3115,31 @@ INDEX_HTML = r"""<!doctype html>
   </section>
 
   <section class="toolbar">
-    <select id="status_filter">
-      <option value="">全部状态</option>
-      <option value="available">可用</option>
-      <option value="not_checked">待检测</option>
-      <option value="unavailable">不可用</option>
-    </select>
-    <select id="country_filter">
-      <option value="">全部国家</option>
-    </select>
-    <select id="type_filter">
-      <option value="">全部类型</option>
-      <option value="residential">住宅 IP</option>
-      <option value="hosting">机房 IP</option>
-      <option value="mobile">移动网</option>
-      <option value="proxy">代理 IP</option>
-    </select>
-    <select id="asn_filter">
-      <option value="">全部 ASN</option>
-    </select>
-    <select id="page_size">
-      <option value="25">每页 25</option>
-      <option value="50">每页 50</option>
-      <option value="100" selected>每页 100</option>
-    </select>
+    <div class="filter-menu">
+      <input type="hidden" id="status_filter" value="">
+      <button type="button" id="status_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('status_filter')">全部状态</button>
+      <div id="status_filter_menu" class="filter-list-menu"></div>
+    </div>
+    <div class="filter-menu">
+      <input type="hidden" id="country_filter" value="">
+      <button type="button" id="country_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('country_filter')">全部国家</button>
+      <div id="country_filter_menu" class="filter-list-menu"></div>
+    </div>
+    <div class="filter-menu">
+      <input type="hidden" id="type_filter" value="">
+      <button type="button" id="type_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('type_filter')">全部类型</button>
+      <div id="type_filter_menu" class="filter-list-menu"></div>
+    </div>
+    <div class="filter-menu">
+      <input type="hidden" id="latency_sort" value="">
+      <button type="button" id="latency_sort_btn" class="filter-menu-btn" onclick="toggleFilterMenu('latency_sort')">延迟默认</button>
+      <div id="latency_sort_menu" class="filter-list-menu"></div>
+    </div>
+    <div class="filter-menu">
+      <input type="hidden" id="asn_filter" value="">
+      <button type="button" id="asn_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('asn_filter')">全部 ASN</button>
+      <div id="asn_filter_menu" class="filter-list-menu"></div>
+    </div>
   </section>
   <div class="table-wrapper">
     <div class="table-container">
@@ -3035,6 +3165,11 @@ INDEX_HTML = r"""<!doctype html>
         显示第 <span id="page_start" style="color: var(--text-primary); font-weight:600;">0</span> - <span id="page_end" style="color: var(--text-primary); font-weight:600;">0</span> 条，共 <span id="filtered_count" style="color: var(--text-primary); font-weight:600;">0</span> 条备选节点
       </div>
       <div style="display: flex; gap: 8px; align-items: center;">
+        <div class="filter-menu compact" style="width: 88px; min-width: 88px;">
+          <input type="hidden" id="page_size" value="100">
+          <button type="button" id="page_size_btn" class="filter-menu-btn" style="width: 88px; min-width: 88px;" onclick="toggleFilterMenu('page_size')">每页 100</button>
+          <div id="page_size_menu" class="filter-list-menu"></div>
+        </div>
         <button id="btn_first_page" class="connect-btn" style="height: 32px; padding: 0 10px;">首页</button>
         <button id="btn_prev_page" class="connect-btn" style="height: 32px; padding: 0 10px;">上一页</button>
         <span style="font-size: 13px; color: var(--text-secondary); margin: 0 8px;">
@@ -3054,12 +3189,24 @@ let currentPage = 1;
 let pageSize = 100;
 let currentPageNodes = [];
 let openLockMenuId = null;
+let toastTimer = null;
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const base=p=>(p||"").split(/[\\/]/).pop();
 function time(ts){return ts?new Date(ts*1000).toLocaleString():"从未"}
 function speed(v){return v?`${(v*8/1000/1000).toFixed(1)} Mbps`:"-"}
+
+function showToast(message, type = "info") {
+  const toast = $("app_toast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.className = `app-toast ${type === "error" ? "error" : ""} show`;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2400);
+}
 
 const translateQuality = q => {
   const dict = {"normal": "普通", "proxy": "代理", "datacenter": "数据中心", "mobile": "移动端"};
@@ -3134,6 +3281,7 @@ const translateCountry = c => {
     "Israel": "以色列",
     "United Arab Emirates": "阿联酋",
     "UAE": "阿联酋",
+    "European Union": "欧盟",
     "Macao": "澳门",
     "Macau": "澳门",
     "Iceland": "冰岛",
@@ -3178,47 +3326,125 @@ function asnOptionLabel(asn, scopedNodes) {
   return asnDisplay(asn, node ? (node.as_name || node.owner) : "").full;
 }
 
-function updateCountryFilter() {
-  const select = $("country_filter");
-  const selectedValue = select.value;
-  const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
-  
-  const currentOptions = Array.from(select.options).map(o => o.value).filter(Boolean);
-  if (JSON.stringify(countries) === JSON.stringify(currentOptions)) {
+function closeFilterMenus(exceptId = "") {
+  document.querySelectorAll(".filter-list-menu.open").forEach(menu => {
+    if (menu.id !== exceptId) menu.classList.remove("open");
+  });
+}
+
+function toggleFilterMenu(key) {
+  const menu = $(`${key}_menu`);
+  if (!menu) return;
+  const willOpen = !menu.classList.contains("open");
+  closeFilterMenus(menu.id);
+  menu.classList.toggle("open", willOpen);
+}
+
+function renderFilterMenu(key, options, selectedValue) {
+  const menu = $(`${key}_menu`);
+  const button = $(`${key}_btn`);
+  if (!menu || !button) return;
+  const selected = options.find(option => option.value === selectedValue) || options[0];
+  button.textContent = selected ? selected.label : "";
+  menu.innerHTML = options.map(option => {
+    const active = option.value === selectedValue ? " active" : "";
+    return `<button type="button" class="filter-option${active}" onclick="setFilterValue('${key}', decodeURIComponent('${encodeURIComponent(option.value)}'))">${esc(option.label)}</button>`;
+  }).join("");
+}
+
+function setFilterValue(key, value) {
+  const input = $(key);
+  const menu = $(`${key}_menu`);
+  if (!input) return;
+  input.value = value || "";
+  if (menu) menu.classList.remove("open");
+
+  if (key === "country_filter") {
+    currentPage = 1;
+    updateCountryFilter();
+    updateAsnFilter();
+    render();
     return;
   }
-  
-  select.innerHTML = '<option value="">全部国家</option>' + 
-    countries.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-  
-  if (countries.includes(selectedValue)) {
-    select.value = selectedValue;
-  } else {
-    select.value = "";
+  if (key === "page_size") {
+    pageSize = parseInt(input.value, 10) || 100;
+    currentPage = 1;
+    updateStaticFilterMenus();
+    render();
+    return;
   }
+  currentPage = 1;
+  updateStaticFilterMenus();
+  render();
+}
+
+function updateStaticFilterMenus() {
+  renderFilterMenu("status_filter", [
+    {value: "", label: "全部状态"},
+    {value: "available", label: "可用"},
+    {value: "not_checked", label: "待检测"},
+    {value: "unavailable", label: "不可用"},
+  ], $("status_filter") ? $("status_filter").value : "");
+  renderFilterMenu("type_filter", [
+    {value: "", label: "全部类型"},
+    {value: "residential", label: "住宅 IP"},
+    {value: "hosting", label: "机房 IP"},
+    {value: "mobile", label: "移动网"},
+    {value: "proxy", label: "代理 IP"},
+  ], $("type_filter") ? $("type_filter").value : "");
+  renderFilterMenu("latency_sort", [
+    {value: "", label: "延迟默认"},
+    {value: "asc", label: "延迟升序"},
+    {value: "desc", label: "延迟降序"},
+  ], $("latency_sort") ? $("latency_sort").value : "");
+  renderFilterMenu("page_size", [
+    {value: "25", label: "每页 25"},
+    {value: "50", label: "每页 50"},
+    {value: "100", label: "每页 100"},
+  ], $("page_size") ? $("page_size").value : "100");
+}
+
+function updateCountryFilter() {
+  const input = $("country_filter");
+  if (!input) return;
+  const selectedValue = input.value;
+  const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
+
+  if (countries.includes(selectedValue)) {
+    input.value = selectedValue;
+  } else {
+    input.value = "";
+  }
+  renderFilterMenu(
+    "country_filter",
+    [{value: "", label: "全部国家"}].concat(countries.map(c => ({value: c, label: translateCountry(c)}))),
+    input.value
+  );
 }
 
 function updateAsnFilter() {
-  const select = $("asn_filter");
-  if (!select) return;
-  const selectedValue = select.value;
+  const input = $("asn_filter");
+  const menu = $("asn_filter_menu");
+  const button = $("asn_filter_btn");
+  if (!input || !menu || !button) return;
+  const selectedValue = input.value;
   const selectedCountry = $("country_filter") ? $("country_filter").value : "";
   const scopedNodes = selectedCountry ? nodes.filter(n => n.country === selectedCountry) : nodes;
   const asns = Array.from(new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
 
-  const currentOptions = Array.from(select.options).map(o => o.value).filter(Boolean);
-  if (JSON.stringify(asns) === JSON.stringify(currentOptions)) {
-    return;
-  }
-
-  select.innerHTML = '<option value="">全部 ASN</option>' +
-    asns.map(asn => `<option value="${esc(asn)}">${esc(asnOptionLabel(asn, scopedNodes))}</option>`).join("");
-
   if (asns.includes(selectedValue)) {
-    select.value = selectedValue;
+    input.value = selectedValue;
   } else {
-    select.value = "";
+    input.value = "";
   }
+
+  const selectedClass = input.value ? "" : " active";
+  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" onclick="setFilterValue('asn_filter', '')">全部 ASN</button>` +
+    asns.map(asn => {
+      const active = asn === input.value ? " active" : "";
+      return `<button type="button" class="filter-option${active}" onclick="setFilterValue('asn_filter', decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+    }).join("");
+  button.textContent = input.value ? asnOptionLabel(input.value, scopedNodes) : "全部 ASN";
 }
 
 function getFilteredNodes() {
@@ -3226,7 +3452,8 @@ function getFilteredNodes() {
   const selectedAsn = $("asn_filter") ? $("asn_filter").value : "";
   const selectedStatus = $("status_filter") ? $("status_filter").value : "";
   const selectedType = $("type_filter") ? $("type_filter").value : "";
-  return nodes.filter(n => {
+  const latencySort = $("latency_sort") ? $("latency_sort").value : "";
+  const filtered = nodes.filter(n => {
     if (selectedCountry && n.country !== selectedCountry) {
       return false;
     }
@@ -3241,6 +3468,14 @@ function getFilteredNodes() {
     }
     return true;
   });
+  if (latencySort) {
+    filtered.sort((a, b) => {
+      const aLatency = Number(a.latency_ms) || 999999;
+      const bLatency = Number(b.latency_ms) || 999999;
+      return latencySort === "asc" ? aLatency - bLatency : bLatency - aLatency;
+    });
+  }
+  return filtered;
 }
 
 function stableSortNodes() {
@@ -3540,7 +3775,6 @@ function renderChannelCards() {
     const asnLabel = nodeAsnLabel(node);
     const nodeLatency = ch.latency_ms || (node && node.latency_ms) || 0;
     const nodeLatencyClass = getLatencyClass(nodeLatency);
-    const proxyLatency = ch.proxy_latency_ms || 0;
     return `
       <article class="channel-card ${cardClass}">
         <div class="channel-top">
@@ -3565,10 +3799,6 @@ function renderChannelCards() {
           <div>
             <span class="metric-label">节点延迟</span>
             <span class="metric-value">${nodeLatency ? `<span class="latency-val ${nodeLatencyClass}">${nodeLatency} ms</span>` : "-"}</span>
-          </div>
-          <div>
-            <span class="metric-label">代理延迟</span>
-            <span class="metric-value">${proxyLatency ? `${proxyLatency} ms` : "-"}</span>
           </div>
         </div>
         <div class="channel-options">
@@ -3630,7 +3860,7 @@ function render(){
       return `<tr ${rowClass}>
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
         <td><span class="country-cell">${esc(translateCountry(n.country))}</span></td>
-        <td class="mono">${esc(n.ip||n.remote_host)}</td>
+        <td class="mono ip-cell">${esc(n.ip||n.remote_host)}</td>
         <td>${esc(translateIpType(n.ip_type))}</td>
         <td>${latencyText}</td>
         <td><span class="asn-cell" title="${esc(asnLabel)}">${esc(asnLabel)}</span></td>
@@ -3813,15 +4043,36 @@ function buildChannelChooser(nodeId) {
   const count = state.channel_count || 6;
   const list = channels.length ? channels : Array.from({length: count}, (_, index) => ({index}));
   const current = Number.isInteger(selectedManualChannels[nodeId]) ? selectedManualChannels[nodeId] : null;
+  const buttonText = current === null ? "选择通道" : `通道 ${current}`;
   const options = list.map(ch => {
     const idx = ch.index || 0;
-    const selected = idx === current ? "selected" : "";
-    return `<option value="${idx}" ${selected}>通道 ${idx}</option>`;
+    const active = idx === current ? " active" : "";
+    return `<button type="button" class="filter-option${active}" onclick="setNodeChannel('${esc(nodeId)}', ${idx})">通道 ${idx}</button>`;
   }).join("");
-  return `<select class="node-channel-select" onchange="selectedManualChannels['${esc(nodeId)}']=this.value === '' ? null : parseInt(this.value, 10);">
-    <option value="" ${current === null ? "selected" : ""}>选择通道</option>
-    ${options}
-  </select>`;
+  return `<div class="filter-menu compact">
+    <button type="button" class="filter-menu-btn" onclick="toggleNodeChannelMenu(this)">${esc(buttonText)}</button>
+    <div class="filter-list-menu">
+      <button type="button" class="filter-option${current === null ? " active" : ""}" onclick="setNodeChannel('${esc(nodeId)}', null)">选择通道</button>
+      ${options}
+    </div>
+  </div>`;
+}
+
+function toggleNodeChannelMenu(button) {
+  const menu = button && button.nextElementSibling;
+  if (!menu) return;
+  const willOpen = !menu.classList.contains("open");
+  closeFilterMenus(menu.id || "");
+  menu.classList.toggle("open", willOpen);
+}
+
+function setNodeChannel(nodeId, channel) {
+  if (channel === null || channel === undefined) {
+    delete selectedManualChannels[nodeId];
+  } else {
+    selectedManualChannels[nodeId] = channel;
+  }
+  render();
 }
 
 function toggleLockMenu(kind, channel) {
@@ -3840,7 +4091,7 @@ async function connectNodeSmart(id) {
   const selectedManualChannel = selectedManualChannels[id];
   const selected = channels.find(ch => (ch.index || 0) === selectedManualChannel);
   if (!selected) {
-    alert("请先选择要连接的通道");
+    showToast("请先选择要连接的通道", "error");
     return;
   }
   const channel = selectedManualChannel;
@@ -3904,26 +4155,6 @@ async function disconnectChannel(channel) {
   }
 }
 
-async function testChannelProxy(channel) {
-  testingChannelIds.add(channel);
-  render();
-  try {
-    const response = await fetch("./api/channel/test_proxy", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({channel})
-    });
-    const result = await response.json();
-    if (!result.ok) {
-      console.warn(result.error || "通道出口测试失败");
-    }
-  } catch (e) {
-  } finally {
-    testingChannelIds.delete(channel);
-    await load();
-  }
-}
-
 async function setChannelCountry(channel, country) {
   try {
     await fetch("./api/channel/country_lock", {
@@ -3969,6 +4200,7 @@ async function load(){
   state=d.state||{}; 
   
   stableSortNodes();
+  updateStaticFilterMenus();
   updateCountryFilter();
   updateAsnFilter();
   render();
@@ -3977,12 +4209,6 @@ async function load(){
     startConnectionPolling();
   }
 }
-
-$("country_filter").onchange=()=>{ currentPage = 1; updateAsnFilter(); render(); };
-if ($("status_filter")) $("status_filter").onchange=()=>{ currentPage = 1; render(); };
-if ($("asn_filter")) $("asn_filter").onchange=()=>{ currentPage = 1; render(); };
-if ($("type_filter")) $("type_filter").onchange=()=>{ currentPage = 1; render(); };
-if ($("page_size")) $("page_size").onchange=()=>{ pageSize = parseInt($("page_size").value, 10) || 100; currentPage = 1; render(); };
 
 $("refresh").onclick=async()=>{ 
   setRefreshButtonBusy("正在全量检测...");
@@ -4063,6 +4289,7 @@ setInterval(async () => {
       nodes = d.nodes || [];
       state = d.state || {};
       stableSortNodes();
+      updateStaticFilterMenus();
       updateCountryFilter();
       updateAsnFilter();
       render();
@@ -4147,7 +4374,6 @@ def background_proxy_checker() -> None:
                 if not node_id:
                     channel["proxy_ok"] = None
                     channel["proxy_ip"] = "-"
-                    channel["proxy_latency_ms"] = 0
                     channel["proxy_error"] = ""
                     if idx == 0:
                         set_state(proxy_ok=None, proxy_ip="-", proxy_latency_ms=0, proxy_error="")
@@ -4157,7 +4383,6 @@ def background_proxy_checker() -> None:
                 if res["ok"]:
                     channel["proxy_ok"] = True
                     channel["proxy_ip"] = res["ip"]
-                    channel["proxy_latency_ms"] = res["latency_ms"]
                     channel["proxy_error"] = ""
                     if idx == 0:
                         set_state(proxy_ok=True, proxy_ip=res["ip"], proxy_latency_ms=res["latency_ms"], proxy_error="")
@@ -4166,7 +4391,6 @@ def background_proxy_checker() -> None:
                     error_msg = res.get("error", "未知错误")
                     channel["proxy_ok"] = False
                     channel["proxy_ip"] = "-"
-                    channel["proxy_latency_ms"] = 0
                     channel["proxy_error"] = error_msg
                     print(f"[警告] 通道 {idx} 端口 {channel_port(idx)} 本地代理当前不可用！原因: {error_msg}", flush=True)
                     log_to_json("WARNING", "Proxy", f"通道 {idx} 代理不可用: {error_msg}")
@@ -4530,27 +4754,6 @@ class Handler(BaseHTTPRequestHandler):
                 if channel_index == 0:
                     set_state(active_openvpn_node_id="", last_check_message="手动断开连接", active_node_latency="无活动连接")
                 self.send_json({"ok": True})
-            except Exception as exc:
-                self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
-        elif effective_path == "/api/channel/test_proxy":
-            try:
-                length = parse_int(self.headers.get("Content-Length"))
-                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
-                channel_index = parse_int(payload.get("channel"))
-                result = check_proxy_health(port=channel_port(channel_index), interface=channel_device(channel_index))
-                channel = get_channel(channel_index)
-                channel["proxy_ok"] = bool(result.get("ok"))
-                channel["proxy_ip"] = result.get("ip", "-") if result.get("ok") else "-"
-                channel["proxy_latency_ms"] = parse_int(result.get("latency_ms"))
-                channel["proxy_error"] = "" if result.get("ok") else result.get("error", "未知错误")
-                if channel_index == 0:
-                    set_state(
-                        proxy_ok=channel["proxy_ok"],
-                        proxy_ip=channel["proxy_ip"],
-                        proxy_latency_ms=channel["proxy_latency_ms"],
-                        proxy_error=channel["proxy_error"],
-                    )
-                self.send_json(result)
             except Exception as exc:
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif effective_path == "/api/channel/country_lock":

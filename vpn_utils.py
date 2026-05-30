@@ -80,6 +80,7 @@ COUNTRY_TRANSLATIONS = {
     "Israel": "以色列",
     "United Arab Emirates": "阿联酋",
     "UAE": "阿联酋",
+    "European Union": "欧盟",
     "Macao": "澳门",
     "Macau": "澳门",
     "Iceland": "冰岛",
