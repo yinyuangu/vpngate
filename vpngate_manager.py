@@ -2151,8 +2151,9 @@ INDEX_HTML = r"""<!doctype html>
       white-space: normal;
       overflow-wrap: anywhere;
       word-break: break-word;
-      color: var(--text-secondary);
+      color: #cbd5e1;
       font-size: 12px;
+      font-weight: 500;
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
       vertical-align: middle;
     }
@@ -2353,28 +2354,29 @@ INDEX_HTML = r"""<!doctype html>
     .channel-card {
       position: relative;
       overflow: visible;
-      border: 2px solid var(--success);
+      border: 1px solid var(--border-color);
       border-radius: 8px;
-      background:
-        linear-gradient(180deg, rgba(10, 37, 44, 0.96) 0%, rgba(8, 31, 39, 0.9) 100%);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.05),
-        0 0 0 1px rgba(16, 185, 129, 0.12),
-        0 10px 24px rgba(0, 0, 0, 0.18);
-      padding: 13px;
+      background: rgba(13, 22, 37, 0.9);
+      box-shadow: none;
+      padding: 14px;
       min-height: 0;
+    }
+
+    .channel-card.active {
+      background: var(--active-row-bg);
+      border: 2px solid var(--success);
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.08);
+      padding: 13px;
     }
 
     .channel-card.connecting {
       border-color: rgba(245, 158, 11, 0.48);
-      background:
-        linear-gradient(180deg, rgba(41, 31, 16, 0.9) 0%, rgba(23, 24, 28, 0.86) 100%);
+      background: rgba(37, 29, 15, 0.74);
     }
 
     .channel-card.offline {
       border-color: rgba(82, 103, 132, 0.28);
-      background:
-        linear-gradient(180deg, rgba(12, 27, 40, 0.88) 0%, rgba(8, 19, 29, 0.84) 100%);
+      background: rgba(13, 22, 37, 0.72);
     }
 
     .channel-top {
@@ -2398,7 +2400,7 @@ INDEX_HTML = r"""<!doctype html>
       gap: 8px;
       font-size: 14px;
       font-weight: 800;
-      color: #f5f7fb;
+      color: var(--text-primary);
     }
 
     .port-pill,
@@ -2426,7 +2428,7 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 999px;
       color: #34d399;
       background: rgba(16, 185, 129, 0.12);
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.14);
+      box-shadow: none;
       font-size: 12px;
       font-weight: 700;
     }
@@ -2457,14 +2459,14 @@ INDEX_HTML = r"""<!doctype html>
       gap: 8px;
       padding: 10px 12px;
       border-radius: 8px;
-      border: 1px solid rgba(126, 146, 178, 0.08);
-      background: rgba(31, 43, 64, 0.86);
+      border: 1px solid var(--border-color);
+      background: rgba(17, 24, 39, 0.4);
       margin-bottom: 10px;
     }
 
     .metric-label {
       display: block;
-      color: #aebbd0;
+      color: var(--text-secondary);
       font-size: 11px;
       font-weight: 700;
       margin-bottom: 4px;
@@ -2472,7 +2474,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .metric-value {
       display: block;
-      color: #f8fafc;
+      color: var(--text-primary);
       font-family: 'JetBrains Mono', Consolas, monospace;
       font-size: 13px;
       font-weight: 800;
@@ -2580,8 +2582,9 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 6px;
       border: 1px solid rgba(126, 146, 178, 0.18);
       background: linear-gradient(180deg, rgba(22, 35, 56, 0.95), rgba(10, 22, 36, 0.92));
-      color: var(--text-primary);
+      color: #e5edf7;
       font-size: 12px;
+      font-weight: 700;
       padding: 0 30px 0 10px;
       text-align: left;
       cursor: pointer;
@@ -2598,20 +2601,6 @@ INDEX_HTML = r"""<!doctype html>
       transform: translateY(-1px);
     }
 
-    .lock-mode-btn::before {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 18px;
-      height: 18px;
-      margin-right: 7px;
-      border-radius: 5px;
-      background: rgba(16, 185, 129, 0.12);
-      color: #34d399;
-      font-size: 11px;
-      vertical-align: -1px;
-    }
-
     .lock-mode-btn::after {
       content: "";
       position: absolute;
@@ -2623,15 +2612,6 @@ INDEX_HTML = r"""<!doctype html>
       border-bottom: 2px solid rgba(203, 213, 225, 0.75);
       transform: translateY(-65%) rotate(45deg);
       pointer-events: none;
-    }
-
-    .lock-mode-btn.country-lock-btn::before {
-      content: "国";
-    }
-
-    .lock-mode-btn.asn-lock-btn::before {
-      content: "AS";
-      font-size: 10px;
     }
 
     .lock-select {
@@ -2667,7 +2647,7 @@ INDEX_HTML = r"""<!doctype html>
       overflow-y: auto;
       border-radius: 6px;
       border: 1px solid var(--border-color);
-      background: rgba(15, 23, 42, 0.96);
+      background: rgba(13, 24, 40, 0.98);
       padding: 6px;
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
       scrollbar-width: none;
@@ -2693,8 +2673,9 @@ INDEX_HTML = r"""<!doctype html>
       min-height: 28px;
       padding: 4px 6px;
       border-radius: 5px;
-      color: var(--text-primary);
+      color: #dbeafe;
       font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
     }
 
@@ -2708,12 +2689,13 @@ INDEX_HTML = r"""<!doctype html>
 
     .country-lock-option.active {
       background: rgba(16, 185, 129, 0.12);
-      color: #34d399;
+      color: #6ee7b7;
     }
 
     .country-lock-option:hover,
     .asn-check-option:hover {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(56, 189, 248, 0.08);
+      color: #e0f2fe;
     }
 
     .asn-check-option input {
@@ -2725,18 +2707,30 @@ INDEX_HTML = r"""<!doctype html>
     .node-channel-select {
       display: inline-block;
       position: static;
-      height: 28px;
-      width: 72px;
-      min-width: 72px;
+      height: 30px;
+      width: 82px;
+      min-width: 82px;
       border-radius: 6px;
-      border: 1px solid var(--border-color);
-      background: rgba(15, 23, 42, 0.72);
-      color: var(--text-primary);
+      border: 1px solid rgba(56, 189, 248, 0.38);
+      background: rgba(8, 24, 38, 0.72);
+      color: #7dd3fc;
       font-size: 12px;
-      padding: 0 6px;
+      font-weight: 600;
+      padding: 0 9px;
       appearance: none;
       -webkit-appearance: none;
       background-image: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .node-channel-select:hover,
+    .node-channel-select:focus {
+      border-color: rgba(56, 189, 248, 0.72);
+      background: rgba(14, 34, 52, 0.9);
+      color: #bae6fd;
+      outline: none;
+      box-shadow: 0 4px 10px rgba(56, 189, 248, 0.14);
     }
 
     .channel-actions button,
@@ -3652,7 +3646,10 @@ function asnCheckboxOptions(channel, currentValue) {
 }
 
 function countryLockLabel(ch) {
-  return ch && ch.country_lock ? `国家锁定：${translateCountry(ch.country_lock)}` : "全部国家锁定";
+  if (!ch || !ch.country_lock) return "全部国家锁定";
+  const sample = nodes.find(n => (n.country === ch.country_lock || n.country_short === ch.country_lock) && n.country_short);
+  const flag = countryFlag(sample && sample.country_short);
+  return `国家锁定：${flag ? flag : ""}${translateCountry(ch.country_lock)}`;
 }
 
 function asnLockLabel(ch) {
@@ -3676,10 +3673,11 @@ function renderChannelCards() {
     const idx = ch.index || 0;
     const node = (ch.node && ch.node.id) ? ch.node : nodes.find(n => n.id === ch.node_id);
     const meta = channelStatusMeta(ch);
-    const cardClass = ch.is_connecting ? "connecting" : (node ? "" : "offline");
+    const cardClass = ch.is_connecting ? "connecting" : (node ? "active" : "offline");
     const ip = node ? (node.ip || node.remote_host || "-") : "-";
     const asnLabel = nodeAsnLabel(node);
     const nodeLatency = ch.latency_ms || (node && node.latency_ms) || 0;
+    const nodeLatencyClass = getLatencyClass(nodeLatency);
     const proxyLatency = ch.proxy_latency_ms || 0;
     return `
       <article class="channel-card ${cardClass}">
@@ -3704,7 +3702,7 @@ function renderChannelCards() {
           </div>
           <div>
             <span class="metric-label">节点延迟</span>
-            <span class="metric-value">${nodeLatency ? `${nodeLatency} ms` : "-"}</span>
+            <span class="metric-value">${nodeLatency ? `<span class="latency-val ${nodeLatencyClass}">${nodeLatency} ms</span>` : "-"}</span>
           </div>
           <div>
             <span class="metric-label">代理延迟</span>
