@@ -2003,7 +2003,6 @@ INDEX_HTML = r"""<!doctype html>
       text-transform: uppercase;
       letter-spacing: 0.8px;
       color: var(--text-secondary);
-      text-align: center;
     }
 
     tr {
@@ -2354,12 +2353,15 @@ INDEX_HTML = r"""<!doctype html>
     .channel-card {
       position: relative;
       overflow: visible;
-      border: 1px solid rgba(34, 197, 166, 0.24);
+      border: 2px solid var(--success);
       border-radius: 8px;
       background:
-        linear-gradient(180deg, rgba(9, 32, 40, 0.92) 0%, rgba(7, 25, 34, 0.86) 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 24px rgba(0, 0, 0, 0.18);
-      padding: 14px;
+        linear-gradient(180deg, rgba(10, 37, 44, 0.96) 0%, rgba(8, 31, 39, 0.9) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 0 1px rgba(16, 185, 129, 0.12),
+        0 10px 24px rgba(0, 0, 0, 0.18);
+      padding: 13px;
       min-height: 0;
     }
 
@@ -2574,24 +2576,62 @@ INDEX_HTML = r"""<!doctype html>
 
     .lock-mode-btn {
       width: 100%;
-      height: 30px;
+      height: 34px;
       border-radius: 6px;
-      border: 1px solid var(--border-color);
-      background: rgba(13, 25, 40, 0.82);
+      border: 1px solid rgba(126, 146, 178, 0.18);
+      background: linear-gradient(180deg, rgba(22, 35, 56, 0.95), rgba(10, 22, 36, 0.92));
       color: var(--text-primary);
       font-size: 12px;
-      padding: 0 9px;
+      padding: 0 30px 0 10px;
       text-align: left;
       cursor: pointer;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      transition: border-color 0.18s ease, background 0.18s ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
     }
 
     .lock-mode-btn:hover {
-      border-color: rgba(129, 140, 248, 0.42);
-      background: rgba(20, 35, 56, 0.9);
+      border-color: rgba(16, 185, 129, 0.36);
+      background: linear-gradient(180deg, rgba(25, 43, 66, 0.98), rgba(12, 28, 43, 0.96));
+      transform: translateY(-1px);
+    }
+
+    .lock-mode-btn::before {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      margin-right: 7px;
+      border-radius: 5px;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      font-size: 11px;
+      vertical-align: -1px;
+    }
+
+    .lock-mode-btn::after {
+      content: "";
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid rgba(203, 213, 225, 0.75);
+      border-bottom: 2px solid rgba(203, 213, 225, 0.75);
+      transform: translateY(-65%) rotate(45deg);
+      pointer-events: none;
+    }
+
+    .lock-mode-btn.country-lock-btn::before {
+      content: "国";
+    }
+
+    .lock-mode-btn.asn-lock-btn::before {
+      content: "AS";
+      font-size: 10px;
     }
 
     .lock-select {
@@ -2694,6 +2734,9 @@ INDEX_HTML = r"""<!doctype html>
       color: var(--text-primary);
       font-size: 12px;
       padding: 0 6px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: none;
     }
 
     .channel-actions button,
@@ -2786,7 +2829,6 @@ INDEX_HTML = r"""<!doctype html>
       text-transform: none;
       letter-spacing: 0;
       background: rgba(12, 18, 32, 0.95);
-      text-align: center;
     }
 
     .row-check {
@@ -3584,7 +3626,9 @@ function countryLockOptions(channel, currentValue) {
   const options = [`<button type="button" class="country-lock-option${allClass}" onclick="setChannelCountry(${channel}, '')">全部国家</button>`];
   countries.forEach(country => {
     const active = country === normalized ? " active" : "";
-    options.push(`<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}'))">${esc(translateCountry(country))}</button>`);
+    const sample = nodes.find(n => n.country === country && n.country_short);
+    const flag = countryFlag(sample && sample.country_short);
+    options.push(`<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}'))">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country))}</span></button>`);
   });
   return options.join("");
 }
@@ -3669,13 +3713,13 @@ function renderChannelCards() {
         </div>
         <div class="channel-options">
           <div class="lock-menu">
-            <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('country', ${idx})">${esc(countryLockLabel(ch))}</button>
+            <button type="button" class="lock-mode-btn country-lock-btn" onclick="toggleLockMenu('country', ${idx})">${esc(countryLockLabel(ch))}</button>
             <div id="country_select_${idx}" class="lock-list-menu">
               ${countryLockOptions(idx, ch.country_lock || "")}
             </div>
           </div>
           <div class="lock-menu">
-            <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('asn', ${idx})">${esc(asnLockLabel(ch))}</button>
+            <button type="button" class="lock-mode-btn asn-lock-btn" onclick="toggleLockMenu('asn', ${idx})">${esc(asnLockLabel(ch))}</button>
             <div id="asn_select_${idx}" class="asn-check-menu">
               ${asnCheckboxOptions(idx, ch.asn_lock)}
             </div>
