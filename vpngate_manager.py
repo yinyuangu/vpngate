@@ -1538,10 +1538,10 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .status {
+      display: none;
       font-size: 13px;
       color: var(--text-secondary);
       margin-top: 4px;
-      display: flex;
       align-items: center;
       gap: 8px;
       max-width: min(760px, 52vw);
@@ -2442,7 +2442,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-actions {
       display: grid;
-      grid-template-columns: 1.1fr 0.8fr 0.9fr;
+      grid-template-columns: 1fr;
       gap: 7px;
       align-items: center;
     }
@@ -2455,7 +2455,34 @@ INDEX_HTML = r"""<!doctype html>
       margin-top: 8px;
     }
 
+    .country-menu {
+      position: relative;
+      min-width: 0;
+    }
+
+    .country-mode-btn {
+      width: 100%;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.72);
+      color: var(--text-primary);
+      font-size: 12px;
+      padding: 0 9px;
+      text-align: left;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .country-lock-select {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 34px;
+      z-index: 20;
       height: 30px;
       border-radius: 6px;
       border: 1px solid var(--border-color);
@@ -2464,6 +2491,23 @@ INDEX_HTML = r"""<!doctype html>
       font-size: 12px;
       padding: 0 8px;
       min-width: 0;
+    }
+
+    .country-lock-select.open {
+      display: block;
+    }
+
+    .node-channel-select {
+      display: inline-block;
+      position: static;
+      height: 28px;
+      min-width: 78px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.72);
+      color: var(--text-primary);
+      font-size: 12px;
+      padding: 0 8px;
     }
 
     .channel-actions button,
@@ -2725,7 +2769,7 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       .channel-actions {
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 6px;
       }
 
@@ -3431,6 +3475,11 @@ function channelSelectOptions(currentValue) {
   return options.join("");
 }
 
+function countryModeLabel(ch) {
+  const country = ch && ch.country_lock ? translateCountry(ch.country_lock) : "不限";
+  return `国家模式：${country}`;
+}
+
 function renderChannelCards() {
   const grid = $("channels_grid");
   if (!grid) return;
@@ -3450,9 +3499,7 @@ function renderChannelCards() {
     const country = node ? translateCountry(node.country) : "-";
     const flag = node ? countryFlag(node.country_short) : "";
     const proto = node ? String(node.proto || "-").toUpperCase() : "-";
-    const activeText = ch.last_message || (node ? `已连接 (${ip})` : "等待手动选择节点");
-    const proxyClass = ch.proxy_ok === false ? "bad" : "good";
-    const proxyText = ch.proxy_ok === false ? "出口异常" : (ch.proxy_ok === true ? "出口正常" : "待检测");
+    const activeText = ch.last_message || (node ? `已连接 (${ip})` : "等待节点");
     return `
       <article class="channel-card ${cardClass}">
         <div class="channel-top">
@@ -3480,19 +3527,16 @@ function renderChannelCards() {
             <span class="metric-value">${proxyLatency ? `${proxyLatency} ms` : "-"}</span>
           </div>
         </div>
-        <div class="channel-tags">
-          <span class="mini-pill ${proxyClass}">${proxyText}</span>
-          <span class="mini-pill">${flag ? `${flag} ` : ""}${esc(country)}</span>
-        </div>
         <div class="channel-actions">
-          <button class="btn-green" onclick="selectChannelForManualConnect(${idx})" ${ch.is_connecting ? "disabled" : ""}>手动连接</button>
           <button class="btn-rose" onclick="disconnectChannel(${idx})" ${(!node && !ch.node_id) ? "disabled" : ""}>断开</button>
-          <button class="btn-dark" onclick="testChannelProxy(${idx})" ${testingChannelIds.has(idx) ? "disabled" : ""}>${testingChannelIds.has(idx) ? "测试中" : "测试出口"}</button>
         </div>
         <div class="channel-options">
-          <select class="country-lock-select" onchange="setChannelCountry(${idx}, this.value)">
-            ${channelSelectOptions(ch.country_lock || "")}
-          </select>
+          <div class="country-menu">
+            <button type="button" class="country-mode-btn" onclick="toggleCountryMenu(${idx})">${flag ? `${flag} ` : ""}${esc(countryModeLabel(ch))}</button>
+            <select id="country_select_${idx}" class="country-lock-select" onchange="setChannelCountry(${idx}, this.value)">
+              ${channelSelectOptions(ch.country_lock || "")}
+            </select>
+          </div>
           <label class="switch-control">自动切换
             <input type="checkbox" ${ch.auto_switch !== false ? "checked" : ""} onchange="toggleChannelAuto(${idx}, this.checked)" />
           </label>
@@ -3720,14 +3764,15 @@ function buildChannelChooser(nodeId) {
     const selected = idx === selectedManualChannel ? "selected" : "";
     return `<option value="${idx}" ${selected}>通道 ${idx}</option>`;
   }).join("");
-  return `<select class="country-lock-select" style="height:28px; min-width:78px;" onchange="selectedManualChannel=parseInt(this.value, 10); render();">${options}</select>`;
+  return `<select class="node-channel-select" onchange="selectedManualChannel=parseInt(this.value, 10); render();">${options}</select>`;
 }
 
-function selectChannelForManualConnect(channel) {
-  selectedManualChannel = channel;
-  const panel = document.querySelector(".nodes-panel-title");
-  if (panel) panel.scrollIntoView({behavior: "smooth", block: "start"});
-  render();
+function toggleCountryMenu(channel) {
+  document.querySelectorAll(".country-lock-select.open").forEach(select => {
+    if (select.id !== `country_select_${channel}`) select.classList.remove("open");
+  });
+  const select = $(`country_select_${channel}`);
+  if (select) select.classList.toggle("open");
 }
 
 async function connectNodeSmart(id) {
@@ -3834,6 +3879,8 @@ async function setChannelCountry(channel, country) {
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({channel, country: String(country || "").trim()})
     });
+    const select = $(`country_select_${channel}`);
+    if (select) select.classList.remove("open");
   } catch (e) {
     alert("国家模式保存失败");
   } finally {
@@ -3900,10 +3947,6 @@ async function batchTestSelectedNodes() {
     alert("请先选择要测试的节点");
     return;
   }
-  if (ids.length > 12) {
-    ids = ids.slice(0, 12);
-    alert("为避免检测过慢，本次先测试前 12 个节点。");
-  }
   const btn = $("btn_batch_selected");
   const original = btn ? btn.textContent : "";
   if (btn) {
@@ -3913,19 +3956,27 @@ async function batchTestSelectedNodes() {
   ids.forEach(id => testingNodeIds.add(id));
   render();
   try {
-    const response = await fetch("./api/test_nodes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids })
-    });
-    const result = await response.json();
-    if (result.ok && Array.isArray(result.nodes)) {
-      result.nodes.forEach(updated => {
-        const idx = nodes.findIndex(item => item.id === updated.id);
-        if (idx !== -1) nodes[idx] = {...nodes[idx], ...updated};
+    const chunkSize = 12;
+    for (let start = 0; start < ids.length; start += chunkSize) {
+      const chunk = ids.slice(start, start + chunkSize);
+      if (btn) btn.textContent = `测试中 ${Math.min(start + chunk.length, ids.length)}/${ids.length}`;
+      const response = await fetch("./api/test_nodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: chunk })
       });
-    } else if (!result.ok) {
-      alert("批量测试失败: " + (result.error || "未知错误"));
+      const result = await response.json();
+      if (result.ok && Array.isArray(result.nodes)) {
+        result.nodes.forEach(updated => {
+          const idx = nodes.findIndex(item => item.id === updated.id);
+          if (idx !== -1) nodes[idx] = {...nodes[idx], ...updated};
+          testingNodeIds.delete(updated.id);
+        });
+        render();
+      } else if (!result.ok) {
+        alert("批量测试失败: " + (result.error || "未知错误"));
+        break;
+      }
     }
   } finally {
     ids.forEach(id => testingNodeIds.delete(id));
