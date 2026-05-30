@@ -2315,22 +2315,26 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-card {
       position: relative;
-      border: 1px solid rgba(25, 154, 141, 0.28);
+      overflow: visible;
+      border: 1px solid rgba(34, 197, 166, 0.24);
       border-radius: 8px;
-      background: rgba(3, 31, 36, 0.76);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-      padding: 12px;
+      background:
+        linear-gradient(180deg, rgba(9, 32, 40, 0.92) 0%, rgba(7, 25, 34, 0.86) 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 24px rgba(0, 0, 0, 0.18);
+      padding: 14px;
       min-height: 0;
     }
 
     .channel-card.connecting {
       border-color: rgba(245, 158, 11, 0.48);
-      background: rgba(38, 31, 16, 0.72);
+      background:
+        linear-gradient(180deg, rgba(41, 31, 16, 0.9) 0%, rgba(23, 24, 28, 0.86) 100%);
     }
 
     .channel-card.offline {
       border-color: rgba(82, 103, 132, 0.28);
-      background: rgba(10, 24, 35, 0.78);
+      background:
+        linear-gradient(180deg, rgba(12, 27, 40, 0.88) 0%, rgba(8, 19, 29, 0.84) 100%);
     }
 
     .channel-top {
@@ -2357,7 +2361,7 @@ INDEX_HTML = r"""<!doctype html>
       align-items: center;
       height: 20px;
       padding: 0 7px;
-      border-radius: 4px;
+      border-radius: 6px;
       background: rgba(83, 104, 139, 0.22);
       border: 1px solid rgba(128, 147, 178, 0.12);
       color: #aebbd0;
@@ -2404,10 +2408,11 @@ INDEX_HTML = r"""<!doctype html>
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
-      padding: 10px;
-      border-radius: 6px;
-      background: #202b40;
-      margin-bottom: 8px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(126, 146, 178, 0.08);
+      background: rgba(31, 43, 64, 0.86);
+      margin-bottom: 10px;
     }
 
     .metric-label {
@@ -2454,6 +2459,7 @@ INDEX_HTML = r"""<!doctype html>
       grid-template-columns: 1fr;
       gap: 7px;
       align-items: center;
+      margin-bottom: 8px;
     }
 
     .channel-options {
@@ -2474,7 +2480,7 @@ INDEX_HTML = r"""<!doctype html>
       height: 30px;
       border-radius: 6px;
       border: 1px solid var(--border-color);
-      background: rgba(15, 23, 42, 0.72);
+      background: rgba(13, 25, 40, 0.82);
       color: var(--text-primary);
       font-size: 12px;
       padding: 0 9px;
@@ -2483,6 +2489,12 @@ INDEX_HTML = r"""<!doctype html>
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      transition: border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .lock-mode-btn:hover {
+      border-color: rgba(129, 140, 248, 0.42);
+      background: rgba(20, 35, 56, 0.9);
     }
 
     .lock-select {
@@ -3460,7 +3472,7 @@ function activeIndexesForNode(node) {
 function channelSelectOptions(currentValue) {
   const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
   const normalized = currentValue || "";
-  const options = [];
+  const options = ['<option value="">全部国家</option>'];
   countries.forEach(country => {
     const selected = country === normalized ? "selected" : "";
     options.push(`<option value="${esc(country)}" ${selected}>${esc(translateCountry(country))}</option>`);
@@ -3471,10 +3483,20 @@ function channelSelectOptions(currentValue) {
 function asnSelectOptions(currentValue) {
   const asns = Array.from(new Set(nodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
   const normalized = currentValue || "";
-  return asns.map(asn => {
+  const options = ['<option value="">全部 ASN</option>'];
+  asns.forEach(asn => {
     const selected = asn === normalized ? "selected" : "";
-    return `<option value="${esc(asn)}" ${selected}>${esc(asn)}</option>`;
-  }).join("");
+    options.push(`<option value="${esc(asn)}" ${selected}>${esc(asn)}</option>`);
+  });
+  return options.join("");
+}
+
+function countryLockLabel(ch) {
+  return ch && ch.country_lock ? `国家：${translateCountry(ch.country_lock)}` : "全部国家";
+}
+
+function asnLockLabel(ch) {
+  return ch && ch.asn_lock ? `ASN：${ch.asn_lock}` : "全部 ASN";
 }
 
 function renderChannelCards() {
@@ -3521,13 +3543,13 @@ function renderChannelCards() {
         </div>
         <div class="channel-options">
           <div class="lock-menu">
-            <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('country', ${idx})">国家锁定</button>
+            <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('country', ${idx})">${esc(countryLockLabel(ch))}</button>
             <select id="country_select_${idx}" class="lock-select" onchange="setChannelCountry(${idx}, this.value)">
               ${channelSelectOptions(ch.country_lock || "")}
             </select>
           </div>
           <div class="lock-menu">
-            <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('asn', ${idx})">ASN锁定</button>
+            <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('asn', ${idx})">${esc(asnLockLabel(ch))}</button>
             <select id="asn_select_${idx}" class="lock-select" onchange="setChannelAsn(${idx}, this.value)">
               ${asnSelectOptions(ch.asn_lock || "")}
             </select>
@@ -3850,6 +3872,11 @@ async function testChannelProxy(channel) {
 }
 
 async function setChannelCountry(channel, country) {
+  const label = country ? translateCountry(country) : "全部国家";
+  if (!confirm(`确认将通道 ${channel} 的国家锁定设置为「${label}」吗？`)) {
+    await load();
+    return;
+  }
   try {
     await fetch("./api/channel/country_lock", {
       method: "POST",
@@ -3866,6 +3893,11 @@ async function setChannelCountry(channel, country) {
 }
 
 async function setChannelAsn(channel, asn) {
+  const label = asn || "全部 ASN";
+  if (!confirm(`确认将通道 ${channel} 的 ASN 锁定设置为「${label}」吗？`)) {
+    await load();
+    return;
+  }
   try {
     await fetch("./api/channel/asn_lock", {
       method: "POST",
