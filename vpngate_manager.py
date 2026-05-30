@@ -2402,7 +2402,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
       padding: 10px;
       border-radius: 6px;
@@ -2458,7 +2458,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-options {
       display: grid;
-      grid-template-columns: minmax(110px, 1fr) minmax(110px, 1fr) auto;
+      grid-template-columns: minmax(110px, 1fr) minmax(110px, 1fr);
       gap: 8px;
       align-items: center;
       margin-top: 8px;
@@ -2545,50 +2545,6 @@ INDEX_HTML = r"""<!doctype html>
       background: rgba(13, 25, 40, 0.82);
       border-color: rgba(116, 137, 170, 0.24);
       color: #f8fafc;
-    }
-
-    .switch-control {
-      display: inline-flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 8px;
-      color: #aebbd0;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-
-    .switch-control input {
-      appearance: none;
-      width: 34px;
-      height: 18px;
-      border-radius: 999px;
-      background: rgba(88, 102, 128, 0.45);
-      border: 1px solid rgba(148, 163, 184, 0.24);
-      position: relative;
-      cursor: pointer;
-      flex: 0 0 auto;
-    }
-
-    .switch-control input::after {
-      content: "";
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      left: 1px;
-      top: 1px;
-      border-radius: 50%;
-      background: #cbd5e1;
-      transition: transform 0.18s ease, background 0.18s ease;
-    }
-
-    .switch-control input:checked {
-      background: rgba(16, 185, 129, 0.42);
-      border-color: rgba(16, 185, 129, 0.5);
-    }
-
-    .switch-control input:checked::after {
-      transform: translateX(16px);
-      background: #fff;
     }
 
     .nodes-panel-title {
@@ -3552,10 +3508,6 @@ function renderChannelCards() {
             <span class="metric-value">${esc(ip)}</span>
           </div>
           <div>
-            <span class="metric-label">TUN</span>
-            <span class="metric-value">${esc(ch.device || `tun${idx}`)}</span>
-          </div>
-          <div>
             <span class="metric-label">节点</span>
             <span class="metric-value">${nodeLatency ? `${nodeLatency} ms` : "-"}</span>
           </div>
@@ -3580,9 +3532,6 @@ function renderChannelCards() {
               ${asnSelectOptions(ch.asn_lock || "")}
             </select>
           </div>
-          <label class="switch-control">自动切换
-            <input type="checkbox" ${ch.auto_switch !== false ? "checked" : ""} onchange="toggleChannelAuto(${idx}, this.checked)" />
-          </label>
         </div>
       </article>
     `;
@@ -3896,19 +3845,6 @@ async function testChannelProxy(channel) {
   } catch (e) {
   } finally {
     testingChannelIds.delete(channel);
-    await load();
-  }
-}
-
-async function toggleChannelAuto(channel, enabled) {
-  try {
-    await fetch("./api/channel/toggle_auto", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({channel, enabled})
-    });
-  } catch (e) {
-  } finally {
     await load();
   }
 }
@@ -4360,18 +4296,17 @@ def background_proxy_checker() -> None:
                     if idx == 0:
                         set_state(proxy_ok=False, proxy_ip="-", proxy_latency_ms=0, proxy_error=error_msg)
 
-                    if channel.get("auto_switch", False):
-                        with lock:
-                            nodes = read_json(NODES_FILE, [])
-                            active_node = next((n for n in nodes if n.get("id") == node_id), None)
-                            if active_node:
-                                mark_blacklisted(active_node, f"通道 {idx} 代理连通性检测失败: {error_msg}")
-                                active_node["probe_status"] = "unavailable"
-                                write_json(NODES_FILE, nodes)
-                        try:
-                            auto_connect_channel(idx)
-                        except Exception as switch_error:
-                            log_to_json("WARNING", "Proxy", f"通道 {idx} 自动切换失败: {switch_error}")
+                    with lock:
+                        nodes = read_json(NODES_FILE, [])
+                        active_node = next((n for n in nodes if n.get("id") == node_id), None)
+                        if active_node:
+                            mark_blacklisted(active_node, f"通道 {idx} 代理连通性检测失败: {error_msg}")
+                            active_node["probe_status"] = "unavailable"
+                            write_json(NODES_FILE, nodes)
+                    try:
+                        auto_connect_channel(idx)
+                    except Exception as switch_error:
+                        log_to_json("WARNING", "Proxy", f"通道 {idx} 自动切换失败: {switch_error}")
         except Exception as e:
             print(f"[错误] 代理后台检测发生异常: {e}", flush=True)
             log_to_json("ERROR", "Proxy", f"检测守护线程发生异常: {e}")
@@ -4739,15 +4674,6 @@ class Handler(BaseHTTPRequestHandler):
                         proxy_error=channel["proxy_error"],
                     )
                 self.send_json(result)
-            except Exception as exc:
-                self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
-        elif effective_path == "/api/channel/toggle_auto":
-            try:
-                length = parse_int(self.headers.get("Content-Length"))
-                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
-                channel = get_channel(parse_int(payload.get("channel")))
-                channel["auto_switch"] = bool(payload.get("enabled"))
-                self.send_json({"ok": True, "auto_switch": channel["auto_switch"]})
             except Exception as exc:
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif effective_path == "/api/channel/country_lock":
