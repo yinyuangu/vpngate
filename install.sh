@@ -531,26 +531,53 @@ def update_service():
             # Fetch remote origin updates
             subprocess.run(["git", "fetch", "--all"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             
-            # Detect remote branch (check origin/main, then origin/master)
-            branch = "main"
-            for b in ["main", "master"]:
-                chk = subprocess.run(["git", "rev-parse", "--verify", f"origin/{b}"], capture_output=True, text=True)
-                if chk.returncode == 0:
-                    branch = b
-                    break
+            def git_out(args):
+                res = subprocess.run(["git"] + args, capture_output=True, text=True)
+                return res.stdout.strip() if res.returncode == 0 else ""
+
+            def remote_branch_exists(name):
+                if not name:
+                    return False
+                res = subprocess.run(["git", "rev-parse", "--verify", f"origin/{name}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return res.returncode == 0
+
+            current_branch = git_out(["branch", "--show-current"])
+            upstream = git_out(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
+            branch = ""
+            if upstream.startswith("origin/") and remote_branch_exists(upstream.split("/", 1)[1]):
+                branch = upstream.split("/", 1)[1]
+            elif remote_branch_exists(current_branch):
+                branch = current_branch
+            else:
+                for b in ["myself", "main", "master"]:
+                    if remote_branch_exists(b):
+                        branch = b
+                        break
+            if not branch:
+                head_ref = git_out(["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"])
+                if head_ref.startswith("origin/") and remote_branch_exists(head_ref.split("/", 1)[1]):
+                    branch = head_ref.split("/", 1)[1]
+            if not branch:
+                print("错误: 无法识别远程更新分支，请确认 origin/myself、origin/main 或 origin/master 是否存在。")
+                time.sleep(3)
+                return
             
             local_commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
             remote_commit = subprocess.run(["git", "rev-parse", f"origin/{branch}"], capture_output=True, text=True).stdout.strip()
+            if not local_commit or not remote_commit or remote_commit.startswith("origin/"):
+                print(f"错误: 无法读取远程版本 origin/{branch}，请检查仓库远程分支状态。")
+                time.sleep(3)
+                return
             
             if local_commit == remote_commit:
-                print("\n【版本状态】当前已是最新版本，无需更新！")
+                print(f"\n【版本状态】当前已是最新版本，无需更新！分支: origin/{branch}，版本: {local_commit[:8]}")
                 override = input("是否强制重新拉取代码并覆盖安装？(y/N): ").strip().lower()
                 if override != 'y':
                     print("已取消更新。")
                     time.sleep(1.5)
                     return
             else:
-                print(f"\n【检测到更新】本地版本: {local_commit[:8]}，远程最新版本: {remote_commit[:8]}")
+                print(f"\n【检测到更新】分支: origin/{branch}，本地版本: {local_commit[:8]}，远程最新版本: {remote_commit[:8]}")
                 confirm = input("是否确认开始更新并重启服务？(Y/n): ").strip().lower()
                 if confirm not in ('', 'y', 'yes'):
                     print("已取消更新。")
