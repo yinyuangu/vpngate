@@ -40,9 +40,9 @@ CHECK_INTERVAL_SECONDS = int(os.environ.get("CHECK_INTERVAL_SECONDS", "960"))
 TARGET_VALID_NODES = int(os.environ.get("TARGET_VALID_NODES", "3"))
 MAX_SCAN_ROWS = int(os.environ.get("MAX_SCAN_ROWS", "300"))
 OPENVPN_TEST_TIMEOUT_SECONDS = int(os.environ.get("OPENVPN_TEST_TIMEOUT_SECONDS", "35"))
-NODE_PROBE_TIMEOUT_SECONDS = int(os.environ.get("NODE_PROBE_TIMEOUT_SECONDS", "7"))
-MAX_BATCH_TEST_NODES = int(os.environ.get("MAX_BATCH_TEST_NODES", "12"))
-NODE_PROBE_WORKERS = int(os.environ.get("NODE_PROBE_WORKERS", "8"))
+NODE_PROBE_TIMEOUT_SECONDS = int(os.environ.get("NODE_PROBE_TIMEOUT_SECONDS", "5"))
+MAX_BATCH_TEST_NODES = int(os.environ.get("MAX_BATCH_TEST_NODES", "24"))
+NODE_PROBE_WORKERS = int(os.environ.get("NODE_PROBE_WORKERS", "16"))
 OPENVPN_CMD = os.environ.get("OPENVPN_CMD", "openvpn")
 OPENVPN_AUTH_USER = os.environ.get("OPENVPN_AUTH_USER", "vpn")
 OPENVPN_AUTH_PASS = os.environ.get("OPENVPN_AUTH_PASS", "vpn")
@@ -1940,7 +1940,7 @@ INDEX_HTML = r"""<!doctype html>
       padding: 12px;
       margin-bottom: 0;
       display: grid;
-      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
       gap: 10px;
       align-items: center;
     }
@@ -2144,10 +2144,11 @@ INDEX_HTML = r"""<!doctype html>
 
     .asn-cell {
       display: inline-block;
-      max-width: 210px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      max-width: 260px;
+      line-height: 1.35;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
       color: var(--text-secondary);
       font-size: 12px;
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
@@ -2447,7 +2448,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: minmax(120px, 1.15fr) minmax(160px, 1.25fr) minmax(80px, 0.55fr) minmax(80px, 0.55fr);
+      grid-template-columns: minmax(120px, 0.85fr) minmax(260px, 1.75fr) minmax(80px, 0.55fr) minmax(80px, 0.55fr);
       gap: 8px;
       padding: 10px 12px;
       border-radius: 8px;
@@ -2477,10 +2478,12 @@ INDEX_HTML = r"""<!doctype html>
     .metric-value.text {
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
       font-weight: 700;
-      word-break: normal;
+      line-height: 1.25;
+      min-height: 32px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      white-space: normal;
     }
 
     .channel-tags {
@@ -2752,7 +2755,7 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 8px;
       background: rgba(19, 29, 46, 0.82);
       display: grid;
-      grid-template-columns: repeat(6, minmax(118px, 1fr));
+      grid-template-columns: repeat(5, minmax(118px, 1fr));
       gap: 9px;
     }
 
@@ -2795,13 +2798,16 @@ INDEX_HTML = r"""<!doctype html>
       white-space: nowrap;
     }
 
-    td:nth-child(8),
-    th:nth-child(8),
-    td:nth-child(9),
-    th:nth-child(9) {
+    td:nth-child(7),
+    th:nth-child(7) {
       min-width: 120px;
       white-space: nowrap;
       word-break: keep-all;
+    }
+
+    td:nth-child(6),
+    th:nth-child(6) {
+      min-width: 240px;
     }
 
     @media (max-width: 1100px) {
@@ -3090,11 +3096,6 @@ INDEX_HTML = r"""<!doctype html>
       <option value="not_checked">待检测</option>
       <option value="unavailable">不可用</option>
     </select>
-    <select id="proto_filter">
-      <option value="">全部协议</option>
-      <option value="tcp">TCP</option>
-      <option value="udp">UDP</option>
-    </select>
     <select id="type_filter">
       <option value="">全部类型</option>
       <option value="residential">住宅 IP</option>
@@ -3121,8 +3122,7 @@ INDEX_HTML = r"""<!doctype html>
             <th style="width: 150px;">IP</th>
             <th style="width: 82px;">类型</th>
             <th style="width: 70px;">延迟</th>
-            <th style="width: 82px;">协议</th>
-            <th style="width: 230px;">ASN</th>
+            <th style="width: 260px;">ASN</th>
             <th style="width: 168px;">操作</th>
           </tr>
         </thead>
@@ -3326,7 +3326,6 @@ function getFilteredNodes() {
   const selectedCountry = $("country_filter").value;
   const selectedAsn = $("asn_filter") ? $("asn_filter").value : "";
   const selectedStatus = $("status_filter") ? $("status_filter").value : "";
-  const selectedProto = $("proto_filter") ? $("proto_filter").value : "";
   const selectedType = $("type_filter") ? $("type_filter").value : "";
   return nodes.filter(n => {
     if (selectedCountry && n.country !== selectedCountry) {
@@ -3336,9 +3335,6 @@ function getFilteredNodes() {
       return false;
     }
     if (selectedStatus && (n.probe_status || "not_checked") !== selectedStatus) {
-      return false;
-    }
-    if (selectedProto && !String(n.proto || "").toLowerCase().includes(selectedProto)) {
       return false;
     }
     if (selectedType && String(n.ip_type || "") !== selectedType) {
@@ -3508,7 +3504,7 @@ function render(){
 
   // Render table rows
   if (currentPageNodes.length === 0) {
-    $("rows").innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
+    $("rows").innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
   } else {
     $("rows").innerHTML=currentPageNodes.map(n=>{
       const isCurrentlyActive = activeNode && n.id === activeNode.id;
@@ -3667,9 +3663,6 @@ function renderChannelCards() {
             <span class="metric-value">${proxyLatency ? `${proxyLatency} ms` : "-"}</span>
           </div>
         </div>
-        <div class="channel-actions">
-          <div class="channel-info-pill asn" title="${esc(asnLabel)}">${esc(asnLabel)}</div>
-        </div>
         <div class="channel-options">
           <div class="lock-menu">
             <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('country', ${idx})">${esc(countryLockLabel(ch))}</button>
@@ -3710,7 +3703,7 @@ function render(){
   $("status").innerHTML = `<span class="status-dot"></span>代理端口 ${state.proxy_base_port || 7928}-${(state.proxy_base_port || 7928) + (state.channel_count || 6) - 1} | 通道 ${state.channel_count || 6} 个 | ${esc(state.last_check_message || "服务运行中")}`;
 
   if (currentPageNodes.length === 0) {
-    $("rows").innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
+    $("rows").innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
   } else {
     $("rows").innerHTML = currentPageNodes.map(n => {
       const activeIndexes = activeIndexesForNode(n);
@@ -3733,7 +3726,6 @@ function render(){
         <td class="mono">${esc(n.ip||n.remote_host)}</td>
         <td>${esc(translateIpType(n.ip_type))}</td>
         <td>${latencyText}</td>
-        <td><span class="mini-pill">${esc(String(n.proto || "-").toUpperCase())}${n.remote_port ? `/${esc(n.remote_port)}` : ""}</span></td>
         <td><span class="asn-cell" title="${esc(asnLabel)}">${esc(asnLabel)}</span></td>
         <td>
           <div class="table-actions">
@@ -4073,7 +4065,6 @@ async function load(){
 $("country_filter").onchange=()=>{ currentPage = 1; updateAsnFilter(); render(); };
 if ($("status_filter")) $("status_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("asn_filter")) $("asn_filter").onchange=()=>{ currentPage = 1; render(); };
-if ($("proto_filter")) $("proto_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("type_filter")) $("type_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("page_size")) $("page_size").onchange=()=>{ pageSize = parseInt($("page_size").value, 10) || 100; currentPage = 1; render(); };
 
