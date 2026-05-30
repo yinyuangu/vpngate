@@ -2447,7 +2447,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: minmax(120px, 1.4fr) minmax(80px, 0.7fr) minmax(80px, 0.7fr);
+      grid-template-columns: minmax(120px, 1.15fr) minmax(160px, 1.25fr) minmax(80px, 0.55fr) minmax(80px, 0.55fr);
       gap: 8px;
       padding: 10px 12px;
       border-radius: 8px;
@@ -2506,7 +2506,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-actions {
       display: grid;
-      grid-template-columns: minmax(90px, 0.45fr) minmax(160px, 1fr);
+      grid-template-columns: 1fr;
       gap: 8px;
       align-items: center;
       margin-bottom: 8px;
@@ -2532,7 +2532,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .channel-info-pill.asn {
-      justify-content: flex-start;
+      justify-content: center;
       color: #dbeafe;
     }
 
@@ -2974,7 +2974,6 @@ INDEX_HTML = r"""<!doctype html>
   </div>
   <div class="dashboard-toolbar">
     <button id="refresh" class="btn-dark">
-      <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5" /></svg>
       刷新节点
     </button>
     <button id="logout_btn" class="btn-rose" onclick="logoutAdmin()">退出登录</button>
@@ -3263,25 +3262,21 @@ function getLatencyClass(ms) {
 }
 
 function asnDisplay(asn, asName) {
-  const full = [asn, asName].map(v => String(v || "").trim()).filter(Boolean).join(" ");
+  const cleanAsn = String(asn || "").trim();
+  const cleanName = String(asName || "").trim().replace(/^AS\d+\s*/i, "");
+  const full = [cleanAsn, cleanName].filter(Boolean).join(" ");
   if (!full) return {short: "-", full: "-"};
-  const match = full.match(/AS\d+/i);
-  if (match) return {short: match[0].toUpperCase(), full};
-  const first = full.split(/\s+/)[0] || full;
-  return {short: first.length > 16 ? `${first.slice(0, 16)}...` : first, full};
-}
-
-function asnCompanyName(node) {
-  if (!node) return "-";
-  const source = String(node.as_name || node.owner || "").trim();
-  if (source) return source.replace(/^AS\d+\s*/i, "").trim() || source;
-  const asn = String(node.asn || "").trim();
-  return asn.replace(/^AS\d+\s*/i, "").trim() || "-";
+  return {short: full, full};
 }
 
 function nodeAsnLabel(node) {
-  const company = asnCompanyName(node);
-  return company && company !== "-" ? company : "-";
+  if (!node) return "-";
+  return asnDisplay(node.asn, node.as_name || node.owner).full;
+}
+
+function asnOptionLabel(asn, scopedNodes) {
+  const node = scopedNodes.find(n => String(n.asn || "").trim() === asn && (n.as_name || n.owner));
+  return asnDisplay(asn, node ? (node.as_name || node.owner) : "").full;
 }
 
 function updateCountryFilter() {
@@ -3308,7 +3303,9 @@ function updateAsnFilter() {
   const select = $("asn_filter");
   if (!select) return;
   const selectedValue = select.value;
-  const asns = Array.from(new Set(nodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
+  const selectedCountry = $("country_filter") ? $("country_filter").value : "";
+  const scopedNodes = selectedCountry ? nodes.filter(n => n.country === selectedCountry) : nodes;
+  const asns = Array.from(new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
 
   const currentOptions = Array.from(select.options).map(o => o.value).filter(Boolean);
   if (JSON.stringify(asns) === JSON.stringify(currentOptions)) {
@@ -3316,7 +3313,7 @@ function updateAsnFilter() {
   }
 
   select.innerHTML = '<option value="">全部 ASN</option>' +
-    asns.map(asn => `<option value="${esc(asn)}">${esc(asn)}</option>`).join("");
+    asns.map(asn => `<option value="${esc(asn)}">${esc(asnOptionLabel(asn, scopedNodes))}</option>`).join("");
 
   if (asns.includes(selectedValue)) {
     select.value = selectedValue;
@@ -3599,11 +3596,14 @@ function normalizeAsnLocks(value) {
 
 function asnCheckboxOptions(channel, currentValue) {
   const selected = new Set(normalizeAsnLocks(currentValue));
-  const asns = Array.from(new Set(nodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
+  const channelData = state.channels && state.channels.find(ch => (ch.index || 0) === channel);
+  const country = channelData && channelData.country_lock ? channelData.country_lock : "";
+  const scopedNodes = country ? nodes.filter(n => n.country === country || n.country_short === country) : nodes;
+  const asns = Array.from(new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
   if (!asns.length) return '<div class="asn-check-option" style="color: var(--text-secondary); cursor: default;">暂无 ASN</div>';
   return asns.map(asn => {
     const checked = selected.has(asn) ? "checked" : "";
-    return `<label class="asn-check-option"><input type="checkbox" value="${esc(asn)}" ${checked} onchange="setChannelAsn(${channel})"><span>${esc(asn)}</span></label>`;
+    return `<label class="asn-check-option"><input type="checkbox" value="${esc(asn)}" ${checked} onchange="setChannelAsn(${channel})"><span>${esc(asnOptionLabel(asn, scopedNodes))}</span></label>`;
   }).join("");
 }
 
@@ -3634,8 +3634,7 @@ function renderChannelCards() {
     const meta = channelStatusMeta(ch);
     const cardClass = ch.is_connecting ? "connecting" : (node ? "" : "offline");
     const ip = node ? (node.ip || node.remote_host || "-") : "-";
-    const country = node ? translateCountry(node.country) : "-";
-    const asnCompany = asnCompanyName(node);
+    const asnLabel = nodeAsnLabel(node);
     const nodeLatency = ch.latency_ms || (node && node.latency_ms) || 0;
     const proxyLatency = ch.proxy_latency_ms || 0;
     return `
@@ -3656,6 +3655,10 @@ function renderChannelCards() {
             <span class="metric-value">${esc(ip)}</span>
           </div>
           <div>
+            <span class="metric-label">ASN</span>
+            <span class="metric-value text" title="${esc(asnLabel)}">${esc(asnLabel)}</span>
+          </div>
+          <div>
             <span class="metric-label">节点</span>
             <span class="metric-value">${nodeLatency ? `${nodeLatency} ms` : "-"}</span>
           </div>
@@ -3665,8 +3668,7 @@ function renderChannelCards() {
           </div>
         </div>
         <div class="channel-actions">
-          <div class="channel-info-pill">${esc(country)}</div>
-          <div class="channel-info-pill asn" title="${esc(asnCompany)}">ASN: ${esc(asnCompany)}</div>
+          <div class="channel-info-pill asn" title="${esc(asnLabel)}">${esc(asnLabel)}</div>
         </div>
         <div class="channel-options">
           <div class="lock-menu">
@@ -4068,7 +4070,7 @@ async function load(){
   }
 }
 
-$("country_filter").onchange=()=>{ currentPage = 1; render(); };
+$("country_filter").onchange=()=>{ currentPage = 1; updateAsnFilter(); render(); };
 if ($("status_filter")) $("status_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("asn_filter")) $("asn_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("proto_filter")) $("proto_filter").onchange=()=>{ currentPage = 1; render(); };
