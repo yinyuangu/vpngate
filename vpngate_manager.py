@@ -2544,6 +2544,7 @@ INDEX_HTML = r"""<!doctype html>
       display: block;
     }
 
+    .lock-list-menu,
     .asn-check-menu {
       display: none;
       position: absolute;
@@ -2558,12 +2559,22 @@ INDEX_HTML = r"""<!doctype html>
       background: rgba(15, 23, 42, 0.96);
       padding: 6px;
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      scrollbar-width: none;
     }
 
+    .lock-list-menu::-webkit-scrollbar,
+    .asn-check-menu::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      display: none;
+    }
+
+    .lock-list-menu.open,
     .asn-check-menu.open {
       display: block;
     }
 
+    .country-lock-option,
     .asn-check-option {
       display: flex;
       align-items: center;
@@ -2576,6 +2587,20 @@ INDEX_HTML = r"""<!doctype html>
       cursor: pointer;
     }
 
+    .country-lock-option {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .country-lock-option.active {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+    }
+
+    .country-lock-option:hover,
     .asn-check-option:hover {
       background: rgba(255, 255, 255, 0.06);
     }
@@ -2894,10 +2919,6 @@ INDEX_HTML = r"""<!doctype html>
 
   <section class="nodes-panel-title">
     <h2>节点池</h2>
-    <div class="nodes-actions">
-      <button id="btn_batch_selected" class="btn-dark">批量测试选中</button>
-      <button id="btn_clear_selection" class="btn-rose">清除选择</button>
-    </div>
   </section>
 
   <section class="ad-section">
@@ -2998,9 +3019,6 @@ INDEX_HTML = r"""<!doctype html>
     <select id="country_filter">
       <option value="">全部国家</option>
     </select>
-    <select id="asn_filter">
-      <option value="">全部 ASN</option>
-    </select>
     <select id="status_filter">
       <option value="">全部状态</option>
       <option value="available">可用</option>
@@ -3019,6 +3037,9 @@ INDEX_HTML = r"""<!doctype html>
       <option value="mobile">移动网</option>
       <option value="proxy">代理 IP</option>
     </select>
+    <select id="asn_filter">
+      <option value="">全部 ASN</option>
+    </select>
     <select id="page_size">
       <option value="25">每页 25</option>
       <option value="50">每页 50</option>
@@ -3030,7 +3051,6 @@ INDEX_HTML = r"""<!doctype html>
       <table>
         <thead>
           <tr>
-            <th style="width: 42px;"><input id="select_all_nodes" class="row-check" type="checkbox" /></th>
             <th style="width: 110px;">状态</th>
             <th style="width: 120px;">国家</th>
             <th style="width: 160px;">IP</th>
@@ -3064,11 +3084,12 @@ INDEX_HTML = r"""<!doctype html>
 
 </main>
 <script>
-let nodes=[], state={}, testingNodeIds = new Set(), selectedNodeIds = new Set(), testingChannelIds = new Set();
+let nodes=[], state={}, testingNodeIds = new Set(), testingChannelIds = new Set();
 let selectedManualChannel = 0;
 let currentPage = 1;
 let pageSize = 100;
 let currentPageNodes = [];
+let openLockMenuId = null;
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
@@ -3411,7 +3432,7 @@ function render(){
 
   // Render table rows
   if (currentPageNodes.length === 0) {
-    $("rows").innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
+    $("rows").innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
   } else {
     $("rows").innerHTML=currentPageNodes.map(n=>{
       const isCurrentlyActive = activeNode && n.id === activeNode.id;
@@ -3480,13 +3501,14 @@ function activeIndexesForNode(node) {
   return [];
 }
 
-function channelSelectOptions(currentValue) {
+function countryLockOptions(channel, currentValue) {
   const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
   const normalized = currentValue || "";
-  const options = ['<option value="">全部国家</option>'];
+  const allClass = normalized ? "" : " active";
+  const options = [`<button type="button" class="country-lock-option${allClass}" onclick="setChannelCountry(${channel}, '')">全部国家</button>`];
   countries.forEach(country => {
-    const selected = country === normalized ? "selected" : "";
-    options.push(`<option value="${esc(country)}" ${selected}>${esc(translateCountry(country))}</option>`);
+    const active = country === normalized ? " active" : "";
+    options.push(`<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}'))">${esc(translateCountry(country))}</button>`);
   });
   return options.join("");
 }
@@ -3519,6 +3541,9 @@ function asnLockLabel(ch) {
 function renderChannelCards() {
   const grid = $("channels_grid");
   if (!grid) return;
+  const activeLockMenuId = openLockMenuId;
+  const activeLockMenu = activeLockMenuId ? $(activeLockMenuId) : null;
+  const activeLockMenuScrollTop = activeLockMenu ? activeLockMenu.scrollTop : 0;
   const count = state.channel_count || 6;
   const channels = state.channels && state.channels.length
     ? state.channels
@@ -3561,9 +3586,9 @@ function renderChannelCards() {
         <div class="channel-options">
           <div class="lock-menu">
             <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('country', ${idx})">${esc(countryLockLabel(ch))}</button>
-            <select id="country_select_${idx}" class="lock-select" onchange="setChannelCountry(${idx}, this.value)">
-              ${channelSelectOptions(ch.country_lock || "")}
-            </select>
+            <div id="country_select_${idx}" class="lock-list-menu">
+              ${countryLockOptions(idx, ch.country_lock || "")}
+            </div>
           </div>
           <div class="lock-menu">
             <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('asn', ${idx})">${esc(asnLockLabel(ch))}</button>
@@ -3575,6 +3600,13 @@ function renderChannelCards() {
       </article>
     `;
   }).join("");
+  if (activeLockMenuId) {
+    const restored = $(activeLockMenuId);
+    if (restored) {
+      restored.classList.add("open");
+      restored.scrollTop = activeLockMenuScrollTop;
+    }
+  }
 }
 
 function render(){
@@ -3591,7 +3623,7 @@ function render(){
   $("status").innerHTML = `<span class="status-dot"></span>代理端口 ${state.proxy_base_port || 7928}-${(state.proxy_base_port || 7928) + (state.channel_count || 6) - 1} | 通道 ${state.channel_count || 6} 个 | ${esc(state.last_check_message || "服务运行中")}`;
 
   if (currentPageNodes.length === 0) {
-    $("rows").innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
+    $("rows").innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
   } else {
     $("rows").innerHTML = currentPageNodes.map(n => {
       const activeIndexes = activeIndexesForNode(n);
@@ -3603,14 +3635,12 @@ function render(){
       const latencyText = n.latency_ms ? `<span class="latency-val ${latencyClass}">${n.latency_ms} ms</span>` : "-";
       const asnInfo = asnDisplay(n.asn, n.as_name || n.owner);
       const isTesting = testingNodeIds.has(n.id);
-      const checked = selectedNodeIds.has(n.id) ? "checked" : "";
       const flag = countryFlag(n.country_short);
       const connectLabel = isActive ? "已连接" : "连接";
       const connectDisabled = state.is_connecting || n.probe_status === "unavailable" ? "disabled" : "";
       const testBtnText = isTesting ? "检测中" : "测试";
       const channelSelect = buildChannelChooser(n.id);
       return `<tr ${rowClass}>
-        <td><input class="row-check node-select" type="checkbox" data-node-id="${esc(n.id)}" ${checked} onchange="toggleNodeSelection('${esc(n.id)}', this.checked)" /></td>
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
         <td><span class="country-cell">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(n.country))}</span></span></td>
         <td class="mono">${esc(n.ip||n.remote_host)}</td>
@@ -3640,12 +3670,6 @@ function render(){
   $("btn_next_page").disabled = currentPage === totalPages;
   $("btn_last_page").disabled = currentPage === totalPages;
 
-  const selectAll = $("select_all_nodes");
-  if (selectAll) {
-    const pageIds = currentPageNodes.map(n => n.id);
-    selectAll.checked = pageIds.length > 0 && pageIds.every(id => selectedNodeIds.has(id));
-    selectAll.indeterminate = pageIds.some(id => selectedNodeIds.has(id)) && !selectAll.checked;
-  }
 }
 
 // Hook up page buttons events
@@ -3812,11 +3836,13 @@ function buildChannelChooser(nodeId) {
 
 function toggleLockMenu(kind, channel) {
   const targetId = `${kind}_select_${channel}`;
-  document.querySelectorAll(".lock-select.open, .asn-check-menu.open").forEach(select => {
+  document.querySelectorAll(".lock-select.open, .lock-list-menu.open, .asn-check-menu.open").forEach(select => {
     if (select.id !== targetId) select.classList.remove("open");
   });
   const select = $(targetId);
-  if (select) select.classList.toggle("open");
+  if (!select) return;
+  select.classList.toggle("open");
+  openLockMenuId = select.classList.contains("open") ? targetId : null;
 }
 
 async function connectNodeSmart(id) {
@@ -3912,6 +3938,7 @@ async function setChannelCountry(channel, country) {
     });
     const select = $(`country_select_${channel}`);
     if (select) select.classList.remove("open");
+    if (openLockMenuId === `country_select_${channel}`) openLockMenuId = null;
   } catch (e) {
     alert("国家锁定保存失败");
   } finally {
@@ -3924,136 +3951,21 @@ async function setChannelAsn(channel) {
   const asns = menu
     ? Array.from(menu.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value)
     : [];
+  const currentChannel = state.channels && state.channels.find(ch => (ch.index || 0) === channel);
+  if (currentChannel) currentChannel.asn_lock = asns;
+  render();
   try {
-    await fetch("./api/channel/asn_lock", {
+    const response = await fetch("./api/channel/asn_lock", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({channel, asns})
     });
+    if (!response.ok) throw new Error("save failed");
   } catch (e) {
     alert("ASN锁定保存失败");
-  } finally {
     await load();
   }
 }
-
-function toggleNodeSelection(id, checked) {
-  if (checked) selectedNodeIds.add(id);
-  else selectedNodeIds.delete(id);
-  render();
-}
-
-// Batch test button implementation
-const batchPageBtn = $("btn_batch_test");
-if (batchPageBtn) batchPageBtn.onclick = async () => {
-  const pageNodes = currentPageNodes || [];
-  if (pageNodes.length === 0) {
-    alert("当前页面没有可供测试的备选节点");
-    return;
-  }
-  
-  const btn = $("btn_batch_test");
-  btn.disabled = true;
-  btn.innerHTML = `<svg style="animation: spin 1s linear infinite; width: 14px; height: 14px; display: inline-block; margin-right: 6px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.2" fill="none"></circle><path d="M4 12a8 8 0 018-8" stroke="currentColor" fill="none"></path></svg>测试中...`;
-  
-  pageNodes.forEach(n => testingNodeIds.add(n.id));
-  render();
-  
-  const testPromises = pageNodes.map(async (n) => {
-    const id = n.id;
-    try {
-      const response = await fetch("./api/test_node", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id })
-      });
-      const result = await response.json();
-      if (result.ok && result.node) {
-        const idx = nodes.findIndex(item => item.id === id);
-        if (idx !== -1) {
-          nodes[idx] = result.node;
-        }
-      }
-    } catch (e) {
-    } finally {
-      testingNodeIds.delete(id);
-      render();
-    }
-  });
-  
-  try {
-    await Promise.all(testPromises);
-  } catch (e) {
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> 批量测试本页`;
-  }
-};
-
-async function batchTestSelectedNodes() {
-  let ids = selectedNodeIds.size ? Array.from(selectedNodeIds) : currentPageNodes.map(n => n.id);
-  if (!ids.length) {
-    alert("请先选择要测试的节点");
-    return;
-  }
-  const btn = $("btn_batch_selected");
-  const original = btn ? btn.textContent : "";
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "测试中...";
-  }
-  ids.forEach(id => testingNodeIds.add(id));
-  render();
-  try {
-    const chunkSize = 12;
-    for (let start = 0; start < ids.length; start += chunkSize) {
-      const chunk = ids.slice(start, start + chunkSize);
-      if (btn) btn.textContent = `测试中 ${Math.min(start + chunk.length, ids.length)}/${ids.length}`;
-      const response = await fetch("./api/test_nodes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: chunk })
-      });
-      const result = await response.json();
-      if (result.ok && Array.isArray(result.nodes)) {
-        result.nodes.forEach(updated => {
-          const idx = nodes.findIndex(item => item.id === updated.id);
-          if (idx !== -1) nodes[idx] = {...nodes[idx], ...updated};
-          testingNodeIds.delete(updated.id);
-        });
-        render();
-      } else if (!result.ok) {
-        alert("批量测试失败: " + (result.error || "未知错误"));
-        break;
-      }
-    }
-  } finally {
-    ids.forEach(id => testingNodeIds.delete(id));
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = original || "批量测试选中";
-    }
-    await load();
-  }
-}
-
-const batchSelectedBtn = $("btn_batch_selected");
-if (batchSelectedBtn) batchSelectedBtn.onclick = batchTestSelectedNodes;
-
-const clearSelectionBtn = $("btn_clear_selection");
-if (clearSelectionBtn) clearSelectionBtn.onclick = () => {
-  selectedNodeIds.clear();
-  render();
-};
-
-const selectAllNodes = $("select_all_nodes");
-if (selectAllNodes) selectAllNodes.onchange = () => {
-  currentPageNodes.forEach(n => {
-    if (selectAllNodes.checked) selectedNodeIds.add(n.id);
-    else selectedNodeIds.delete(n.id);
-  });
-  render();
-};
 
 async function load(){
   const r=await fetch("./api/nodes"); 
@@ -4150,7 +4062,7 @@ load();
 
 // 每 10 秒在前台空闲时自动更新节点与状态，无需手动刷新页面
 setInterval(async () => {
-  if (typeof state !== "undefined" && !state.is_connecting && (!testingNodeIds || !testingNodeIds.size) && document.visibilityState === "visible") {
+  if (typeof state !== "undefined" && !state.is_connecting && !openLockMenuId && (!testingNodeIds || !testingNodeIds.size) && document.visibilityState === "visible") {
     try {
       const r = await fetch("./api/nodes");
       const d = await r.json();
