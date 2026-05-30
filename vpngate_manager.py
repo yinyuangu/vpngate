@@ -920,49 +920,42 @@ def test_nodes_in_batches(node_ids: list[str]) -> list[dict[str, Any]]:
         all_results.extend(test_multiple_nodes(batch_ids))
     return all_results
 
-def auto_switch_node(attempt: int = 0) -> None:
+def auto_switch_node(attempt: int = 0, channel_index: int = 0) -> None:
     if attempt >= 3:
         print("[自动切换] 连续切换失败已达 3 次，停止切换以防止主线程死锁，将在后台重新加载节点...", flush=True)
         return
-        
-    # Find the next best available node
-    with lock:
-        nodes = read_json(NODES_FILE, [])
-        candidates = [
-            n for n in nodes 
-            if n.get("probe_status") == "available" 
-            and not n.get("active")
-        ]
-        candidates.sort(key=lambda n: (parse_int(n.get("latency_ms")) or 999999, -parse_int(n.get("score"))))
-        
-    if candidates:
-        next_node = candidates[0]
-        msg = f"当前连接已失效或代理连通性检测失败，正在自动切换至最佳备用节点: {next_node['id']}"
+
+    next_node = best_node_for_channel(channel_index)
+    if next_node:
+        msg = f"通道 {channel_index} 当前连接已失效或代理连通性检测失败，正在按锁定条件切换至最低延迟可用节点: {next_node['id']}"
         print(f"[自动切换] {msg}", flush=True)
         log_to_json("INFO", "VPN", msg)
         try:
-            connect_node(next_node["id"])
+            connect_channel_node(channel_index, next_node["id"])
         except Exception as e:
-            err_msg = f"切换到备用节点 {next_node['id']} 失败: {e}，将尝试下一个..."
+            err_msg = f"通道 {channel_index} 切换到备用节点 {next_node['id']} 失败: {e}，将尝试下一个..."
             print(f"[自动切换] {err_msg}", flush=True)
             log_to_json("WARNING", "VPN", err_msg)
-            auto_switch_node(attempt + 1)
+            auto_switch_node(attempt + 1, channel_index)
     else:
-        msg = "没有可用的备选节点，将自动断开并清理当前连接状态，同时在后台异步获取新节点..."
+        msg = f"通道 {channel_index} 没有符合锁定条件的可用备选节点，将自动断开并在后台异步获取新节点..."
         print(f"[自动切换] {msg}", flush=True)
         log_to_json("WARNING", "VPN", msg)
-        stop_active_openvpn()
+        stop_channel_openvpn(channel_index)
         with lock:
             nodes = read_json(NODES_FILE, [])
             for item in nodes:
-                item["active"] = False
+                active_indexes = [idx for idx in item.get("active_channels", []) if idx != channel_index]
+                item["active_channels"] = active_indexes
+                item["active"] = 0 in active_indexes
             write_json(NODES_FILE, nodes)
-        set_state(active_openvpn_node_id="", last_check_message="没有可用的备选节点，已断开")
+        if channel_index == 0:
+            set_state(active_openvpn_node_id="", last_check_message="没有符合锁定条件的可用备选节点，已断开")
         
         def bg_fetch_and_switch():
             try:
                 maintain_valid_nodes(force=False)
-                auto_switch_node()
+                auto_switch_node(0, channel_index)
             except Exception as e:
                 print(f"[自动切换后台补齐] 获取并测试节点失败: {e}", flush=True)
         
@@ -986,13 +979,6 @@ def best_node_for_channel(channel_index: int) -> dict[str, Any] | None:
         and n.get("id") not in active_ids
         and matches_locks(n)
     ]
-    if not candidates:
-        candidates = [
-            n for n in nodes
-            if n.get("probe_status") != "unavailable"
-            and n.get("id") not in active_ids
-            and matches_locks(n)
-        ]
     candidates.sort(key=lambda n: (parse_int(n.get("latency_ms")) or 999999, -parse_int(n.get("score"))))
     return candidates[0] if candidates else None
 
