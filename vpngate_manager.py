@@ -94,6 +94,7 @@ def get_channel(index: int) -> dict[str, Any]:
                 "last_latency": 0,
                 "auto_switch": True,
                 "country_lock": "",
+                "asn_lock": "",
                 "last_message": "未连接",
                 "proxy_ok": None,
                 "proxy_ip": "-",
@@ -145,6 +146,7 @@ def serialize_channels(nodes: list[dict[str, Any]] | None = None) -> list[dict[s
                 "running": running,
                 "auto_switch": bool(channel.get("auto_switch", True)),
                 "country_lock": channel.get("country_lock", ""),
+                "asn_lock": channel.get("asn_lock", ""),
                 "last_message": channel.get("last_message", ""),
                 "latency_ms": int(channel.get("last_latency") or node.get("latency_ms") or 0),
                 "proxy_ok": channel.get("proxy_ok"),
@@ -937,20 +939,27 @@ def auto_switch_node(attempt: int = 0) -> None:
 def best_node_for_channel(channel_index: int) -> dict[str, Any] | None:
     channel = get_channel(channel_index)
     country_lock = str(channel.get("country_lock") or "")
+    asn_lock = str(channel.get("asn_lock") or "")
     active_ids = {str(get_channel(idx).get("node_id") or "") for idx in range(CHANNEL_COUNT)}
     nodes = read_json(NODES_FILE, [])
+    def matches_locks(n: dict[str, Any]) -> bool:
+        if country_lock and n.get("country") != country_lock and n.get("country_short") != country_lock:
+            return False
+        if asn_lock and str(n.get("asn") or "") != asn_lock:
+            return False
+        return True
     candidates = [
         n for n in nodes
         if n.get("probe_status") == "available"
         and n.get("id") not in active_ids
-        and (not country_lock or n.get("country") == country_lock or n.get("country_short") == country_lock)
+        and matches_locks(n)
     ]
     if not candidates:
         candidates = [
             n for n in nodes
             if n.get("probe_status") != "unavailable"
             and n.get("id") not in active_ids
-            and (not country_lock or n.get("country") == country_lock or n.get("country_short") == country_lock)
+            and matches_locks(n)
         ]
     candidates.sort(key=lambda n: (parse_int(n.get("latency_ms")) or 999999, -parse_int(n.get("score"))))
     return candidates[0] if candidates else None
@@ -2449,18 +2458,18 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-options {
       display: grid;
-      grid-template-columns: minmax(130px, 1fr) auto;
+      grid-template-columns: minmax(110px, 1fr) minmax(110px, 1fr) auto;
       gap: 8px;
       align-items: center;
       margin-top: 8px;
     }
 
-    .country-menu {
+    .lock-menu {
       position: relative;
       min-width: 0;
     }
 
-    .country-mode-btn {
+    .lock-mode-btn {
       width: 100%;
       height: 30px;
       border-radius: 6px;
@@ -2476,7 +2485,7 @@ INDEX_HTML = r"""<!doctype html>
       white-space: nowrap;
     }
 
-    .country-lock-select {
+    .lock-select {
       display: none;
       position: absolute;
       left: 0;
@@ -2493,7 +2502,7 @@ INDEX_HTML = r"""<!doctype html>
       min-width: 0;
     }
 
-    .country-lock-select.open {
+    .lock-select.open {
       display: block;
     }
 
@@ -2946,6 +2955,9 @@ INDEX_HTML = r"""<!doctype html>
     <select id="country_filter">
       <option value="">全部国家</option>
     </select>
+    <select id="asn_filter">
+      <option value="">全部 ASN</option>
+    </select>
     <select id="status_filter">
       <option value="">全部状态</option>
       <option value="available">可用</option>
@@ -2958,7 +2970,7 @@ INDEX_HTML = r"""<!doctype html>
       <option value="udp">UDP</option>
     </select>
     <select id="type_filter">
-      <option value="">住宅</option>
+      <option value="">全部类型</option>
       <option value="residential">住宅 IP</option>
       <option value="hosting">机房 IP</option>
       <option value="mobile">移动网</option>
@@ -3208,14 +3220,39 @@ function updateCountryFilter() {
   }
 }
 
+function updateAsnFilter() {
+  const select = $("asn_filter");
+  if (!select) return;
+  const selectedValue = select.value;
+  const asns = Array.from(new Set(nodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
+
+  const currentOptions = Array.from(select.options).map(o => o.value).filter(Boolean);
+  if (JSON.stringify(asns) === JSON.stringify(currentOptions)) {
+    return;
+  }
+
+  select.innerHTML = '<option value="">全部 ASN</option>' +
+    asns.map(asn => `<option value="${esc(asn)}">${esc(asn)}</option>`).join("");
+
+  if (asns.includes(selectedValue)) {
+    select.value = selectedValue;
+  } else {
+    select.value = "";
+  }
+}
+
 function getFilteredNodes() {
   const q = $("search").value.toLowerCase();
   const selectedCountry = $("country_filter").value;
+  const selectedAsn = $("asn_filter") ? $("asn_filter").value : "";
   const selectedStatus = $("status_filter") ? $("status_filter").value : "";
   const selectedProto = $("proto_filter") ? $("proto_filter").value : "";
   const selectedType = $("type_filter") ? $("type_filter").value : "";
   return nodes.filter(n => {
     if (selectedCountry && n.country !== selectedCountry) {
+      return false;
+    }
+    if (selectedAsn && String(n.asn || "") !== selectedAsn) {
       return false;
     }
     if (selectedStatus && (n.probe_status || "not_checked") !== selectedStatus) {
@@ -3229,7 +3266,7 @@ function getFilteredNodes() {
     }
     const searchStr = [
       n.country, n.country_short, n.ip, n.remote_host, n.proto,
-      translateQuality(n.quality), translateIpType(n.ip_type), n.location, n.owner, n.as_name
+      n.asn, translateQuality(n.quality), translateIpType(n.ip_type), n.location, n.owner, n.as_name
     ].join(" ").toLowerCase();
     return searchStr.includes(q);
   });
@@ -3467,7 +3504,7 @@ function activeIndexesForNode(node) {
 function channelSelectOptions(currentValue) {
   const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
   const normalized = currentValue || "";
-  const options = ['<option value="">国家模式：不限</option>'];
+  const options = [];
   countries.forEach(country => {
     const selected = country === normalized ? "selected" : "";
     options.push(`<option value="${esc(country)}" ${selected}>${esc(translateCountry(country))}</option>`);
@@ -3475,9 +3512,13 @@ function channelSelectOptions(currentValue) {
   return options.join("");
 }
 
-function countryModeLabel(ch) {
-  const country = ch && ch.country_lock ? translateCountry(ch.country_lock) : "不限";
-  return `国家模式：${country}`;
+function asnSelectOptions(currentValue) {
+  const asns = Array.from(new Set(nodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
+  const normalized = currentValue || "";
+  return asns.map(asn => {
+    const selected = asn === normalized ? "selected" : "";
+    return `<option value="${esc(asn)}" ${selected}>${esc(asn)}</option>`;
+  }).join("");
 }
 
 function renderChannelCards() {
@@ -3496,10 +3537,6 @@ function renderChannelCards() {
     const ip = node ? (node.ip || node.remote_host || "-") : "-";
     const nodeLatency = ch.latency_ms || (node && node.latency_ms) || 0;
     const proxyLatency = ch.proxy_latency_ms || 0;
-    const country = node ? translateCountry(node.country) : "-";
-    const flag = node ? countryFlag(node.country_short) : "";
-    const proto = node ? String(node.proto || "-").toUpperCase() : "-";
-    const activeText = ch.last_message || (node ? `已连接 (${ip})` : "等待节点");
     return `
       <article class="channel-card ${cardClass}">
         <div class="channel-top">
@@ -3531,18 +3568,21 @@ function renderChannelCards() {
           <button class="btn-rose" onclick="disconnectChannel(${idx})" ${(!node && !ch.node_id) ? "disabled" : ""}>断开</button>
         </div>
         <div class="channel-options">
-          <div class="country-menu">
-            <button type="button" class="country-mode-btn" onclick="toggleCountryMenu(${idx})">${flag ? `${flag} ` : ""}${esc(countryModeLabel(ch))}</button>
-            <select id="country_select_${idx}" class="country-lock-select" onchange="setChannelCountry(${idx}, this.value)">
+          <div class="lock-menu">
+            <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('country', ${idx})">国家锁定</button>
+            <select id="country_select_${idx}" class="lock-select" onchange="setChannelCountry(${idx}, this.value)">
               ${channelSelectOptions(ch.country_lock || "")}
+            </select>
+          </div>
+          <div class="lock-menu">
+            <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('asn', ${idx})">ASN锁定</button>
+            <select id="asn_select_${idx}" class="lock-select" onchange="setChannelAsn(${idx}, this.value)">
+              ${asnSelectOptions(ch.asn_lock || "")}
             </select>
           </div>
           <label class="switch-control">自动切换
             <input type="checkbox" ${ch.auto_switch !== false ? "checked" : ""} onchange="toggleChannelAuto(${idx}, this.checked)" />
           </label>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:8px;">
-          <span style="font-size:12px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(activeText)}</span>
         </div>
       </article>
     `;
@@ -3767,11 +3807,12 @@ function buildChannelChooser(nodeId) {
   return `<select class="node-channel-select" onchange="selectedManualChannel=parseInt(this.value, 10); render();">${options}</select>`;
 }
 
-function toggleCountryMenu(channel) {
-  document.querySelectorAll(".country-lock-select.open").forEach(select => {
-    if (select.id !== `country_select_${channel}`) select.classList.remove("open");
+function toggleLockMenu(kind, channel) {
+  const targetId = `${kind}_select_${channel}`;
+  document.querySelectorAll(".lock-select.open").forEach(select => {
+    if (select.id !== targetId) select.classList.remove("open");
   });
-  const select = $(`country_select_${channel}`);
+  const select = $(targetId);
   if (select) select.classList.toggle("open");
 }
 
@@ -3882,7 +3923,23 @@ async function setChannelCountry(channel, country) {
     const select = $(`country_select_${channel}`);
     if (select) select.classList.remove("open");
   } catch (e) {
-    alert("国家模式保存失败");
+    alert("国家锁定保存失败");
+  } finally {
+    await load();
+  }
+}
+
+async function setChannelAsn(channel, asn) {
+  try {
+    await fetch("./api/channel/asn_lock", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({channel, asn: String(asn || "").trim()})
+    });
+    const select = $(`asn_select_${channel}`);
+    if (select) select.classList.remove("open");
+  } catch (e) {
+    alert("ASN锁定保存失败");
   } finally {
     await load();
   }
@@ -4014,6 +4071,7 @@ async function load(){
   
   stableSortNodes();
   updateCountryFilter();
+  updateAsnFilter();
   render();
 
   if (state.is_connecting) {
@@ -4024,6 +4082,7 @@ async function load(){
 $("search").oninput=()=>{ currentPage = 1; render(); };
 $("country_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("status_filter")) $("status_filter").onchange=()=>{ currentPage = 1; render(); };
+if ($("asn_filter")) $("asn_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("proto_filter")) $("proto_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("type_filter")) $("type_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("page_size")) $("page_size").onchange=()=>{ pageSize = parseInt($("page_size").value, 10) || 100; currentPage = 1; render(); };
@@ -4191,6 +4250,8 @@ setInterval(async () => {
       nodes = d.nodes || [];
       state = d.state || {};
       stableSortNodes();
+      updateCountryFilter();
+      updateAsnFilter();
       render();
     } catch(e) {}
   }
@@ -4696,6 +4757,15 @@ class Handler(BaseHTTPRequestHandler):
                 channel = get_channel(parse_int(payload.get("channel")))
                 channel["country_lock"] = str(payload.get("country") or "")
                 self.send_json({"ok": True, "country_lock": channel["country_lock"]})
+            except Exception as exc:
+                self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
+        elif effective_path == "/api/channel/asn_lock":
+            try:
+                length = parse_int(self.headers.get("Content-Length"))
+                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+                channel = get_channel(parse_int(payload.get("channel")))
+                channel["asn_lock"] = str(payload.get("asn") or "")
+                self.send_json({"ok": True, "asn_lock": channel["asn_lock"]})
             except Exception as exc:
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif effective_path == "/api/check":
