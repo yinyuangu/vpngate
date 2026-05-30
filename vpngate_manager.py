@@ -1981,16 +1981,17 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     table {
-      width: 100%;
+      width: max-content;
+      min-width: 100%;
       border-collapse: collapse;
       text-align: left;
-      min-width: 920px;
+      table-layout: auto;
     }
 
     th, td {
-      padding: 14px 20px;
+      padding: 11px 12px;
       border-bottom: 1px solid var(--border-color);
-      font-size: 14px;
+      font-size: 13px;
     }
 
     th {
@@ -2080,9 +2081,9 @@ INDEX_HTML = r"""<!doctype html>
 
     .table-actions {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
 
     .connect-btn {
@@ -2090,7 +2091,7 @@ INDEX_HTML = r"""<!doctype html>
       color: #818cf8;
       border: 1px solid rgba(99, 102, 241, 0.4);
       border-radius: 6px;
-      padding: 0 12px;
+      padding: 0 10px;
       height: 30px;
       font-size: 12px;
       font-weight: 600;
@@ -2143,7 +2144,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .asn-cell {
       display: inline-block;
-      max-width: 140px;
+      max-width: 210px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -2321,8 +2322,8 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     main {
-      max-width: none;
-      padding: 22px 30px 28px;
+      max-width: 1560px;
+      padding: 22px 24px 28px;
     }
 
     .dashboard-toolbar {
@@ -2330,6 +2331,13 @@ INDEX_HTML = r"""<!doctype html>
       justify-content: flex-end;
       gap: 10px;
       align-items: center;
+    }
+
+    @media (min-width: 1600px) {
+      header {
+        padding-left: calc((100vw - 1560px) / 2 + 24px);
+        padding-right: calc((100vw - 1560px) / 2 + 24px);
+      }
     }
 
     .channels-grid {
@@ -2369,6 +2377,13 @@ INDEX_HTML = r"""<!doctype html>
       gap: 12px;
       align-items: center;
       margin-bottom: 8px;
+    }
+
+    .channel-head-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .channel-title {
@@ -2432,7 +2447,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: minmax(120px, 1.4fr) minmax(80px, 0.7fr) minmax(80px, 0.7fr);
       gap: 8px;
       padding: 10px 12px;
       border-radius: 8px;
@@ -2459,6 +2474,15 @@ INDEX_HTML = r"""<!doctype html>
       word-break: break-all;
     }
 
+    .metric-value.text {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+      font-weight: 700;
+      word-break: normal;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .channel-tags {
       display: flex;
       flex-wrap: wrap;
@@ -2482,10 +2506,51 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-actions {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 7px;
+      grid-template-columns: minmax(90px, 0.45fr) minmax(160px, 1fr);
+      gap: 8px;
       align-items: center;
       margin-bottom: 8px;
+    }
+
+    .channel-info-pill {
+      min-width: 0;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid rgba(126, 146, 178, 0.12);
+      background: rgba(13, 25, 40, 0.7);
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .channel-info-pill.asn {
+      justify-content: flex-start;
+      color: #dbeafe;
+    }
+
+    .channel-disconnect-btn {
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(244, 63, 94, 0.26);
+      background: rgba(244, 63, 94, 0.12);
+      color: #fb7185;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .channel-disconnect-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
     }
 
     .channel-options {
@@ -2615,13 +2680,14 @@ INDEX_HTML = r"""<!doctype html>
       display: inline-block;
       position: static;
       height: 28px;
-      min-width: 78px;
+      width: 72px;
+      min-width: 72px;
       border-radius: 6px;
       border: 1px solid var(--border-color);
       background: rgba(15, 23, 42, 0.72);
       color: var(--text-primary);
       font-size: 12px;
-      padding: 0 8px;
+      padding: 0 6px;
     }
 
     .channel-actions button,
@@ -2714,10 +2780,6 @@ INDEX_HTML = r"""<!doctype html>
       text-transform: none;
       letter-spacing: 0;
       background: rgba(12, 18, 32, 0.95);
-    }
-
-    table {
-      min-width: 980px;
     }
 
     .row-check {
@@ -2852,6 +2914,10 @@ INDEX_HTML = r"""<!doctype html>
       .nodes-actions button {
         width: 100%;
         padding: 0 6px;
+      }
+
+      .channel-head-actions {
+        gap: 6px;
       }
 
       .nodes-panel-title {
@@ -3051,14 +3117,14 @@ INDEX_HTML = r"""<!doctype html>
       <table>
         <thead>
           <tr>
-            <th style="width: 110px;">状态</th>
-            <th style="width: 120px;">国家</th>
-            <th style="width: 160px;">IP</th>
-            <th style="width: 100px;">类型</th>
-            <th style="width: 90px;">延迟</th>
-            <th style="width: 90px;">协议</th>
-            <th style="width: 130px;">ASN</th>
-            <th style="width: 220px;">操作</th>
+            <th style="width: 82px;">状态</th>
+            <th style="width: 110px;">国家</th>
+            <th style="width: 150px;">IP</th>
+            <th style="width: 82px;">类型</th>
+            <th style="width: 70px;">延迟</th>
+            <th style="width: 82px;">协议</th>
+            <th style="width: 230px;">ASN</th>
+            <th style="width: 168px;">操作</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -3203,6 +3269,19 @@ function asnDisplay(asn, asName) {
   if (match) return {short: match[0].toUpperCase(), full};
   const first = full.split(/\s+/)[0] || full;
   return {short: first.length > 16 ? `${first.slice(0, 16)}...` : first, full};
+}
+
+function asnCompanyName(node) {
+  if (!node) return "-";
+  const source = String(node.as_name || node.owner || "").trim();
+  if (source) return source.replace(/^AS\d+\s*/i, "").trim() || source;
+  const asn = String(node.asn || "").trim();
+  return asn.replace(/^AS\d+\s*/i, "").trim() || "-";
+}
+
+function nodeAsnLabel(node) {
+  const company = asnCompanyName(node);
+  return company && company !== "-" ? company : "-";
 }
 
 function updateCountryFilter() {
@@ -3555,6 +3634,8 @@ function renderChannelCards() {
     const meta = channelStatusMeta(ch);
     const cardClass = ch.is_connecting ? "connecting" : (node ? "" : "offline");
     const ip = node ? (node.ip || node.remote_host || "-") : "-";
+    const country = node ? translateCountry(node.country) : "-";
+    const asnCompany = asnCompanyName(node);
     const nodeLatency = ch.latency_ms || (node && node.latency_ms) || 0;
     const proxyLatency = ch.proxy_latency_ms || 0;
     return `
@@ -3564,7 +3645,10 @@ function renderChannelCards() {
             <span>通道 ${idx}</span>
             <span class="port-pill">:${ch.port || ((state.proxy_base_port || 7928) + idx)}</span>
           </div>
-          <span class="channel-status ${meta.cls}">${meta.text}</span>
+          <div class="channel-head-actions">
+            <span class="channel-status ${meta.cls}">${meta.text}</span>
+            <button class="channel-disconnect-btn" onclick="disconnectChannel(${idx})" ${(!node && !ch.node_id) ? "disabled" : ""}>断开</button>
+          </div>
         </div>
         <div class="channel-metrics">
           <div>
@@ -3581,7 +3665,8 @@ function renderChannelCards() {
           </div>
         </div>
         <div class="channel-actions">
-          <button class="btn-rose" onclick="disconnectChannel(${idx})" ${(!node && !ch.node_id) ? "disabled" : ""}>断开</button>
+          <div class="channel-info-pill">${esc(country)}</div>
+          <div class="channel-info-pill asn" title="${esc(asnCompany)}">ASN: ${esc(asnCompany)}</div>
         </div>
         <div class="channel-options">
           <div class="lock-menu">
@@ -3633,7 +3718,7 @@ function render(){
       const badgeText = isActive ? `<span class="badge-pulse"></span>通道 ${activeIndexes.join(",")}` : translateStatus(n.probe_status);
       const latencyClass = getLatencyClass(n.latency_ms);
       const latencyText = n.latency_ms ? `<span class="latency-val ${latencyClass}">${n.latency_ms} ms</span>` : "-";
-      const asnInfo = asnDisplay(n.asn, n.as_name || n.owner);
+      const asnLabel = nodeAsnLabel(n);
       const isTesting = testingNodeIds.has(n.id);
       const flag = countryFlag(n.country_short);
       const connectLabel = isActive ? "已连接" : "连接";
@@ -3647,7 +3732,7 @@ function render(){
         <td>${esc(translateIpType(n.ip_type))}</td>
         <td>${latencyText}</td>
         <td><span class="mini-pill">${esc(String(n.proto || "-").toUpperCase())}${n.remote_port ? `/${esc(n.remote_port)}` : ""}</span></td>
-        <td><span class="asn-cell" title="${esc(asnInfo.full)}">${esc(asnInfo.short)}</span></td>
+        <td><span class="asn-cell" title="${esc(asnLabel)}">${esc(asnLabel)}</span></td>
         <td>
           <div class="table-actions">
             <button class="test-btn" ${isTesting ? "disabled" : ""} onclick="testNode(this, '${esc(n.id)}', event)">${testBtnText}</button>
