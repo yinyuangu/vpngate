@@ -125,6 +125,22 @@ def active_channel_map() -> dict[str, list[int]]:
             result.setdefault(node_id, []).append(idx)
     return result
 
+def normalize_asn_locks(value: Any) -> list[str]:
+    if isinstance(value, list):
+        raw_values = value
+    elif isinstance(value, str):
+        raw_values = [part for part in re.split(r"[,\\s]+", value) if part]
+    else:
+        raw_values = []
+    result: list[str] = []
+    seen: set[str] = set()
+    for item in raw_values:
+        asn = str(item or "").strip()
+        if asn and asn not in seen:
+            seen.add(asn)
+            result.append(asn)
+    return result
+
 def serialize_channels(nodes: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     node_map = {str(n.get("id")): n for n in (nodes or read_json(NODES_FILE, []))}
     data = []
@@ -146,7 +162,7 @@ def serialize_channels(nodes: list[dict[str, Any]] | None = None) -> list[dict[s
                 "running": running,
                 "auto_switch": bool(channel.get("auto_switch", True)),
                 "country_lock": channel.get("country_lock", ""),
-                "asn_lock": channel.get("asn_lock", ""),
+                "asn_lock": normalize_asn_locks(channel.get("asn_lock")),
                 "last_message": channel.get("last_message", ""),
                 "latency_ms": int(channel.get("last_latency") or node.get("latency_ms") or 0),
                 "proxy_ok": channel.get("proxy_ok"),
@@ -888,6 +904,22 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
         
     return list(updated_nodes_map.values())
 
+def test_nodes_in_batches(node_ids: list[str]) -> list[dict[str, Any]]:
+    all_results: list[dict[str, Any]] = []
+    if not node_ids:
+        return all_results
+    batches = [
+        node_ids[i : i + MAX_BATCH_TEST_NODES]
+        for i in range(0, len(node_ids), MAX_BATCH_TEST_NODES)
+    ]
+    for batch_index, batch_ids in enumerate(batches, start=1):
+        set_state(
+            is_connecting=True,
+            last_check_message=f"正在全量检测节点可用性 {batch_index}/{len(batches)}，本批 {len(batch_ids)} 个..."
+        )
+        all_results.extend(test_multiple_nodes(batch_ids))
+    return all_results
+
 def auto_switch_node(attempt: int = 0) -> None:
     if attempt >= 3:
         print("[自动切换] 连续切换失败已达 3 次，停止切换以防止主线程死锁，将在后台重新加载节点...", flush=True)
@@ -939,13 +971,13 @@ def auto_switch_node(attempt: int = 0) -> None:
 def best_node_for_channel(channel_index: int) -> dict[str, Any] | None:
     channel = get_channel(channel_index)
     country_lock = str(channel.get("country_lock") or "")
-    asn_lock = str(channel.get("asn_lock") or "")
+    asn_locks = set(normalize_asn_locks(channel.get("asn_lock")))
     active_ids = {str(get_channel(idx).get("node_id") or "") for idx in range(CHANNEL_COUNT)}
     nodes = read_json(NODES_FILE, [])
     def matches_locks(n: dict[str, Any]) -> bool:
         if country_lock and n.get("country") != country_lock and n.get("country_short") != country_lock:
             return False
-        if asn_lock and str(n.get("asn") or "") != asn_lock:
+        if asn_locks and str(n.get("asn") or "") not in asn_locks:
             return False
         return True
     candidates = [
@@ -1162,15 +1194,17 @@ def maintain_valid_nodes(force: bool = False) -> str:
                         
             write_json(NODES_FILE, merged)
 
-        # Test the first 10 non-active nodes from the new list
+        # Test all non-active nodes in bounded batches so the refreshed pool is fully classified.
         with lock:
             current_nodes = read_json(NODES_FILE, [])
-            to_test = [n for n in current_nodes if not n.get("active")][:10]
+            active_ids = {str(get_channel(idx).get("node_id") or "") for idx in range(CHANNEL_COUNT)}
+            active_ids.discard("")
+            to_test = [n for n in current_nodes if str(n.get("id") or "") not in active_ids]
             to_test_ids = [n["id"] for n in to_test]
             
-        print(f"[维护线程] 正在检测新获取列表的前 10 个节点: {to_test_ids}", flush=True)
-        set_state(is_connecting=True, last_check_message="正在并发检测筛选可用节点，这可能需要 5-30 秒...")
-        test_multiple_nodes(to_test_ids)
+        print(f"[维护线程] 正在全量检测新获取列表的 {len(to_test_ids)} 个节点", flush=True)
+        set_state(is_connecting=True, last_check_message=f"正在全量检测 {len(to_test_ids)} 个节点可用性...")
+        tested_nodes = test_nodes_in_batches(to_test_ids)
         
         is_connecting = False
         
@@ -1182,7 +1216,7 @@ def maintain_valid_nodes(force: bool = False) -> str:
                     auto_switch_node()
 
         valid_nodes_count = len([n for n in merged if n.get("probe_status") == "available"])
-        message = f"Fetched {len(candidates)} nodes. Tested first 10 nodes."
+        message = f"Fetched {len(candidates)} nodes. Tested {len(tested_nodes)} nodes."
         set_state(
             last_check_at=time.time(),
             last_check_message=message,
@@ -1501,7 +1535,7 @@ INDEX_HTML = r"""<!doctype html>
 
     body {
       margin: 0;
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-dark);
       background-image: 
         radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
@@ -1906,7 +1940,7 @@ INDEX_HTML = r"""<!doctype html>
       padding: 12px;
       margin-bottom: 0;
       display: grid;
-      grid-template-columns: repeat(6, minmax(120px, 1fr)) auto;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
       gap: 10px;
       align-items: center;
     }
@@ -1932,16 +1966,6 @@ INDEX_HTML = r"""<!doctype html>
       background: #0f172a;
     }
 
-    .filter-summary {
-      font-size: 12px;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      justify-content: flex-end;
-      white-space: nowrap;
-    }
-
     .table-wrapper {
       background: var(--bg-surface);
       backdrop-filter: blur(12px);
@@ -1960,7 +1984,7 @@ INDEX_HTML = r"""<!doctype html>
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      min-width: 1000px;
+      min-width: 920px;
     }
 
     th, td {
@@ -2115,6 +2139,18 @@ INDEX_HTML = r"""<!doctype html>
       font-family: 'JetBrains Mono', Consolas, monospace;
       font-size: 13px;
       color: #e2e8f0;
+    }
+
+    .asn-cell {
+      display: inline-block;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+      vertical-align: middle;
     }
 
     .latency-val {
@@ -2508,6 +2544,48 @@ INDEX_HTML = r"""<!doctype html>
       display: block;
     }
 
+    .asn-check-menu {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 34px;
+      z-index: 25;
+      max-height: 180px;
+      overflow-y: auto;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.96);
+      padding: 6px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+    }
+
+    .asn-check-menu.open {
+      display: block;
+    }
+
+    .asn-check-option {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      padding: 4px 6px;
+      border-radius: 5px;
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .asn-check-option:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .asn-check-option input {
+      width: 14px;
+      height: 14px;
+      accent-color: #10b981;
+    }
+
     .node-channel-select {
       display: inline-block;
       position: static;
@@ -2614,7 +2692,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     table {
-      min-width: 1120px;
+      min-width: 980px;
     }
 
     .row-check {
@@ -2630,6 +2708,8 @@ INDEX_HTML = r"""<!doctype html>
       white-space: nowrap;
     }
 
+    td:nth-child(8),
+    th:nth-child(8),
     td:nth-child(9),
     th:nth-child(9) {
       min-width: 120px;
@@ -2778,6 +2858,17 @@ INDEX_HTML = r"""<!doctype html>
         grid-column: 1 / -1;
         text-align: center;
       }
+
+      th,
+      td {
+        font-size: 12px;
+        padding: 9px 10px;
+      }
+
+      .mono,
+      .asn-cell {
+        font-size: 11px;
+      }
     }
   </style>
 </head>
@@ -2794,10 +2885,6 @@ INDEX_HTML = r"""<!doctype html>
     <button id="refresh" class="btn-dark">
       <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5" /></svg>
       刷新节点
-    </button>
-    <button id="admin_btn" class="btn-dark" onclick="openSettingsModal()">
-      <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h3M7 12h10M9 18h6" /></svg>
-      设置
     </button>
     <button id="logout_btn" class="btn-rose" onclick="logoutAdmin()">退出登录</button>
   </div>
@@ -2937,11 +3024,6 @@ INDEX_HTML = r"""<!doctype html>
       <option value="50">每页 50</option>
       <option value="100" selected>每页 100</option>
     </select>
-    <div class="filter-summary">
-      <span>总数: <strong id="total" style="color: var(--text-primary);">0</strong></span>
-      <span>已选: <strong id="selected_count" style="color: var(--text-primary);">0</strong></span>
-      <span>显示: <strong id="visible_count" style="color: var(--text-primary);">0</strong></span>
-    </div>
   </section>
   <div class="table-wrapper">
     <div class="table-container">
@@ -2955,8 +3037,7 @@ INDEX_HTML = r"""<!doctype html>
             <th style="width: 100px;">类型</th>
             <th style="width: 90px;">延迟</th>
             <th style="width: 90px;">协议</th>
-            <th style="width: 150px;">位置</th>
-            <th style="width: 140px;">ASN</th>
+            <th style="width: 130px;">ASN</th>
             <th style="width: 220px;">操作</th>
           </tr>
         </thead>
@@ -2981,68 +3062,6 @@ INDEX_HTML = r"""<!doctype html>
     </div>
   </div>
 
-  <!-- Settings Modal -->
-  <div id="settings_modal" class="modal">
-    <div class="modal-content">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width:20px; height:20px; color: var(--primary);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-          管理员设置
-        </h3>
-        <button type="button" onclick="closeSettingsModal()" style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--text-secondary); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
-      </div>
-      
-      <div id="settings_error" style="color: var(--danger); font-size: 13px; margin-bottom: 16px; padding: 8px 12px; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.2); border-radius: 6px; display: none;"></div>
-      <div id="settings_success" style="color: var(--success); font-size: 13px; margin-bottom: 16px; padding: 8px 12px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); border-radius: 6px; display: none;"></div>
-
-      <form id="settings_form" onsubmit="saveSettings(event)">
-        <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px; margin-bottom: 16px;">
-          <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px;">修改网页访问配置</div>
-          
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label" for="settings_port">网页端口</label>
-            <input type="number" id="settings_port" class="input-field" required min="1" max="65535" placeholder="8787">
-          </div>
-          
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label" for="settings_suffix">登录安全后缀 (仅字母数字)</label>
-            <input type="text" id="settings_suffix" class="input-field" required pattern="[A-Za-z0-9]+" placeholder="EJsW2EeBo9lY">
-          </div>
-
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label" for="settings_new_username">新管理账号 (留空则不修改)</label>
-            <input type="text" id="settings_new_username" class="input-field" placeholder="留空则不修改">
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label" for="settings_new_password">新安全密码 (留空则不修改)</label>
-            <input type="password" id="settings_new_password" class="input-field" placeholder="留空则不修改">
-          </div>
-        </div>
-        
-        <div style="margin-bottom: 24px;">
-          <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px;">安全验证 (必须输入当前账号密码)</div>
-          
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label" for="settings_curr_username">当前管理账号</label>
-            <input type="text" id="settings_curr_username" class="input-field" required placeholder="请输入当前管理账号">
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label" for="settings_curr_password">当前安全密码</label>
-            <input type="password" id="settings_curr_password" class="input-field" required placeholder="请输入当前安全密码">
-          </div>
-        </div>
-        
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button type="button" onclick="closeSettingsModal()" style="height: 40px; padding: 0 16px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer;">取消</button>
-          <button type="submit" id="settings_submit_btn" class="btn-primary" style="height: 40px; padding: 0 20px; font-weight: 600; border-radius: 8px;">保存修改</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </main>
 <script>
 let nodes=[], state={}, testingNodeIds = new Set(), selectedNodeIds = new Set(), testingChannelIds = new Set();
@@ -3154,6 +3173,15 @@ function getLatencyClass(ms) {
   if (ms < 50) return 'latency-good';
   if (ms < 150) return 'latency-medium';
   return 'latency-poor';
+}
+
+function asnDisplay(asn, asName) {
+  const full = [asn, asName].map(v => String(v || "").trim()).filter(Boolean).join(" ");
+  if (!full) return {short: "-", full: "-"};
+  const match = full.match(/AS\d+/i);
+  if (match) return {short: match[0].toUpperCase(), full};
+  const first = full.split(/\s+/)[0] || full;
+  return {short: first.length > 16 ? `${first.slice(0, 16)}...` : first, full};
 }
 
 function updateCountryFilter() {
@@ -3463,15 +3491,19 @@ function channelSelectOptions(currentValue) {
   return options.join("");
 }
 
-function asnSelectOptions(currentValue) {
+function normalizeAsnLocks(value) {
+  if (Array.isArray(value)) return value.map(v => String(v || "").trim()).filter(Boolean);
+  return String(value || "").split(/[,\s]+/).map(v => v.trim()).filter(Boolean);
+}
+
+function asnCheckboxOptions(channel, currentValue) {
+  const selected = new Set(normalizeAsnLocks(currentValue));
   const asns = Array.from(new Set(nodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
-  const normalized = currentValue || "";
-  const options = ['<option value="">全部 ASN</option>'];
-  asns.forEach(asn => {
-    const selected = asn === normalized ? "selected" : "";
-    options.push(`<option value="${esc(asn)}" ${selected}>${esc(asn)}</option>`);
-  });
-  return options.join("");
+  if (!asns.length) return '<div class="asn-check-option" style="color: var(--text-secondary); cursor: default;">暂无 ASN</div>';
+  return asns.map(asn => {
+    const checked = selected.has(asn) ? "checked" : "";
+    return `<label class="asn-check-option"><input type="checkbox" value="${esc(asn)}" ${checked} onchange="setChannelAsn(${channel})"><span>${esc(asn)}</span></label>`;
+  }).join("");
 }
 
 function countryLockLabel(ch) {
@@ -3479,7 +3511,9 @@ function countryLockLabel(ch) {
 }
 
 function asnLockLabel(ch) {
-  return ch && ch.asn_lock ? `ASN：${ch.asn_lock}` : "全部 ASN";
+  const asns = normalizeAsnLocks(ch && ch.asn_lock);
+  if (!asns.length) return "全部 ASN";
+  return asns.length === 1 ? `ASN：${asns[0]}` : `ASN：已选 ${asns.length}`;
 }
 
 function renderChannelCards() {
@@ -3533,9 +3567,9 @@ function renderChannelCards() {
           </div>
           <div class="lock-menu">
             <button type="button" class="lock-mode-btn" onclick="toggleLockMenu('asn', ${idx})">${esc(asnLockLabel(ch))}</button>
-            <select id="asn_select_${idx}" class="lock-select" onchange="setChannelAsn(${idx}, this.value)">
-              ${asnSelectOptions(ch.asn_lock || "")}
-            </select>
+            <div id="asn_select_${idx}" class="asn-check-menu">
+              ${asnCheckboxOptions(idx, ch.asn_lock)}
+            </div>
           </div>
         </div>
       </article>
@@ -3554,13 +3588,10 @@ function render(){
   const endIndex = Math.min(startIndex + pageSize, shown.length);
   currentPageNodes = shown.slice(startIndex, endIndex);
 
-  $("total").textContent = nodes.length;
-  if ($("visible_count")) $("visible_count").textContent = shown.length;
-  if ($("selected_count")) $("selected_count").textContent = selectedNodeIds.size;
   $("status").innerHTML = `<span class="status-dot"></span>代理端口 ${state.proxy_base_port || 7928}-${(state.proxy_base_port || 7928) + (state.channel_count || 6) - 1} | 通道 ${state.channel_count || 6} 个 | ${esc(state.last_check_message || "服务运行中")}`;
 
   if (currentPageNodes.length === 0) {
-    $("rows").innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
+    $("rows").innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
   } else {
     $("rows").innerHTML = currentPageNodes.map(n => {
       const activeIndexes = activeIndexesForNode(n);
@@ -3570,7 +3601,7 @@ function render(){
       const badgeText = isActive ? `<span class="badge-pulse"></span>通道 ${activeIndexes.join(",")}` : translateStatus(n.probe_status);
       const latencyClass = getLatencyClass(n.latency_ms);
       const latencyText = n.latency_ms ? `<span class="latency-val ${latencyClass}">${n.latency_ms} ms</span>` : "-";
-      const displayLocation = n.location || translateCountry(n.country) || "-";
+      const asnInfo = asnDisplay(n.asn, n.as_name || n.owner);
       const isTesting = testingNodeIds.has(n.id);
       const checked = selectedNodeIds.has(n.id) ? "checked" : "";
       const flag = countryFlag(n.country_short);
@@ -3586,8 +3617,7 @@ function render(){
         <td>${esc(translateIpType(n.ip_type))}</td>
         <td>${latencyText}</td>
         <td><span class="mini-pill">${esc(String(n.proto || "-").toUpperCase())}${n.remote_port ? `/${esc(n.remote_port)}` : ""}</span></td>
-        <td>${esc(displayLocation)}</td>
-        <td class="mono" style="font-size:12px; color:var(--text-secondary);">${esc(n.asn || n.as_name || "-")}</td>
+        <td><span class="asn-cell" title="${esc(asnInfo.full)}">${esc(asnInfo.short)}</span></td>
         <td>
           <div class="table-actions">
             <button class="test-btn" ${isTesting ? "disabled" : ""} onclick="testNode(this, '${esc(n.id)}', event)">${testBtnText}</button>
@@ -3659,6 +3689,23 @@ async function testNode(btn, id, event){
 }
 
 let pollInterval = null;
+let manualRefreshActive = false;
+
+function setRefreshButtonBusy(text) {
+  const btn = $("refresh");
+  if (!btn) return;
+  manualRefreshActive = true;
+  btn.disabled = true;
+  btn.textContent = text || "正在全量检测...";
+}
+
+function resetRefreshButton() {
+  const btn = $("refresh");
+  if (!btn) return;
+  manualRefreshActive = false;
+  btn.disabled = false;
+  btn.textContent = "刷新节点";
+}
 
 function startConnectionPolling() {
   if (pollInterval) clearInterval(pollInterval);
@@ -3674,6 +3721,7 @@ function startConnectionPolling() {
       if (!state.is_connecting) {
         clearInterval(pollInterval);
         pollInterval = null;
+        if (manualRefreshActive) resetRefreshButton();
         try {
           await fetch("./api/test_proxy", { method: "POST" });
         } catch(pe){}
@@ -3682,6 +3730,7 @@ function startConnectionPolling() {
     } catch(pe) {
       clearInterval(pollInterval);
       pollInterval = null;
+      if (manualRefreshActive) resetRefreshButton();
       load();
     }
   }, 1000);
@@ -3763,7 +3812,7 @@ function buildChannelChooser(nodeId) {
 
 function toggleLockMenu(kind, channel) {
   const targetId = `${kind}_select_${channel}`;
-  document.querySelectorAll(".lock-select.open").forEach(select => {
+  document.querySelectorAll(".lock-select.open, .asn-check-menu.open").forEach(select => {
     if (select.id !== targetId) select.classList.remove("open");
   });
   const select = $(targetId);
@@ -3855,11 +3904,6 @@ async function testChannelProxy(channel) {
 }
 
 async function setChannelCountry(channel, country) {
-  const label = country ? translateCountry(country) : "全部国家";
-  if (!confirm(`确认将通道 ${channel} 的国家锁定设置为「${label}」吗？`)) {
-    await load();
-    return;
-  }
   try {
     await fetch("./api/channel/country_lock", {
       method: "POST",
@@ -3875,20 +3919,17 @@ async function setChannelCountry(channel, country) {
   }
 }
 
-async function setChannelAsn(channel, asn) {
-  const label = asn || "全部 ASN";
-  if (!confirm(`确认将通道 ${channel} 的 ASN 锁定设置为「${label}」吗？`)) {
-    await load();
-    return;
-  }
+async function setChannelAsn(channel) {
+  const menu = $(`asn_select_${channel}`);
+  const asns = menu
+    ? Array.from(menu.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value)
+    : [];
   try {
     await fetch("./api/channel/asn_lock", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({channel, asn: String(asn || "").trim()})
+      body: JSON.stringify({channel, asns})
     });
-    const select = $(`asn_select_${channel}`);
-    if (select) select.classList.remove("open");
   } catch (e) {
     alert("ASN锁定保存失败");
   } finally {
@@ -4038,14 +4079,19 @@ if ($("type_filter")) $("type_filter").onchange=()=>{ currentPage = 1; render();
 if ($("page_size")) $("page_size").onchange=()=>{ pageSize = parseInt($("page_size").value, 10) || 100; currentPage = 1; render(); };
 
 $("refresh").onclick=async()=>{ 
-  $("refresh").disabled=true; 
-  $("refresh").textContent="正在后台更新..."; 
-  try{await fetch("./api/refresh_nodes",{method:"POST"}); await load();} 
-  catch(e){}
-  setTimeout(()=>{
-    $("refresh").disabled=false; 
-    $("refresh").textContent="刷新节点";
-  }, 3000);
+  setRefreshButtonBusy("正在全量检测...");
+  state.is_connecting = true;
+  state.last_check_message = "正在手动刷新节点并全量检测可用性...";
+  render();
+  try{
+    const response = await fetch("./api/refresh_nodes",{method:"POST"});
+    if (!response.ok) throw new Error("refresh failed");
+    startConnectionPolling();
+  } 
+  catch(e){
+    resetRefreshButton();
+    await load();
+  }
 };
 if ($("btn_test_proxy")) $("btn_test_proxy").onclick = async () => {
   const btn = $("btn_test_proxy");
@@ -4086,95 +4132,6 @@ if ($("btn_test_proxy")) $("btn_test_proxy").onclick = async () => {
     btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> 测试代理`;
   }
 };
-
-function openSettingsModal() {
-  $("settings_error").style.display = "none";
-  $("settings_success").style.display = "none";
-  $("settings_form").reset();
-  
-  if (state) {
-    $("settings_port").value = state.port || 8787;
-    $("settings_suffix").value = state.secret_path || "EJsW2EeBo9lY";
-  }
-  
-  $("settings_modal").style.display = "flex";
-}
-
-function closeSettingsModal() {
-  $("settings_modal").style.display = "none";
-}
-
-async function saveSettings(e) {
-  e.preventDefault();
-  const errorDivEl = $("settings_error");
-  const successDiv = $("settings_success");
-  const submitBtn = $("settings_submit_btn");
-  
-  errorDivEl.style.display = "none";
-  successDiv.style.display = "none";
-  
-  const port = parseInt($("settings_port").value);
-  const suffix = $("settings_suffix").value.trim();
-  const newUsername = $("settings_new_username").value.trim();
-  const newPassword = $("settings_new_password").value.trim();
-  const currUsername = $("settings_curr_username").value.trim();
-  const currPassword = $("settings_curr_password").value.trim();
-  
-  if (isNaN(port) || port < 1 || port > 65535) {
-    errorDivEl.textContent = "端口范围必须在 1 至 65535 之间";
-    errorDivEl.style.display = "block";
-    return;
-  }
-  
-  if (!/^[A-Za-z0-9]+$/.test(suffix)) {
-    errorDivEl.textContent = "登录安全后缀仅能由英文字母和数字组成";
-    errorDivEl.style.display = "block";
-    return;
-  }
-  
-  submitBtn.disabled = true;
-  submitBtn.textContent = "正在保存...";
-  
-  try {
-    const res = await fetch("./api/update_settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        port: port,
-        secret_path: suffix,
-        new_username: newUsername,
-        new_password: newPassword,
-        curr_username: currUsername,
-        curr_password: currPassword
-      })
-    });
-    
-    const data = await res.json();
-    if (res.ok && data.ok) {
-      successDiv.textContent = "保存成功！页面将在 4 秒内自动跳转至新地址...";
-      successDiv.style.display = "block";
-      
-      const inputs = $("settings_form").querySelectorAll("input, button");
-      inputs.forEach(el => el.disabled = true);
-      
-      setTimeout(() => {
-        const protocol = window.location.protocol;
-        const host = window.location.hostname;
-        window.location.href = `${protocol}//${host}:${port}/${suffix}/`;
-      }, 4000);
-    } else {
-      errorDivEl.textContent = data.error || "保存失败，请检查输入";
-      errorDivEl.style.display = "block";
-      submitBtn.disabled = false;
-      submitBtn.textContent = "保存修改";
-    }
-  } catch (err) {
-    errorDivEl.textContent = "连接服务器失败，请稍后重试";
-    errorDivEl.style.display = "block";
-    submitBtn.disabled = false;
-    submitBtn.textContent = "保存修改";
-  }
-}
 
 async function logoutAdmin() {
   try {
@@ -4704,7 +4661,7 @@ class Handler(BaseHTTPRequestHandler):
                 length = parse_int(self.headers.get("Content-Length"))
                 payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
                 channel = get_channel(parse_int(payload.get("channel")))
-                channel["asn_lock"] = str(payload.get("asn") or "")
+                channel["asn_lock"] = normalize_asn_locks(payload.get("asns", payload.get("asn")))
                 self.send_json({"ok": True, "asn_lock": channel["asn_lock"]})
             except Exception as exc:
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
@@ -4716,7 +4673,7 @@ class Handler(BaseHTTPRequestHandler):
         elif effective_path == "/api/refresh_nodes":
             try:
                 threading.Thread(target=maintain_valid_nodes, args=(False,), daemon=True).start()
-                self.send_json({"ok": True, "message": "已在后台启动节点更新流程"})
+                self.send_json({"ok": True, "message": "已在后台启动节点刷新与全量可用性检测流程"})
             except Exception as exc:
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif effective_path == "/api/test_nodes":
