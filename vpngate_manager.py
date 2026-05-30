@@ -1798,140 +1798,6 @@ INDEX_HTML = r"""<!doctype html>
     .stat:nth-child(2) .stat-icon { color: var(--warning); }
     .stat:nth-child(3) .stat-icon { color: var(--success); }
 
-    .ad-section {
-      background: var(--bg-surface);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 24px;
-    }
-    
-    .ad-card {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    
-    .ad-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .ad-badge {
-      background: var(--primary-gradient);
-      color: white;
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-weight: 700;
-      text-transform: uppercase;
-      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
-    }
-    
-    .ad-links {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-    }
-    
-    .ad-item {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      border-radius: 10px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      justify-content: space-between;
-      transition: all 0.2s ease;
-    }
-    
-    .ad-item:hover {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: var(--border-color-hover);
-      transform: translateY(-2px);
-    }
-    
-    .ad-tag {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 6px;
-      width: fit-content;
-    }
-    
-    .tag-normal {
-      background: rgba(99, 102, 241, 0.15);
-      color: #a5b4fc;
-      border: 1px solid rgba(99, 102, 241, 0.2);
-    }
-    
-    .tag-opt {
-      background: rgba(245, 158, 11, 0.15);
-      color: #fde047;
-      border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-    
-    .tag-premium {
-      background: rgba(16, 185, 129, 0.15);
-      color: #6ee7b7;
-      border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-    
-    .ad-desc {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      flex: 1;
-    }
-    
-    .ad-btn {
-      align-self: flex-start;
-      text-decoration: none;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: var(--text-primary);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 6px;
-      transition: all 0.2s ease;
-      text-align: center;
-    }
-    
-    .ad-item:hover .ad-btn {
-      background: var(--primary-gradient);
-      border-color: transparent;
-      color: white;
-      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2);
-    }
-    
-    .ad-footer {
-      border-top: 1px dashed rgba(255, 255, 255, 0.08);
-      padding-top: 12px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      text-align: center;
-    }
-    
-    .forum-link {
-      color: #818cf8;
-      font-weight: 700;
-      text-decoration: none;
-      transition: color 0.2s ease;
-    }
-    
-    .forum-link:hover {
-      color: #a5b4fc;
-      text-decoration: underline;
-    }
-
     .toolbar {
       background: rgba(13, 22, 36, 0.74);
       backdrop-filter: blur(12px);
@@ -2708,15 +2574,17 @@ INDEX_HTML = r"""<!doctype html>
       display: inline-block;
       position: static;
       height: 30px;
-      width: 82px;
-      min-width: 82px;
+      width: 74px;
+      min-width: 74px;
       border-radius: 6px;
       border: 1px solid rgba(56, 189, 248, 0.38);
       background: rgba(8, 24, 38, 0.72);
       color: #7dd3fc;
       font-size: 12px;
       font-weight: 600;
-      padding: 0 9px;
+      padding: 0 6px;
+      text-align: center;
+      text-align-last: center;
       appearance: none;
       -webkit-appearance: none;
       background-image: none;
@@ -2750,15 +2618,35 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .btn-rose {
-      background: linear-gradient(135deg, #fb3f6f 0%, #e11d48 100%);
-      border: 0;
-      color: #fff;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.34);
+      color: #fb7185;
+      font-weight: 700;
+      box-shadow: none;
+    }
+
+    .btn-rose:hover {
+      background: rgba(244, 63, 94, 0.2);
+      border-color: rgba(244, 63, 94, 0.52);
+      color: #fecdd3;
     }
 
     .btn-dark {
-      background: rgba(13, 25, 40, 0.82);
-      border-color: rgba(116, 137, 170, 0.24);
-      color: #f8fafc;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(8, 24, 38, 0.72);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      color: #bae6fd;
+      font-weight: 700;
+      box-shadow: none;
+    }
+
+    .btn-dark:hover {
+      background: rgba(14, 34, 52, 0.9);
+      border-color: rgba(56, 189, 248, 0.58);
+      color: #e0f2fe;
     }
 
     .nodes-panel-title {
@@ -2769,7 +2657,6 @@ INDEX_HTML = r"""<!doctype html>
       margin: 6px 0 12px;
     }
 
-    .ad-section,
     .active-node-section,
     .stats,
     .proxy-test-section {
@@ -2840,7 +2727,7 @@ INDEX_HTML = r"""<!doctype html>
 
     td:nth-child(7),
     th:nth-child(7) {
-      min-width: 120px;
+      min-width: 112px;
       white-space: nowrap;
       word-break: keep-all;
     }
@@ -3032,34 +2919,6 @@ INDEX_HTML = r"""<!doctype html>
     <h2>节点池</h2>
   </section>
 
-  <section class="ad-section">
-    <div class="ad-card">
-      <div class="ad-title">
-        <span class="ad-badge">推荐</span> <strong>购买高性价比 VPS 搭建节点或用作客户端</strong>
-      </div>
-      <div class="ad-links">
-        <div class="ad-item">
-          <span class="ad-tag tag-normal">普通用户推荐</span>
-          <span class="ad-desc">RackNerd - 超低折扣价格，日常使用实惠方便，海外多机房可选，推荐普通家庭或低频用户。</span>
-          <a href="https://my.racknerd.com/aff.php?aff=18708" target="_blank" class="ad-btn">点击进入官网</a>
-        </div>
-        <div class="ad-item">
-          <span class="ad-tag tag-opt">网络优化推荐</span>
-          <span class="ad-desc">VMiss - 专线优化网络 (CN2 GIA/9929/CMIN2 等顶级线路)，低延迟不丢包，推荐高网络要求用户。</span>
-          <a href="https://app.vmiss.com/aff.php?aff=4619" target="_blank" class="ad-btn">点击进入官网</a>
-        </div>
-        <div class="ad-item">
-          <span class="ad-tag tag-premium">高端企业推荐</span>
-          <span class="ad-desc">BandwagonHost (搬瓦工) - 直连三网顶级专线，经典高带宽 CN2 GIA 线路，超凡稳定速度。</span>
-          <a href="https://bandwagonhost.com/aff.php?aff=81790" target="_blank" class="ad-btn">点击进入官网</a>
-        </div>
-      </div>
-      <div class="ad-footer">
-        官方技术支持及优质资源交流论坛：<a href="https://339936.xyz" target="_blank" class="forum-link">339936.xyz</a>
-      </div>
-    </div>
-  </section>
-
   <!-- 当前连接活动节点卡片 -->
   <section class="active-node-section" id="active_node_card" style="margin-bottom: 24px;">
     <!-- Rendered dynamically by render() -->
@@ -3163,7 +3022,7 @@ INDEX_HTML = r"""<!doctype html>
             <th style="width: 82px;">类型</th>
             <th style="width: 70px;">延迟</th>
             <th style="width: 260px;">ASN</th>
-            <th style="width: 168px;">操作</th>
+            <th style="width: 150px;">操作</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -3637,11 +3496,14 @@ function asnCheckboxOptions(channel, currentValue) {
   const channelData = state.channels && state.channels.find(ch => (ch.index || 0) === channel);
   const country = channelData && channelData.country_lock ? channelData.country_lock : "";
   const scopedNodes = country ? nodes.filter(n => n.country === country || n.country_short === country) : nodes;
-  const asns = Array.from(new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
+  const currentAsns = new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean));
+  const asns = Array.from(new Set([...selected, ...currentAsns])).sort();
   if (!asns.length) return '<div class="asn-check-option" style="color: var(--text-secondary); cursor: default;">暂无 ASN</div>';
   return asns.map(asn => {
     const checked = selected.has(asn) ? "checked" : "";
-    return `<label class="asn-check-option"><input type="checkbox" value="${esc(asn)}" ${checked} onchange="setChannelAsn(${channel})"><span>${esc(asnOptionLabel(asn, scopedNodes))}</span></label>`;
+    const present = currentAsns.has(asn);
+    const label = present ? asnOptionLabel(asn, scopedNodes) : `${asn} 暂无节点`;
+    return `<label class="asn-check-option${present ? "" : " stale"}"><input type="checkbox" value="${esc(asn)}" ${checked} onchange="setChannelAsn(${channel})"><span>${esc(label)}</span></label>`;
   }).join("");
 }
 
