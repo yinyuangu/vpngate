@@ -1897,29 +1897,30 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .toolbar {
-      background: var(--bg-surface);
+      background: rgba(13, 22, 36, 0.74);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 24px;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
+      border-radius: 8px 8px 0 0;
+      border-bottom: 0;
+      padding: 12px;
+      margin-bottom: 0;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr)) auto;
+      gap: 10px;
       align-items: center;
     }
 
     .toolbar select {
-      width: 180px;
-      height: 42px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 0 12px;
+      width: 100%;
+      height: 38px;
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid rgba(126, 146, 178, 0.16);
+      border-radius: 6px;
+      padding: 0 10px;
       color: var(--text-primary);
       font-family: inherit;
-      font-size: 14px;
+      font-size: 13px;
       outline: none;
       transition: all 0.2s ease;
       cursor: pointer;
@@ -1931,25 +1932,14 @@ INDEX_HTML = r"""<!doctype html>
       background: #0f172a;
     }
 
-    .toolbar input {
-      flex: 1;
-      min-width: 250px;
-      height: 42px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 0 16px;
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 14px;
-      transition: all 0.2s ease;
-    }
-
-    .toolbar input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-      background: rgba(15, 23, 42, 0.8);
+    .filter-summary {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: flex-end;
+      white-space: nowrap;
     }
 
     .table-wrapper {
@@ -2593,11 +2583,10 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 8px;
       background: rgba(19, 29, 46, 0.82);
       display: grid;
-      grid-template-columns: minmax(260px, 1.8fr) repeat(5, minmax(118px, 0.5fr)) auto;
+      grid-template-columns: repeat(6, minmax(118px, 1fr));
       gap: 9px;
     }
 
-    .toolbar input,
     .toolbar select {
       width: 100%;
       min-width: 0;
@@ -2919,7 +2908,6 @@ INDEX_HTML = r"""<!doctype html>
   </section>
 
   <section class="toolbar">
-    <input id="search" placeholder="输入国家、位置、IP、ASN、运营主体等过滤节点..." />
     <select id="country_filter">
       <option value="">全部国家</option>
     </select>
@@ -2949,7 +2937,7 @@ INDEX_HTML = r"""<!doctype html>
       <option value="50">每页 50</option>
       <option value="100" selected>每页 100</option>
     </select>
-    <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 10px; justify-content: flex-end;">
+    <div class="filter-summary">
       <span>总数: <strong id="total" style="color: var(--text-primary);">0</strong></span>
       <span>已选: <strong id="selected_count" style="color: var(--text-primary);">0</strong></span>
       <span>显示: <strong id="visible_count" style="color: var(--text-primary);">0</strong></span>
@@ -3210,7 +3198,6 @@ function updateAsnFilter() {
 }
 
 function getFilteredNodes() {
-  const q = $("search").value.toLowerCase();
   const selectedCountry = $("country_filter").value;
   const selectedAsn = $("asn_filter") ? $("asn_filter").value : "";
   const selectedStatus = $("status_filter") ? $("status_filter").value : "";
@@ -3232,11 +3219,7 @@ function getFilteredNodes() {
     if (selectedType && String(n.ip_type || "") !== selectedType) {
       return false;
     }
-    const searchStr = [
-      n.country, n.country_short, n.ip, n.remote_host, n.proto,
-      n.asn, translateQuality(n.quality), translateIpType(n.ip_type), n.location, n.owner, n.as_name
-    ].join(" ").toLowerCase();
-    return searchStr.includes(q);
+    return true;
   });
 }
 
@@ -4047,7 +4030,6 @@ async function load(){
   }
 }
 
-$("search").oninput=()=>{ currentPage = 1; render(); };
 $("country_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("status_filter")) $("status_filter").onchange=()=>{ currentPage = 1; render(); };
 if ($("asn_filter")) $("asn_filter").onchange=()=>{ currentPage = 1; render(); };
