@@ -165,8 +165,6 @@ def socks5_client(client: socket.socket, first_byte: bytes, bind_device: str = "
             host = socket.inet_ntoa(recv_exact(client, 4))
         elif address_type == 3:
             host = recv_exact(client, recv_exact(client, 1)[0]).decode("idna")
-        elif address_type == 4:
-            host = socket.inet_ntop(socket.AF_INET6, recv_exact(client, 16))
         else:
             client.sendall(b"\x05\x08\x00\x01\x00\x00\x00\x00\x00\x00")
             return

@@ -23,7 +23,7 @@ import concurrent.futures
 import sys
 import uuid
 
-# Force socket to resolve IPv4 only to avoid slow AAAA (IPv6) DNS resolution timeouts (e.g. in WSL)
+# Force socket to resolve IPv4 only.
 _orig_getaddrinfo = socket.getaddrinfo
 def _ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
     if family == 0:
@@ -198,6 +198,7 @@ def read_json(path: Path, default: Any) -> Any:
             return default
 
 import hashlib
+import ipaddress
 import random
 
 def generate_random_password() -> str:
@@ -371,10 +372,29 @@ def load_blacklist() -> dict[str, dict[str, Any]]:
 def mark_blacklisted(node: dict[str, Any], message: str) -> None:
     pass
 
-def row_to_node(row: dict[str, str], config_text: str) -> dict[str, Any]:
+def is_ipv4_literal(value: str) -> bool:
+    try:
+        return ipaddress.ip_address(value.strip()).version == 4
+    except ValueError:
+        return False
+
+def clean_openvpn_config(config_text: str) -> str:
+    blocked_directives = {"route-ipv6", "ifconfig-ipv6", "tun-ipv6", "redirect-gateway-ipv6"}
+    cleaned_lines = []
+    for raw_line in config_text.splitlines():
+        directive = raw_line.strip().split(maxsplit=1)[0].lower() if raw_line.strip() else ""
+        if directive in blocked_directives:
+            continue
+        cleaned_lines.append(raw_line)
+    return "\n".join(cleaned_lines)
+
+def row_to_node(row: dict[str, str], config_text: str) -> dict[str, Any] | None:
+    config_text = clean_openvpn_config(config_text)
     ip = row.get("IP", "")
     country_short = row.get("CountryShort", "")
     remote_host, remote_port, proto = vpn_utils.parse_remote(config_text, ip)
+    if not is_ipv4_literal(ip) or (remote_host and not is_ipv4_literal(remote_host)):
+        return None
     node_id = safe_name("_".join([country_short or "XX", ip or remote_host, str(remote_port), proto]))
     config_path = CONFIG_DIR / f"{node_id}.ovpn"
     
@@ -433,6 +453,8 @@ def fetch_candidates() -> list[dict[str, Any]]:
                     continue
                 config_text = decode_config(encoded)
                 node = row_to_node(row, config_text)
+                if not node:
+                    continue
                 candidates.append(node)
                 seen_ips.add(ip)
         except Exception as e:
@@ -482,12 +504,6 @@ def openvpn_command(config_file: str, route_nopull: bool, dev: str = "tun0") -> 
             dev,
             "--dev-type",
             "tun",
-            "--pull-filter",
-            "ignore",
-            "route-ipv6",
-            "--pull-filter",
-            "ignore",
-            "ifconfig-ipv6",
             "--route-delay",
             "2",
             "--connect-retry-max",
@@ -1987,6 +2003,7 @@ INDEX_HTML = r"""<!doctype html>
       text-transform: uppercase;
       letter-spacing: 0.8px;
       color: var(--text-secondary);
+      text-align: center;
     }
 
     tr {
@@ -2769,6 +2786,7 @@ INDEX_HTML = r"""<!doctype html>
       text-transform: none;
       letter-spacing: 0;
       background: rgba(12, 18, 32, 0.95);
+      text-align: center;
     }
 
     .row-check {
@@ -3073,14 +3091,14 @@ INDEX_HTML = r"""<!doctype html>
   </section>
 
   <section class="toolbar">
-    <select id="country_filter">
-      <option value="">全部国家</option>
-    </select>
     <select id="status_filter">
       <option value="">全部状态</option>
       <option value="available">可用</option>
       <option value="not_checked">待检测</option>
       <option value="unavailable">不可用</option>
+    </select>
+    <select id="country_filter">
+      <option value="">全部国家</option>
     </select>
     <select id="type_filter">
       <option value="">全部类型</option>
@@ -3136,7 +3154,7 @@ INDEX_HTML = r"""<!doctype html>
 </main>
 <script>
 let nodes=[], state={}, testingNodeIds = new Set(), testingChannelIds = new Set();
-let selectedManualChannel = 0;
+let selectedManualChannels = {};
 let currentPage = 1;
 let pageSize = 100;
 let currentPageNodes = [];
@@ -3590,13 +3608,13 @@ function asnCheckboxOptions(channel, currentValue) {
 }
 
 function countryLockLabel(ch) {
-  return ch && ch.country_lock ? `国家：${translateCountry(ch.country_lock)}` : "全部国家";
+  return ch && ch.country_lock ? `国家锁定：${translateCountry(ch.country_lock)}` : "全部国家锁定";
 }
 
 function asnLockLabel(ch) {
   const asns = normalizeAsnLocks(ch && ch.asn_lock);
-  if (!asns.length) return "全部 ASN";
-  return asns.length === 1 ? `ASN：${asns[0]}` : `ASN：已选 ${asns.length}`;
+  if (!asns.length) return "全部 ASN 锁定";
+  return asns.length === 1 ? `ASN锁定：${asns[0]}` : `ASN锁定：已选 ${asns.length}`;
 }
 
 function renderChannelCards() {
@@ -3633,7 +3651,7 @@ function renderChannelCards() {
         </div>
         <div class="channel-metrics">
           <div>
-            <span class="metric-label">出口</span>
+            <span class="metric-label">出口IP</span>
             <span class="metric-value">${esc(ip)}</span>
           </div>
           <div>
@@ -3641,11 +3659,11 @@ function renderChannelCards() {
             <span class="metric-value text" title="${esc(asnLabel)}">${esc(asnLabel)}</span>
           </div>
           <div>
-            <span class="metric-label">节点</span>
+            <span class="metric-label">节点延迟</span>
             <span class="metric-value">${nodeLatency ? `${nodeLatency} ms` : "-"}</span>
           </div>
           <div>
-            <span class="metric-label">代理</span>
+            <span class="metric-label">代理延迟</span>
             <span class="metric-value">${proxyLatency ? `${proxyLatency} ms` : "-"}</span>
           </div>
         </div>
@@ -3701,14 +3719,13 @@ function render(){
       const latencyText = n.latency_ms ? `<span class="latency-val ${latencyClass}">${n.latency_ms} ms</span>` : "-";
       const asnLabel = nodeAsnLabel(n);
       const isTesting = testingNodeIds.has(n.id);
-      const flag = countryFlag(n.country_short);
       const connectLabel = isActive ? "已连接" : "连接";
       const connectDisabled = state.is_connecting || n.probe_status === "unavailable" ? "disabled" : "";
       const testBtnText = isTesting ? "检测中" : "测试";
       const channelSelect = buildChannelChooser(n.id);
       return `<tr ${rowClass}>
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-        <td><span class="country-cell">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(n.country))}</span></span></td>
+        <td><span class="country-cell">${esc(translateCountry(n.country))}</span></td>
         <td class="mono">${esc(n.ip||n.remote_host)}</td>
         <td>${esc(translateIpType(n.ip_type))}</td>
         <td>${latencyText}</td>
@@ -3891,12 +3908,16 @@ function buildChannelChooser(nodeId) {
   const channels = state.channels || [];
   const count = state.channel_count || 6;
   const list = channels.length ? channels : Array.from({length: count}, (_, index) => ({index}));
+  const current = Number.isInteger(selectedManualChannels[nodeId]) ? selectedManualChannels[nodeId] : null;
   const options = list.map(ch => {
     const idx = ch.index || 0;
-    const selected = idx === selectedManualChannel ? "selected" : "";
+    const selected = idx === current ? "selected" : "";
     return `<option value="${idx}" ${selected}>通道 ${idx}</option>`;
   }).join("");
-  return `<select class="node-channel-select" onchange="selectedManualChannel=parseInt(this.value, 10); render();">${options}</select>`;
+  return `<select class="node-channel-select" onchange="selectedManualChannels['${esc(nodeId)}']=this.value === '' ? null : parseInt(this.value, 10);">
+    <option value="" ${current === null ? "selected" : ""}>选择通道</option>
+    ${options}
+  </select>`;
 }
 
 function toggleLockMenu(kind, channel) {
@@ -3912,8 +3933,13 @@ function toggleLockMenu(kind, channel) {
 
 async function connectNodeSmart(id) {
   const channels = state.channels || [];
+  const selectedManualChannel = selectedManualChannels[id];
   const selected = channels.find(ch => (ch.index || 0) === selectedManualChannel);
-  const channel = selected ? selectedManualChannel : firstAvailableChannel();
+  if (!selected) {
+    alert("请先选择要连接的通道");
+    return;
+  }
+  const channel = selectedManualChannel;
   await connectNodeToChannel(channel, id);
 }
 
