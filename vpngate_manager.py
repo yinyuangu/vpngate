@@ -3331,10 +3331,10 @@ function updateAsnFilter() {
   const selectedSet = new Set(validSelected);
 
   const selectedClass = selectedSet.size ? "" : " active";
-  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" onclick="setAsnFilter('')">ASN：全部</button>` +
+  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" onclick="handleAsnFilterClick(event, '')">ASN：全部</button>` +
     asns.map(asn => {
       const active = selectedSet.has(asn) ? " active" : "";
-      return `<button type="button" class="filter-option${active}" onclick="setAsnFilter(decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+      return `<button type="button" class="filter-option${active}" onclick="handleAsnFilterClick(event, decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
     }).join("");
   if (!selectedSet.size) {
     button.textContent = "ASN：全部";
@@ -3343,6 +3343,11 @@ function updateAsnFilter() {
   } else {
     button.textContent = `ASN：已选 ${selectedSet.size}`;
   }
+}
+
+function handleAsnFilterClick(event, asn) {
+  if (event) event.stopPropagation();
+  setAsnFilter(asn);
 }
 
 function setAsnFilter(asn) {
