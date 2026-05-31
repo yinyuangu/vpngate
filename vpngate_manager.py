@@ -1510,13 +1510,14 @@ INDEX_HTML = r"""<!doctype html>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     
     :root {
-      --bg-dark: #070d16;
-      --bg-surface: rgba(14, 25, 42, 0.72);
-      --bg-surface-hover: rgba(24, 38, 61, 0.9);
-      --border-color: rgba(137, 160, 198, 0.13);
-      --border-color-hover: rgba(94, 234, 212, 0.3);
-      --text-primary: #eef5ff;
-      --text-secondary: #91a4bf;
+      --bg-dark: #090d16;
+      --bg-surface: rgba(15, 23, 42, 0.54);
+      --bg-surface-hover: rgba(24, 36, 58, 0.76);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-color-hover: rgba(99, 102, 241, 0.34);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #72809a;
       --primary: #6366f1;
       --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
       --primary-hover: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
@@ -1532,21 +1533,24 @@ INDEX_HTML = r"""<!doctype html>
 
     body {
       margin: 0;
-      font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+      font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 12% -8%, rgba(59, 130, 246, 0.16) 0, transparent 32%),
-        radial-gradient(circle at 88% 2%, rgba(20, 184, 166, 0.12) 0, transparent 30%),
-        linear-gradient(180deg, #07111f 0%, #06111a 56%, #050a12 100%);
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 48%),
+        radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.08) 0, transparent 46%),
+        radial-gradient(circle at 50% 110%, rgba(56, 189, 248, 0.06), transparent 34%),
+        linear-gradient(180deg, #090d16 0%, #07111b 56%, #050911 100%);
       background-attachment: fixed;
       color: var(--text-primary);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      font-feature-settings: "kern" 1;
     }
 
     header {
       padding: 16px 32px;
-      background: rgba(11, 15, 25, 0.7);
+      background: rgba(9, 13, 22, 0.72);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border-color);
@@ -1566,9 +1570,9 @@ INDEX_HTML = r"""<!doctype html>
 
     h1 {
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 750;
       margin: 0;
-      background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
+      background: linear-gradient(135deg, #f8fafc 0%, #a5b4fc 58%, #6ee7b7 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       letter-spacing: 0;
@@ -1579,10 +1583,10 @@ INDEX_HTML = r"""<!doctype html>
 
     button {
       height: 38px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      border-radius: 10px;
       padding: 0 16px;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 13px;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1590,13 +1594,14 @@ INDEX_HTML = r"""<!doctype html>
       align-items: center;
       justify-content: center;
       gap: 6px;
-      background: rgba(255, 255, 255, 0.04);
+      line-height: 1;
+      background: rgba(15, 23, 42, 0.5);
       color: var(--text-primary);
     }
 
     button:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(30, 41, 59, 0.66);
+      border-color: rgba(148, 163, 184, 0.24);
       transform: translateY(-1px);
     }
 
@@ -1638,7 +1643,7 @@ INDEX_HTML = r"""<!doctype html>
       grid-template-columns: repeat(5, minmax(120px, 1fr));
       gap: 12px;
       align-items: center;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
 
@@ -1650,20 +1655,20 @@ INDEX_HTML = r"""<!doctype html>
     .filter-menu-btn {
       width: 100%;
       height: 38px;
-      border-radius: 10px;
-      border: 1px solid rgba(120, 144, 188, 0.2);
-      background: linear-gradient(180deg, rgba(20, 33, 53, 0.94), rgba(12, 24, 39, 0.92));
-      color: #e7eef8;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      background: linear-gradient(180deg, rgba(22, 32, 50, 0.78), rgba(12, 21, 35, 0.76));
+      color: #eef5ff;
       font-family: inherit;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 750;
       padding: 0 32px 0 12px;
       justify-content: flex-start;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       position: relative;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.045), 0 10px 22px rgba(0,0,0,0.08);
     }
 
     .filter-menu-btn::after {
@@ -1681,8 +1686,8 @@ INDEX_HTML = r"""<!doctype html>
 
     .filter-menu-btn.menu-open,
     .lock-mode-btn.menu-open {
-      border-color: rgba(56, 189, 248, 0.48);
-      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.12);
+      border-color: rgba(99, 102, 241, 0.48);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.16), inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
     .filter-list-menu {
@@ -1694,9 +1699,9 @@ INDEX_HTML = r"""<!doctype html>
       width: 100%;
       max-height: 260px;
       overflow-y: auto;
-      border-radius: 8px;
-      border: 1px solid rgba(126, 146, 178, 0.32);
-      background: linear-gradient(180deg, #0f1a2b, #0a1321);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(180deg, rgba(16, 24, 39, 0.98), rgba(8, 15, 28, 0.98));
       padding: 6px;
       box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
       scrollbar-width: none;
@@ -1766,9 +1771,9 @@ INDEX_HTML = r"""<!doctype html>
       width: 100%;
       min-height: 30px;
       border: 0;
-      border-radius: 6px;
+      border-radius: 8px;
       background: transparent;
-      color: #dbeafe;
+      color: #d7e2f2;
       display: block;
       padding: 6px 8px;
       text-align: left;
@@ -1777,13 +1782,13 @@ INDEX_HTML = r"""<!doctype html>
       word-break: break-word;
       line-height: 1.35;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
     }
 
     .filter-option:hover {
-      background: rgba(56, 189, 248, 0.08);
-      color: #e0f2fe;
+      background: rgba(99, 102, 241, 0.12);
+      color: #f8fafc;
     }
 
     .filter-option.active {
@@ -1835,7 +1840,7 @@ INDEX_HTML = r"""<!doctype html>
       border: 1px solid var(--border-color);
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.035);
     }
 
     .table-container {
@@ -1854,14 +1859,15 @@ INDEX_HTML = r"""<!doctype html>
       padding: 11px 12px;
       border-bottom: 1px solid var(--border-color);
       font-size: 13px;
+      line-height: 1.35;
     }
 
     th {
-      background: rgba(17, 24, 39, 0.4);
+      background: rgba(9, 14, 25, 0.62);
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 750;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.2px;
       color: var(--text-secondary);
     }
 
@@ -1870,12 +1876,12 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     tr:hover {
-      background: rgba(255, 255, 255, 0.015);
+      background: rgba(99, 102, 241, 0.035);
     }
 
     .active-row {
-      background: var(--active-row-bg) !important;
-      outline: 2px solid var(--success) !important;
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.11), rgba(16, 185, 129, 0.035)) !important;
+      outline: 2px solid rgba(16, 185, 129, 0.82) !important;
       outline-offset: -2px;
       position: relative;
       z-index: 5;
@@ -1949,14 +1955,14 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .connect-btn {
-      background: transparent;
-      color: #818cf8;
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      border-radius: 6px;
+      background: rgba(79, 70, 229, 0.08);
+      color: #a5b4fc;
+      border: 1px solid rgba(129, 140, 248, 0.32);
+      border-radius: 8px;
       padding: 0 10px;
       height: 30px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 750;
       transition: all 0.2s ease;
       cursor: pointer;
     }
@@ -1974,14 +1980,14 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .test-btn {
-      background: transparent;
+      background: rgba(16, 185, 129, 0.07);
       color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      border-radius: 6px;
+      border: 1px solid rgba(16, 185, 129, 0.32);
+      border-radius: 8px;
       padding: 0 12px;
       height: 30px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 750;
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -1999,15 +2005,16 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .mono {
-      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
       font-size: 13px;
-      color: #e2e8f0;
+      color: #dbe4f1;
+      font-variant-numeric: tabular-nums;
     }
 
     .ip-cell {
-      color: #cbd5e1;
-      font-size: 12px;
-      font-weight: 500;
+      color: #dbe4f1;
+      font-size: 13px;
+      font-weight: 650;
       letter-spacing: 0;
     }
 
@@ -2018,22 +2025,23 @@ INDEX_HTML = r"""<!doctype html>
       white-space: normal;
       overflow-wrap: anywhere;
       word-break: break-word;
-      color: #cbd5e1;
+      color: #d7e2f2;
       font-size: 12px;
-      font-weight: 500;
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+      font-weight: 650;
+      font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
       vertical-align: middle;
     }
 
     .latency-val {
-      font-weight: 600;
-      padding: 2px 6px;
-      border-radius: 4px;
+      font-weight: 750;
+      padding: 2px 7px;
+      border-radius: 6px;
       font-size: 12px;
+      font-variant-numeric: tabular-nums;
     }
 
     .latency-good {
-      background: rgba(16, 185, 129, 0.1);
+      background: rgba(16, 185, 129, 0.12);
       color: #34d399;
     }
     
@@ -2059,28 +2067,28 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     body {
-      background: #070d16;
+      background: #090d16;
       background-image:
-        radial-gradient(circle at 12% -10%, rgba(56, 189, 248, 0.15), transparent 28%),
-        radial-gradient(circle at 88% -6%, rgba(45, 212, 191, 0.1), transparent 26%),
-        radial-gradient(circle at 50% 118%, rgba(99, 102, 241, 0.08), transparent 34%),
-        linear-gradient(180deg, #07111f 0%, #06111a 58%, #050a12 100%);
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.14) 0, transparent 44%),
+        radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.08) 0, transparent 44%),
+        radial-gradient(circle at 52% 115%, rgba(56, 189, 248, 0.055), transparent 34%),
+        linear-gradient(180deg, #090d16 0%, #07111b 58%, #050911 100%);
     }
 
     header {
       padding: 18px 30px 16px;
       background:
-        linear-gradient(135deg, rgba(11, 29, 57, 0.78), rgba(6, 14, 25, 0.94)),
-        rgba(7, 13, 22, 0.9);
-      border-bottom: 1px solid rgba(110, 139, 190, 0.16);
-      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.035), 0 16px 38px rgba(0, 0, 0, 0.2);
+        linear-gradient(135deg, rgba(18, 24, 44, 0.82), rgba(7, 13, 23, 0.94)),
+        rgba(9, 13, 22, 0.88);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.035), 0 16px 40px rgba(0, 0, 0, 0.24);
     }
 
     h1 {
       font-size: 19px;
       background: none;
       -webkit-text-fill-color: unset;
-      color: #aebcff;
+      color: #f8fafc;
       letter-spacing: 0;
     }
 
@@ -2096,6 +2104,13 @@ INDEX_HTML = r"""<!doctype html>
       align-items: center;
     }
 
+    .dashboard-toolbar button {
+      min-width: 118px;
+      gap: 8px;
+      border-radius: 10px;
+      font-weight: 800;
+    }
+
     @media (min-width: 1600px) {
       header {
         padding-left: calc((100vw - 1560px) / 2 + 24px);
@@ -2107,6 +2122,7 @@ INDEX_HTML = r"""<!doctype html>
       display: grid;
       grid-template-columns: repeat(2, minmax(360px, 1fr));
       gap: 12px;
+      align-items: start;
       margin-bottom: 18px;
     }
 
@@ -2115,8 +2131,10 @@ INDEX_HTML = r"""<!doctype html>
       overflow: visible;
       border: 1px solid var(--border-color);
       border-radius: 14px;
-      background: linear-gradient(180deg, rgba(14, 26, 43, 0.96), rgba(8, 18, 31, 0.96));
-      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+      background:
+        linear-gradient(180deg, rgba(17, 24, 39, 0.58), rgba(9, 16, 28, 0.76)),
+        rgba(15, 23, 42, 0.5);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255,255,255,0.035);
       padding: 14px;
       min-height: 0;
     }
@@ -2132,20 +2150,22 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .channel-card.active {
-      background: var(--active-row-bg);
-      border: 2px solid var(--success);
-      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.24), 0 18px 34px rgba(0, 0, 0, 0.22);
+      background:
+        linear-gradient(180deg, rgba(16, 185, 129, 0.09), rgba(9, 16, 28, 0.82)),
+        rgba(15, 23, 42, 0.56);
+      border: 2px solid rgba(16, 185, 129, 0.86);
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), 0 20px 42px rgba(0, 0, 0, 0.22), 0 0 24px rgba(16, 185, 129, 0.08);
       padding: 13px;
     }
 
     .channel-card.connecting {
       border-color: rgba(245, 158, 11, 0.48);
-      background: rgba(37, 29, 15, 0.74);
+      background: linear-gradient(180deg, rgba(47, 36, 15, 0.55), rgba(12, 20, 32, 0.78));
     }
 
     .channel-card.offline {
-      border-color: rgba(82, 103, 132, 0.28);
-      background: rgba(13, 22, 37, 0.72);
+      border-color: rgba(148, 163, 184, 0.1);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.46), rgba(7, 14, 24, 0.72));
     }
 
     .channel-top {
@@ -2169,7 +2189,7 @@ INDEX_HTML = r"""<!doctype html>
       gap: 8px;
       font-size: 14px;
       font-weight: 800;
-      color: var(--text-primary);
+      color: #f8fafc;
     }
 
     .port-pill,
@@ -2182,10 +2202,11 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 6px;
       background: rgba(83, 104, 139, 0.22);
       border: 1px solid rgba(128, 147, 178, 0.12);
-      color: #aebbd0;
-      font-family: 'JetBrains Mono', Consolas, monospace;
+      color: #b7c3d8;
+      font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
       font-size: 11px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
 
     .channel-status {
@@ -2227,9 +2248,9 @@ INDEX_HTML = r"""<!doctype html>
       grid-template-columns: minmax(120px, 0.9fr) minmax(260px, 1.8fr) minmax(90px, 0.6fr);
       gap: 8px;
       padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      background: rgba(17, 24, 39, 0.4);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(9, 16, 28, 0.48);
       margin-bottom: 10px;
     }
 
@@ -2244,15 +2265,16 @@ INDEX_HTML = r"""<!doctype html>
     .metric-value {
       display: block;
       color: var(--text-primary);
-      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 750;
       min-height: 16px;
       word-break: break-all;
+      font-variant-numeric: tabular-nums;
     }
 
     .metric-value.text {
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+      font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
       font-weight: 700;
       line-height: 1.25;
       min-height: 32px;
@@ -2348,26 +2370,26 @@ INDEX_HTML = r"""<!doctype html>
     .lock-mode-btn {
       width: 100%;
       height: 34px;
-      border-radius: 6px;
-      border: 1px solid rgba(126, 146, 178, 0.18);
-      background: linear-gradient(180deg, rgba(22, 35, 56, 0.95), rgba(10, 22, 36, 0.92));
-      color: #e5edf7;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      background: linear-gradient(180deg, rgba(22, 32, 50, 0.76), rgba(12, 21, 35, 0.76));
+      color: #eef5ff;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 750;
       padding: 0 30px 0 10px;
       text-align: left;
       cursor: pointer;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
       transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
       position: relative;
     }
 
     .lock-mode-btn:hover {
-      border-color: rgba(16, 185, 129, 0.36);
-      background: linear-gradient(180deg, rgba(25, 43, 66, 0.98), rgba(12, 28, 43, 0.96));
+      border-color: rgba(99, 102, 241, 0.34);
+      background: linear-gradient(180deg, rgba(30, 42, 64, 0.84), rgba(14, 27, 44, 0.84));
       transform: translateY(-1px);
     }
 
@@ -2415,9 +2437,9 @@ INDEX_HTML = r"""<!doctype html>
       width: 100%;
       max-height: 240px;
       overflow-y: auto;
-      border-radius: 6px;
-      border: 1px solid rgba(126, 146, 178, 0.32);
-      background: linear-gradient(180deg, #0f1a2b, #0a1321);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(180deg, rgba(16, 24, 39, 0.98), rgba(8, 15, 28, 0.98));
       padding: 6px;
       box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
       scrollbar-width: none;
@@ -2444,10 +2466,10 @@ INDEX_HTML = r"""<!doctype html>
       gap: 7px;
       min-height: 28px;
       padding: 4px 6px;
-      border-radius: 5px;
-      color: #dbeafe;
+      border-radius: 8px;
+      color: #d7e2f2;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       width: 100%;
       border: 0;
@@ -2466,14 +2488,14 @@ INDEX_HTML = r"""<!doctype html>
 
     .country-lock-option.active,
     .asn-check-option.active {
-      background: rgba(16, 185, 129, 0.12);
-      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.14);
+      color: #86efac;
     }
 
     .country-lock-option:hover,
     .asn-check-option:hover {
-      background: rgba(56, 189, 248, 0.08);
-      color: #e0f2fe;
+      background: rgba(99, 102, 241, 0.12);
+      color: #f8fafc;
     }
 
     .asn-check-option.stale {
@@ -2497,40 +2519,41 @@ INDEX_HTML = r"""<!doctype html>
 
     .btn-rose {
       height: 36px;
-      border-radius: 8px;
-      background: rgba(244, 63, 94, 0.12);
-      border: 1px solid rgba(244, 63, 94, 0.34);
-      color: #fb7185;
-      font-weight: 700;
-      box-shadow: none;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(76, 29, 48, 0.62), rgba(38, 18, 34, 0.68));
+      border: 1px solid rgba(251, 113, 133, 0.34);
+      color: #fda4af;
+      font-weight: 750;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 24px rgba(244, 63, 94, 0.08);
     }
 
     .btn-rose:hover {
-      background: rgba(244, 63, 94, 0.2);
-      border-color: rgba(244, 63, 94, 0.52);
+      background: linear-gradient(180deg, rgba(94, 34, 58, 0.75), rgba(52, 22, 40, 0.78));
+      border-color: rgba(251, 113, 133, 0.52);
       color: #fecdd3;
     }
 
     .btn-dark {
       height: 36px;
-      border-radius: 8px;
-      background: linear-gradient(180deg, rgba(9, 28, 47, 0.82), rgba(7, 20, 35, 0.82));
-      border: 1px solid rgba(56, 189, 248, 0.32);
-      color: #bae6fd;
-      font-weight: 700;
-      box-shadow: none;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(29, 45, 72, 0.72), rgba(12, 24, 41, 0.72));
+      border: 1px solid rgba(96, 165, 250, 0.28);
+      color: #bfdbfe;
+      font-weight: 750;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 24px rgba(59, 130, 246, 0.08);
     }
 
     .btn-icon {
-      width: 16px;
-      height: 16px;
+      width: 17px;
+      height: 17px;
       flex: 0 0 auto;
-      stroke-width: 2.2;
+      display: block;
+      stroke-width: 2;
     }
 
     .btn-dark:hover {
-      background: rgba(14, 34, 52, 0.9);
-      border-color: rgba(56, 189, 248, 0.58);
+      background: linear-gradient(180deg, rgba(37, 57, 88, 0.84), rgba(16, 31, 52, 0.84));
+      border-color: rgba(96, 165, 250, 0.46);
       color: #e0f2fe;
     }
 
@@ -2552,6 +2575,7 @@ INDEX_HTML = r"""<!doctype html>
       margin: 0;
       font-size: 18px;
       color: #f8fafc;
+      font-weight: 800;
       letter-spacing: 0;
     }
 
@@ -2571,31 +2595,42 @@ INDEX_HTML = r"""<!doctype html>
     .nodes-panel-icon {
       width: 34px;
       height: 34px;
-      border-radius: 10px;
+      border-radius: 12px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: #7dd3fc;
-      background: linear-gradient(180deg, rgba(25, 51, 89, 0.9), rgba(14, 29, 49, 0.9));
-      border: 1px solid rgba(77, 124, 214, 0.24);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      color: #93c5fd;
+      background: linear-gradient(180deg, rgba(49, 46, 129, 0.36), rgba(15, 23, 42, 0.88));
+      border: 1px solid rgba(129, 140, 248, 0.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 26px rgba(99, 102, 241, 0.1);
+    }
+
+    .nodes-panel-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      stroke-width: 2;
     }
 
     .channels-panel-icon {
-      color: #99f6e4;
-      background: linear-gradient(180deg, rgba(14, 82, 78, 0.68), rgba(14, 43, 58, 0.88));
-      border-color: rgba(45, 212, 191, 0.26);
+      color: #8df5df;
+      background:
+        linear-gradient(180deg, rgba(17, 94, 89, 0.38), rgba(15, 23, 42, 0.9));
+      border-color: rgba(45, 212, 191, 0.32);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        0 10px 24px rgba(20, 184, 166, 0.12);
     }
 
     .toolbar {
       margin-bottom: 12px;
       padding: 14px;
       border-radius: 14px 14px 0 0;
-      background: linear-gradient(180deg, rgba(17, 29, 48, 0.92), rgba(10, 21, 35, 0.88));
+      background: linear-gradient(180deg, rgba(18, 27, 45, 0.74), rgba(10, 18, 31, 0.76));
       display: grid;
       grid-template-columns: repeat(5, minmax(118px, 1fr));
       gap: 12px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
     .filter-menu-btn {
@@ -2605,21 +2640,22 @@ INDEX_HTML = r"""<!doctype html>
 
     .table-wrapper {
       border-radius: 16px;
-      background: rgba(13, 22, 37, 0.9);
+      background: rgba(15, 23, 42, 0.54);
       overflow: visible;
-      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.035);
     }
 
     th,
     td {
-      padding: 10px 12px;
+      padding: 11px 12px;
       font-size: 13px;
     }
 
     th {
       text-transform: none;
-      letter-spacing: 0;
-      background: rgba(12, 18, 32, 0.95);
+      letter-spacing: 0.1px;
+      background: rgba(9, 14, 25, 0.72);
+      color: #9aa8bd;
     }
 
     .country-cell {
@@ -2627,6 +2663,8 @@ INDEX_HTML = r"""<!doctype html>
       align-items: center;
       gap: 7px;
       white-space: nowrap;
+      color: #e5edf7;
+      font-weight: 650;
     }
 
     td:nth-child(7),
@@ -2827,12 +2865,12 @@ INDEX_HTML = r"""<!doctype html>
   </div>
   <div class="dashboard-toolbar">
     <button id="refresh" class="btn-dark">
-      <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4v6h-6" /><path d="M3 20v-6h6" /><path d="M18.5 8A7.5 7.5 0 0 0 5.2 6.2L3 8" /><path d="M5.5 16A7.5 7.5 0 0 0 18.8 17.8L21 16" /></svg>
+      <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.66 5.66" /><path d="M6 21v-4h4" /><path d="M4 12A8 8 0 0 1 17.66 6.34" /><path d="M18 3v4h-4" /></svg>
       <span class="btn-label">刷新节点</span>
     </button>
     <button id="logout_btn" class="btn-rose" onclick="logoutAdmin()">
-      <svg xmlns="http://www.w3.org/2000/svg" style="width:15px; height:15px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H9m4 8H6a2 2 0 01-2-2V6a2 2 0 012-2h7" /></svg>
-      退出登录
+      <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h-5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" /><path d="M18 8l4 4-4 4" /><path d="M22 12H12" /></svg>
+      <span class="btn-label">退出登录</span>
     </button>
   </div>
 </header>
@@ -2840,7 +2878,12 @@ INDEX_HTML = r"""<!doctype html>
   <section class="channels-panel-title">
     <div class="channels-panel-copy">
       <span class="nodes-panel-icon channels-panel-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h5l2 3h9M4 17h5l2-3h9M16 5l3 2-3 2M16 12l3 2-3 2" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <rect x="4" y="5" width="6" height="5" rx="1.5" />
+          <rect x="14" y="5" width="6" height="5" rx="1.5" />
+          <rect x="4" y="14" width="6" height="5" rx="1.5" />
+          <rect x="14" y="14" width="6" height="5" rx="1.5" />
+        </svg>
       </span>
       <div>
         <h2>通道池</h2>
