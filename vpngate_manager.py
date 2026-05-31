@@ -1599,11 +1599,6 @@ INDEX_HTML = r"""<!doctype html>
       display: inline-block;
     }
 
-    .btn-group {
-      display: flex;
-      gap: 12px;
-    }
-
     button {
       height: 38px;
       border: 1px solid var(--border-color);
@@ -1625,18 +1620,6 @@ INDEX_HTML = r"""<!doctype html>
       background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.15);
       transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      background: var(--primary-gradient);
-      color: white;
-      border: none;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
     }
 
     .btn-danger {
@@ -1664,190 +1647,46 @@ INDEX_HTML = r"""<!doctype html>
       margin: 0 auto;
     }
 
-    .active-card {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(79, 70, 229, 0.04) 100%);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(99, 102, 241, 0.25);
-      border-radius: 16px;
-      padding: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 24px;
-      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.12);
-      transition: all 0.3s ease;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    
-    .active-card-info {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    
-    .active-card-details {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    
-    .active-card-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #a5b4fc;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .active-card-value {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-    
-    .active-card-meta {
-      display: flex;
-      gap: 16px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      flex-wrap: wrap;
-    }
-
-    .active-card-meta span strong {
-      color: var(--text-primary);
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .stat {
-      background: var(--bg-surface);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .stat:hover {
-      background: var(--bg-surface-hover);
-      border-color: var(--border-color-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
-    }
-
-    .stat-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .stat strong {
-      font-size: 32px;
-      font-weight: 700;
-      display: block;
-      margin-bottom: 4px;
-      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .stat span {
-      font-size: 13px;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    .stat-icon-wrapper {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.04);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .stat-icon {
-      width: 22px;
-      height: 22px;
-      color: var(--primary);
-    }
-
-    .stat:nth-child(2) .stat-icon { color: var(--warning); }
-    .stat:nth-child(3) .stat-icon { color: var(--success); }
-
     .toolbar {
-      background: rgba(13, 22, 36, 0.74);
+      background: linear-gradient(180deg, rgba(17, 29, 48, 0.92), rgba(10, 21, 35, 0.88));
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
-      border-radius: 8px 8px 0 0;
+      border-radius: 14px 14px 0 0;
       border-bottom: 0;
-      padding: 12px;
+      padding: 14px;
       margin-bottom: 0;
       display: grid;
       grid-template-columns: repeat(5, minmax(120px, 1fr));
-      gap: 10px;
+      gap: 12px;
       align-items: center;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
-    .toolbar select {
-      width: 100%;
-      height: 38px;
-      background: rgba(15, 23, 42, 0.78);
-      border: 1px solid rgba(126, 146, 178, 0.16);
-      border-radius: 6px;
-      padding: 0 10px;
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 13px;
-      outline: none;
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-
-    .toolbar select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-      background: #0f172a;
-    }
 
     .filter-menu {
       position: relative;
       min-width: 0;
+      z-index: 3;
     }
 
     .filter-menu-btn {
       width: 100%;
       height: 38px;
-      border-radius: 6px;
-      border: 1px solid rgba(126, 146, 178, 0.16);
-      background: rgba(15, 23, 42, 0.78);
-      color: var(--text-primary);
+      border-radius: 10px;
+      border: 1px solid rgba(120, 144, 188, 0.2);
+      background: linear-gradient(180deg, rgba(20, 33, 53, 0.94), rgba(12, 24, 39, 0.92));
+      color: #e7eef8;
       font-family: inherit;
       font-size: 13px;
-      padding: 0 28px 0 10px;
+      font-weight: 600;
+      padding: 0 32px 0 12px;
       justify-content: flex-start;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
     .filter-menu-btn::after {
@@ -1863,21 +1702,28 @@ INDEX_HTML = r"""<!doctype html>
       pointer-events: none;
     }
 
+    .filter-menu-btn.menu-open,
+    .lock-mode-btn.menu-open {
+      border-color: rgba(56, 189, 248, 0.48);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.12);
+    }
+
     .filter-list-menu {
       display: none;
-      position: absolute;
+      position: fixed;
       left: 0;
-      right: 0;
-      top: 42px;
-      z-index: 40;
+      top: 0;
+      z-index: 5200;
+      width: 100%;
       max-height: 260px;
       overflow-y: auto;
       border-radius: 8px;
       border: 1px solid rgba(126, 146, 178, 0.2);
-      background: rgba(13, 24, 40, 0.98);
+      background: linear-gradient(180deg, rgba(15, 26, 43, 0.985), rgba(10, 19, 33, 0.985));
       padding: 6px;
       box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
       scrollbar-width: none;
+      overscroll-behavior: contain;
     }
 
     .filter-list-menu::-webkit-scrollbar {
@@ -1915,9 +1761,18 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .filter-menu.compact .filter-list-menu {
-      top: 34px;
       width: 98px;
-      right: auto;
+    }
+
+    .node-channel-menu {
+      width: 104px;
+      min-width: 104px;
+    }
+
+    .node-channel-menu .filter-menu-btn {
+      width: 104px;
+      min-width: 104px;
+      justify-content: center;
     }
 
     .filter-option {
@@ -2206,135 +2061,26 @@ INDEX_HTML = r"""<!doctype html>
         align-items: flex-start;
         padding: 16px 20px;
       }
-      .btn-group {
-        width: 100%;
-        margin-top: 12px;
-      }
-      .btn-group button {
-        flex: 1;
-      }
       main {
         padding: 16px 20px;
       }
-      .active-card {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-      }
-      .active-card button {
-        width: 100%;
-      }
-    }
-    
-    /* Admin dropdown styles */
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      margin-top: 6px;
-      min-width: 140px;
-      background: rgba(22, 30, 49, 0.95);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-      z-index: 1000;
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    .dropdown-content a {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 16px;
-      color: var(--text-primary);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    .dropdown-content a:hover {
-      background: rgba(255,255,255,0.08);
-    }
-    
-    /* Modal styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 10000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(9, 13, 22, 0.7);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-content {
-      background: rgba(22, 30, 49, 0.9);
-      border: 1px solid var(--border-color);
-      border-radius: 20px;
-      width: 90%;
-      max-width: 480px;
-      padding: 32px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-      position: relative;
-      box-sizing: border-box;
-      animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    @keyframes modalFadeIn {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-    
-    /* Inputs in settings */
-    .form-group {
-      margin-bottom: 20px;
-      text-align: left;
-    }
-    .form-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-      margin-left: 4px;
-    }
-    .input-field {
-      width: 100%;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 0 12px;
-      box-sizing: border-box;
-      color: var(--text-primary);
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-      transition: all 0.2s ease;
-    }
-    .input-field:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-      background: rgba(15, 23, 42, 0.6);
     }
 
     body {
       background: #080d17;
-      background-image: linear-gradient(180deg, rgba(8, 13, 23, 1) 0%, rgba(7, 17, 24, 1) 100%);
+      background-image:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 28%),
+        radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 24%),
+        linear-gradient(180deg, rgba(8, 13, 23, 1) 0%, rgba(7, 17, 24, 1) 100%);
     }
 
     header {
       padding: 18px 30px 16px;
-      background: rgba(8, 13, 23, 0.86);
+      background:
+        linear-gradient(135deg, rgba(11, 27, 54, 0.72), rgba(7, 16, 29, 0.92)),
+        rgba(8, 13, 23, 0.86);
+      border-bottom: 1px solid rgba(90, 119, 168, 0.16);
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.03);
     }
 
     h1 {
@@ -2375,17 +2121,27 @@ INDEX_HTML = r"""<!doctype html>
       position: relative;
       overflow: visible;
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      background: rgba(13, 22, 37, 0.9);
-      box-shadow: none;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(13, 23, 38, 0.96), rgba(10, 18, 31, 0.96));
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
       padding: 14px;
       min-height: 0;
+    }
+
+    .channel-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(34, 211, 238, 0), rgba(34, 211, 238, 0.34), rgba(34, 211, 238, 0));
+      opacity: 0.8;
+      pointer-events: none;
     }
 
     .channel-card.active {
       background: var(--active-row-bg);
       border: 2px solid var(--success);
-      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.08);
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.24), 0 18px 34px rgba(0, 0, 0, 0.22);
       padding: 13px;
     }
 
@@ -2594,6 +2350,7 @@ INDEX_HTML = r"""<!doctype html>
     .lock-menu {
       position: relative;
       min-width: 0;
+      z-index: 4;
     }
 
     .lock-mode-btn {
@@ -2613,6 +2370,7 @@ INDEX_HTML = r"""<!doctype html>
       white-space: nowrap;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
       transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+      position: relative;
     }
 
     .lock-mode-btn:hover {
@@ -2658,11 +2416,11 @@ INDEX_HTML = r"""<!doctype html>
     .lock-list-menu,
     .asn-check-menu {
       display: none;
-      position: absolute;
+      position: fixed;
       left: 0;
-      right: 0;
-      top: 34px;
-      z-index: 25;
+      top: 0;
+      z-index: 5300;
+      width: 100%;
       max-height: 180px;
       overflow-y: auto;
       border-radius: 6px;
@@ -2671,6 +2429,7 @@ INDEX_HTML = r"""<!doctype html>
       padding: 6px;
       box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
       scrollbar-width: none;
+      overscroll-behavior: contain;
     }
 
     .lock-list-menu::-webkit-scrollbar,
@@ -2697,9 +2456,6 @@ INDEX_HTML = r"""<!doctype html>
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-    }
-
-    .country-lock-option {
       width: 100%;
       border: 0;
       background: transparent;
@@ -2707,7 +2463,12 @@ INDEX_HTML = r"""<!doctype html>
       font-family: inherit;
     }
 
-    .country-lock-option.active {
+    .country-lock-option {
+      justify-content: flex-start;
+    }
+
+    .country-lock-option.active,
+    .asn-check-option.active {
       background: rgba(16, 185, 129, 0.12);
       color: #6ee7b7;
     }
@@ -2718,14 +2479,11 @@ INDEX_HTML = r"""<!doctype html>
       color: #e0f2fe;
     }
 
-    .asn-check-option input {
-      width: 14px;
-      height: 14px;
-      accent-color: #10b981;
+    .asn-check-option.stale {
+      opacity: 0.72;
     }
 
-    .channel-actions button,
-    .nodes-actions button {
+    .channel-actions button {
       height: 30px;
       min-width: 0;
       padding: 0 10px;
@@ -2777,45 +2535,50 @@ INDEX_HTML = r"""<!doctype html>
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      margin: 6px 0 12px;
-    }
-
-    .active-node-section,
-    .stats,
-    .proxy-test-section {
-      display: none !important;
+      margin: 4px 0 14px;
     }
 
     .nodes-panel-title h2 {
       margin: 0;
-      font-size: 16px;
+      font-size: 18px;
       color: #f8fafc;
+      letter-spacing: 0.01em;
     }
 
-    .nodes-actions {
+    .nodes-panel-copy {
       display: flex;
-      gap: 8px;
       align-items: center;
-      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .nodes-panel-copy p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: #8ea2c6;
+    }
+
+    .nodes-panel-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #7dd3fc;
+      background: linear-gradient(180deg, rgba(25, 51, 89, 0.9), rgba(14, 29, 49, 0.9));
+      border: 1px solid rgba(77, 124, 214, 0.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
     .toolbar {
       margin-bottom: 12px;
-      padding: 12px;
-      border-radius: 8px;
-      background: rgba(19, 29, 46, 0.82);
+      padding: 14px;
+      border-radius: 14px 14px 0 0;
+      background: linear-gradient(180deg, rgba(17, 29, 48, 0.92), rgba(10, 21, 35, 0.88));
       display: grid;
       grid-template-columns: repeat(5, minmax(118px, 1fr));
-      gap: 9px;
-    }
-
-    .toolbar select {
-      width: 100%;
-      min-width: 0;
-      height: 36px;
-      border-radius: 6px;
-      font-size: 13px;
-      box-sizing: border-box;
+      gap: 12px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
     }
 
     .filter-menu-btn {
@@ -2824,8 +2587,10 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .table-wrapper {
-      border-radius: 8px;
+      border-radius: 16px;
       background: rgba(13, 22, 37, 0.9);
+      overflow: visible;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
     }
 
     th,
@@ -2838,12 +2603,6 @@ INDEX_HTML = r"""<!doctype html>
       text-transform: none;
       letter-spacing: 0;
       background: rgba(12, 18, 32, 0.95);
-    }
-
-    .row-check {
-      width: 16px;
-      height: 16px;
-      accent-color: #10b981;
     }
 
     .country-cell {
@@ -2919,10 +2678,6 @@ INDEX_HTML = r"""<!doctype html>
         padding: 0 10px;
       }
 
-      .dashboard-toolbar .dropdown button {
-        width: 100%;
-      }
-
       main {
         padding: 12px;
       }
@@ -2971,8 +2726,7 @@ INDEX_HTML = r"""<!doctype html>
         grid-template-columns: 1fr;
       }
 
-      .channel-actions button,
-      .nodes-actions button {
+      .channel-actions button {
         width: 100%;
         padding: 0 6px;
       }
@@ -2986,11 +2740,6 @@ INDEX_HTML = r"""<!doctype html>
         flex-direction: column;
       }
 
-      .nodes-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-      }
-
       .table-wrapper {
         margin-left: -2px;
         margin-right: -2px;
@@ -2998,17 +2747,48 @@ INDEX_HTML = r"""<!doctype html>
 
       .pagination-container {
         align-items: stretch !important;
+        gap: 14px !important;
       }
 
-      .pagination-container > div:last-child {
+      .pagination-summary {
         width: 100%;
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        text-align: left;
       }
 
-      .pagination-container span {
+      .pagination-controls {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .pagination-size {
+        width: 100%;
+      }
+
+      .pagination-size .filter-menu,
+      .pagination-size .filter-menu.compact,
+      .pagination-size .filter-menu.compact .filter-menu-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      .pagination-nav {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .pagination-nav .page-indicator {
         grid-column: 1 / -1;
         text-align: center;
+        justify-content: center;
+        min-height: 36px;
+      }
+
+      .pagination-nav button {
+        width: 100%;
       }
 
       th,
@@ -3036,80 +2816,26 @@ INDEX_HTML = r"""<!doctype html>
   </div>
   <div class="dashboard-toolbar">
     <button id="refresh" class="btn-dark">
+      <svg xmlns="http://www.w3.org/2000/svg" style="width:15px; height:15px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M5.64 18.36A9 9 0 1018.36 5.64" /></svg>
       刷新节点
     </button>
-    <button id="logout_btn" class="btn-rose" onclick="logoutAdmin()">退出登录</button>
+    <button id="logout_btn" class="btn-rose" onclick="logoutAdmin()">
+      <svg xmlns="http://www.w3.org/2000/svg" style="width:15px; height:15px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H9m4 8H6a2 2 0 01-2-2V6a2 2 0 012-2h7" /></svg>
+      退出登录
+    </button>
   </div>
 </header>
 <main>
   <section class="channels-grid" id="channels_grid"></section>
 
   <section class="nodes-panel-title">
-    <h2>节点池</h2>
-  </section>
-
-  <!-- 当前连接活动节点卡片 -->
-  <section class="active-node-section" id="active_node_card" style="margin-bottom: 24px;">
-    <!-- Rendered dynamically by render() -->
-  </section>
-
-  <section class="stats">
-    <div class="stat">
-      <div class="stat-info">
-        <strong id="legacy_total">0</strong>
-        <span>可用节点池</span>
-      </div>
-      <div class="stat-icon-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-      </div>
-    </div>
-    <div class="stat">
-      <div class="stat-info">
-        <strong id="legacy_target">3</strong>
-        <span>目标储备数</span>
-      </div>
-      <div class="stat-icon-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      </div>
-    </div>
-    <div class="stat">
-      <div class="stat-info">
-        <strong id="legacy_active">0</strong>
-        <span>已激活连接</span>
-      </div>
-      <div class="stat-icon-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-      </div>
-    </div>
-  </section>
-
-  <section class="proxy-test-section" style="margin-bottom: 24px;">
-    <div class="stat" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; flex-wrap: wrap; gap: 16px;">
-      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-        <div class="stat-icon-wrapper" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2);">
-          <svg xmlns="http://www.w3.org/2000/svg" class="stat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="color: var(--primary);"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a10.5 10.5 0 0114.14 0M1.414 8.05a16 16 0 0121.172 0" /></svg>
-        </div>
-        <div>
-          <h3 style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: var(--text-primary);">本地代理出口检测 (Port 7928)</h3>
-          <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">
-            测试本地 HTTP/SOCKS5 代理是否成功通过当前 VPN 节点出站，并获取实际出口公网 IP 和延迟。
-          </p>
-        </div>
-      </div>
-      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-left: auto;">
-        <div id="proxy_test_result" style="text-align: right;">
-          <div style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">
-            测试状态: <span id="proxy_status_badge" class="badge not_checked" style="margin-left: 4px;">未检测</span>
-          </div>
-          <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-            出口 IP: <span id="proxy_ip_val" class="mono" style="font-weight: 600; color: var(--text-primary);">-</span> 
-            <span id="proxy_latency_val" style="margin-left: 8px;"></span>
-          </div>
-        </div>
-        <button id="btn_test_proxy" class="btn-primary" style="height: 40px; padding: 0 16px;">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          测试代理
-        </button>
+    <div class="nodes-panel-copy">
+      <span class="nodes-panel-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h10" /></svg>
+      </span>
+      <div>
+        <h2>节点池</h2>
+        <p>按状态、国家、类型、延迟与 ASN 快速筛选当前可用节点</p>
       </div>
     </div>
   </section>
@@ -3117,27 +2843,27 @@ INDEX_HTML = r"""<!doctype html>
   <section class="toolbar">
     <div class="filter-menu">
       <input type="hidden" id="status_filter" value="">
-      <button type="button" id="status_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('status_filter')">全部状态</button>
+      <button type="button" id="status_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('status_filter')">状态：全部</button>
       <div id="status_filter_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="country_filter" value="">
-      <button type="button" id="country_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('country_filter')">全部国家</button>
+      <button type="button" id="country_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('country_filter')">🌐 全部国家</button>
       <div id="country_filter_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="type_filter" value="">
-      <button type="button" id="type_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('type_filter')">全部类型</button>
+      <button type="button" id="type_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('type_filter')">类型：全部</button>
       <div id="type_filter_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="latency_sort" value="">
-      <button type="button" id="latency_sort_btn" class="filter-menu-btn" onclick="toggleFilterMenu('latency_sort')">延迟默认</button>
+      <button type="button" id="latency_sort_btn" class="filter-menu-btn" onclick="toggleFilterMenu('latency_sort')">延迟：默认</button>
       <div id="latency_sort_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="asn_filter" value="">
-      <button type="button" id="asn_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('asn_filter')">全部 ASN</button>
+      <button type="button" id="asn_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('asn_filter')">ASN：全部</button>
       <div id="asn_filter_menu" class="filter-list-menu"></div>
     </div>
   </section>
@@ -3161,41 +2887,43 @@ INDEX_HTML = r"""<!doctype html>
     
     <!-- 分页控制栏 -->
     <div class="pagination-container" style="padding: 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px;">
-      <div style="font-size: 13px; color: var(--text-secondary);">
+      <div class="pagination-summary" style="font-size: 13px; color: var(--text-secondary);">
         显示第 <span id="page_start" style="color: var(--text-primary); font-weight:600;">0</span> - <span id="page_end" style="color: var(--text-primary); font-weight:600;">0</span> 条，共 <span id="filtered_count" style="color: var(--text-primary); font-weight:600;">0</span> 条备选节点
       </div>
-      <div style="display: flex; gap: 8px; align-items: center;">
-        <div class="filter-menu compact" style="width: 88px; min-width: 88px;">
-          <input type="hidden" id="page_size" value="100">
-          <button type="button" id="page_size_btn" class="filter-menu-btn" style="width: 88px; min-width: 88px;" onclick="toggleFilterMenu('page_size')">每页 100</button>
-          <div id="page_size_menu" class="filter-list-menu"></div>
+      <div class="pagination-controls" style="display: flex; gap: 8px; align-items: center;">
+        <div class="pagination-size">
+          <div class="filter-menu compact" style="width: 88px; min-width: 88px;">
+            <input type="hidden" id="page_size" value="100">
+            <button type="button" id="page_size_btn" class="filter-menu-btn" style="width: 88px; min-width: 88px;" onclick="toggleFilterMenu('page_size')">每页 100</button>
+            <div id="page_size_menu" class="filter-list-menu"></div>
+          </div>
         </div>
-        <button id="btn_first_page" class="connect-btn" style="height: 32px; padding: 0 10px;">首页</button>
-        <button id="btn_prev_page" class="connect-btn" style="height: 32px; padding: 0 10px;">上一页</button>
-        <span style="font-size: 13px; color: var(--text-secondary); margin: 0 8px;">
+        <div class="pagination-nav">
+          <button id="btn_first_page" class="connect-btn" style="height: 32px; padding: 0 10px;">首页</button>
+          <button id="btn_prev_page" class="connect-btn" style="height: 32px; padding: 0 10px;">上一页</button>
+          <span class="page-indicator" style="font-size: 13px; color: var(--text-secondary); margin: 0 8px;">
           页码 <strong id="current_page_val" style="color: var(--primary);">1</strong> / <strong id="total_pages_val">1</strong>
-        </span>
-        <button id="btn_next_page" class="connect-btn" style="height: 32px; padding: 0 10px;">下一页</button>
-        <button id="btn_last_page" class="connect-btn" style="height: 32px; padding: 0 10px;">尾页</button>
+          </span>
+          <button id="btn_next_page" class="connect-btn" style="height: 32px; padding: 0 10px;">下一页</button>
+          <button id="btn_last_page" class="connect-btn" style="height: 32px; padding: 0 10px;">尾页</button>
+        </div>
       </div>
     </div>
   </div>
 
 </main>
 <script>
-let nodes=[], state={}, testingNodeIds = new Set(), testingChannelIds = new Set();
+let nodes=[], state={}, testingNodeIds = new Set();
 let selectedManualChannels = {};
 let currentPage = 1;
 let pageSize = 100;
 let currentPageNodes = [];
 let openLockMenuId = null;
 let toastTimer = null;
+let activeFloatingMenu = null;
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-const base=p=>(p||"").split(/[\\/]/).pop();
-function time(ts){return ts?new Date(ts*1000).toLocaleString():"从未"}
-function speed(v){return v?`${(v*8/1000/1000).toFixed(1)} Mbps`:"-"}
 
 function showToast(message, type = "info") {
   const toast = $("app_toast");
@@ -3326,18 +3054,103 @@ function asnOptionLabel(asn, scopedNodes) {
   return asnDisplay(asn, node ? (node.as_name || node.owner) : "").full;
 }
 
-function closeFilterMenus(exceptId = "") {
-  document.querySelectorAll(".filter-list-menu.open").forEach(menu => {
-    if (menu.id !== exceptId) menu.classList.remove("open");
+function countryMenuLabel(country) {
+  if (!country) return "🌐 全部国家";
+  const sample = nodes.find(n => (n.country === country || n.country_short === country) && n.country_short);
+  const flag = countryFlag(sample && sample.country_short);
+  return `${flag ? `${flag} ` : ""}${translateCountry(country)}`;
+}
+
+function getAllOpenMenus() {
+  return document.querySelectorAll(".filter-list-menu.open, .lock-list-menu.open, .asn-check-menu.open");
+}
+
+function isLockMenu(menu) {
+  return !!(menu && (menu.classList.contains("lock-list-menu") || menu.classList.contains("asn-check-menu")));
+}
+
+function closeFloatingMenu(menu) {
+  if (!menu) return;
+  menu.classList.remove("open", "drop-up");
+  menu.style.left = "";
+  menu.style.top = "";
+  menu.style.width = "";
+  menu.style.maxHeight = "";
+  menu.style.visibility = "";
+  if (menu.__triggerEl) menu.__triggerEl.classList.remove("menu-open");
+  if (activeFloatingMenu === menu) activeFloatingMenu = null;
+  if (isLockMenu(menu) && openLockMenuId === menu.id) openLockMenuId = null;
+}
+
+function closeAllMenus(exceptMenu = null) {
+  getAllOpenMenus().forEach(menu => {
+    if (menu !== exceptMenu) closeFloatingMenu(menu);
   });
+}
+
+function positionFloatingMenu(menu, trigger, options = {}) {
+  if (!menu || !trigger) return;
+  const gap = options.gap || 6;
+  const viewportPadding = 12;
+  const minHeight = options.minHeight || 120;
+  menu.classList.add("open");
+  menu.style.visibility = "hidden";
+  menu.style.left = "-9999px";
+  menu.style.top = "0";
+  menu.style.width = `${Math.max(options.minWidth || 0, trigger.getBoundingClientRect().width)}px`;
+
+  const triggerRect = trigger.getBoundingClientRect();
+  const measuredHeight = Math.max(menu.scrollHeight, minHeight);
+  const spaceBelow = window.innerHeight - triggerRect.bottom - viewportPadding;
+  const spaceAbove = triggerRect.top - viewportPadding;
+  const openUp = spaceBelow < Math.min(measuredHeight, 220) && spaceAbove > spaceBelow;
+  const maxHeight = Math.max(96, openUp ? spaceAbove - gap : spaceBelow - gap);
+  const desiredWidth = Math.max(options.minWidth || 0, triggerRect.width);
+  const left = Math.min(
+    Math.max(viewportPadding, triggerRect.left),
+    Math.max(viewportPadding, window.innerWidth - desiredWidth - viewportPadding)
+  );
+
+  menu.style.width = `${desiredWidth}px`;
+  menu.style.maxHeight = `${maxHeight}px`;
+  menu.style.left = `${left}px`;
+  menu.classList.toggle("drop-up", openUp);
+
+  const finalHeight = Math.min(menu.scrollHeight, maxHeight);
+  const top = openUp
+    ? Math.max(viewportPadding, triggerRect.top - finalHeight - gap)
+    : Math.min(window.innerHeight - finalHeight - viewportPadding, triggerRect.bottom + gap);
+  menu.style.top = `${top}px`;
+  menu.style.visibility = "";
+}
+
+function toggleFloatingMenu(menu, trigger, options = {}) {
+  if (!menu || !trigger) return;
+  const willOpen = !menu.classList.contains("open");
+  closeAllMenus(willOpen ? menu : null);
+  if (!willOpen) {
+    closeFloatingMenu(menu);
+    return;
+  }
+  menu.__triggerEl = trigger;
+  menu.__menuOptions = options;
+  trigger.classList.add("menu-open");
+  positionFloatingMenu(menu, trigger, options);
+  activeFloatingMenu = menu;
+  if (isLockMenu(menu)) openLockMenuId = menu.id;
+}
+
+function refreshOpenMenuPosition() {
+  if (activeFloatingMenu && activeFloatingMenu.__triggerEl && document.body.contains(activeFloatingMenu) && document.body.contains(activeFloatingMenu.__triggerEl)) {
+    positionFloatingMenu(activeFloatingMenu, activeFloatingMenu.__triggerEl, activeFloatingMenu.__menuOptions || {});
+  }
 }
 
 function toggleFilterMenu(key) {
   const menu = $(`${key}_menu`);
-  if (!menu) return;
-  const willOpen = !menu.classList.contains("open");
-  closeFilterMenus(menu.id);
-  menu.classList.toggle("open", willOpen);
+  const button = $(`${key}_btn`);
+  if (!menu || !button) return;
+  toggleFloatingMenu(menu, button, {minWidth: button.getBoundingClientRect().width});
 }
 
 function renderFilterMenu(key, options, selectedValue) {
@@ -3357,7 +3170,7 @@ function setFilterValue(key, value) {
   const menu = $(`${key}_menu`);
   if (!input) return;
   input.value = value || "";
-  if (menu) menu.classList.remove("open");
+  if (menu) closeFloatingMenu(menu);
 
   if (key === "country_filter") {
     currentPage = 1;
@@ -3380,22 +3193,22 @@ function setFilterValue(key, value) {
 
 function updateStaticFilterMenus() {
   renderFilterMenu("status_filter", [
-    {value: "", label: "全部状态"},
-    {value: "available", label: "可用"},
-    {value: "not_checked", label: "待检测"},
-    {value: "unavailable", label: "不可用"},
+    {value: "", label: "状态：全部"},
+    {value: "available", label: "状态：可用"},
+    {value: "not_checked", label: "状态：待检测"},
+    {value: "unavailable", label: "状态：不可用"},
   ], $("status_filter") ? $("status_filter").value : "");
   renderFilterMenu("type_filter", [
-    {value: "", label: "全部类型"},
-    {value: "residential", label: "住宅 IP"},
-    {value: "hosting", label: "机房 IP"},
-    {value: "mobile", label: "移动网"},
-    {value: "proxy", label: "代理 IP"},
+    {value: "", label: "类型：全部"},
+    {value: "residential", label: "类型：住宅 IP"},
+    {value: "hosting", label: "类型：机房 IP"},
+    {value: "mobile", label: "类型：移动网"},
+    {value: "proxy", label: "类型：代理 IP"},
   ], $("type_filter") ? $("type_filter").value : "");
   renderFilterMenu("latency_sort", [
-    {value: "", label: "延迟默认"},
-    {value: "asc", label: "延迟升序"},
-    {value: "desc", label: "延迟降序"},
+    {value: "", label: "延迟：默认"},
+    {value: "asc", label: "延迟：升序"},
+    {value: "desc", label: "延迟：降序"},
   ], $("latency_sort") ? $("latency_sort").value : "");
   renderFilterMenu("page_size", [
     {value: "25", label: "每页 25"},
@@ -3417,7 +3230,7 @@ function updateCountryFilter() {
   }
   renderFilterMenu(
     "country_filter",
-    [{value: "", label: "全部国家"}].concat(countries.map(c => ({value: c, label: translateCountry(c)}))),
+    [{value: "", label: countryMenuLabel("")}].concat(countries.map(c => ({value: c, label: countryMenuLabel(c)}))),
     input.value
   );
 }
@@ -3439,12 +3252,12 @@ function updateAsnFilter() {
   }
 
   const selectedClass = input.value ? "" : " active";
-  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" onclick="setFilterValue('asn_filter', '')">全部 ASN</button>` +
+  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" onclick="setFilterValue('asn_filter', '')">ASN：全部</button>` +
     asns.map(asn => {
       const active = asn === input.value ? " active" : "";
       return `<button type="button" class="filter-option${active}" onclick="setFilterValue('asn_filter', decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
     }).join("");
-  button.textContent = input.value ? asnOptionLabel(input.value, scopedNodes) : "全部 ASN";
+  button.textContent = input.value ? `ASN：${asnOptionLabel(input.value, scopedNodes)}` : "ASN：全部";
 }
 
 function getFilteredNodes() {
@@ -3487,212 +3300,6 @@ function stableSortNodes() {
   });
 }
 
-function render(){
-  const activeNodeId = state.active_openvpn_node_id;
-  const activeNode = nodes.find(n => n.active || n.id === activeNodeId);
-  
-  // Render separated Active Node Card
-  const activeCardContainer = $("active_node_card");
-  if (state.is_connecting) {
-    activeCardContainer.innerHTML = `
-      <div class="active-card" style="background: var(--bg-surface); border-color: var(--warning); box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);">
-        <div class="active-card-info">
-          <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); width: 48px; height: 48px; border-radius: 12px;">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color: #f59e0b; width: 24px; height: 24px; animation: spin 2s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18" /></svg>
-          </div>
-          <div class="active-card-details">
-            <div class="active-card-title" style="color: var(--text-primary);">
-              <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);"><span class="badge-pulse" style="background: #f59e0b;"></span>正在连接</span>
-              <strong>${esc(state.active_node_latency || '正在连接...')}</strong>
-            </div>
-            <div class="active-card-meta" style="margin-top: 4px;">
-              ${esc(state.last_check_message || '正在与 VPN 节点建立加密隧道，请稍候...')}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  } else if (activeNode) {
-    const latencyClass = getLatencyClass(activeNode.latency_ms);
-    const latencyText = activeNode.latency_ms ? `<span class="latency-val ${latencyClass}">${activeNode.latency_ms} ms</span>` : "-";
-    const displayLocation = activeNode.location || translateCountry(activeNode.country) || "-";
-    activeCardContainer.innerHTML = `
-      <div class="active-card">
-        <div class="active-card-info">
-          <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); width: 48px; height: 48px; border-radius: 12px;">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color: #34d399; width: 24px; height: 24px;"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          </div>
-          <div class="active-card-details">
-            <div class="active-card-title">
-              <span class="badge available"><span class="badge-pulse"></span>已连接</span>
-              <strong>${esc(translateCountry(activeNode.country))} 节点</strong>
-            </div>
-            <div class="active-card-value mono" style="font-size: 20px; margin-top: 2px;">
-              ${esc(activeNode.ip || activeNode.remote_host)}:${activeNode.remote_port || ""}
-            </div>
-            <div class="active-card-meta" style="margin-top: 4px;">
-              <span>物理位置: <strong>${esc(displayLocation)}</strong></span>
-              <span style="margin-left: 12px;">延时: <strong>${latencyText}</strong></span>
-              <span style="margin-left: 12px;">运营主体: <strong>${esc(activeNode.owner || activeNode.as_name || "-")}</strong></span>
-              <span style="margin-left: 12px;">IP 类型: <strong>${esc(translateIpType(activeNode.ip_type))}</strong></span>
-            </div>
-          </div>
-        </div>
-        <button class="btn-danger" style="height: 38px; padding: 0 16px; border-radius: 8px;" onclick="disconnectNode()">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          断开连接
-        </button>
-      </div>
-    `;
-  } else {
-    activeCardContainer.innerHTML = `
-      <div class="active-card" style="background: var(--bg-surface); border-color: var(--border-color); box-shadow: none;">
-        <div class="active-card-info">
-          <div class="stat-icon-wrapper" style="background: rgba(244, 63, 94, 0.1); border-color: rgba(244, 63, 94, 0.2); width: 48px; height: 48px; border-radius: 12px;">
-            <svg xmlns="http://www.w3.org/2000/svg" class="stat-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color: var(--danger); width: 24px; height: 24px;"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-          </div>
-          <div class="active-card-details">
-            <div class="active-card-title" style="color: var(--text-secondary);">
-              <span class="badge unavailable" style="padding: 2px 8px;">未连接</span> 当前未连接 VPN 节点
-            </div>
-            <div class="active-card-meta" style="margin-top: 4px;">
-              在下方列表中选择一个可用备用节点并点击 “切换” 按钮开始连接。
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  const shown = getFilteredNodes();
-  
-  $("total").textContent=nodes.length; 
-  $("target").textContent=state.target_valid_nodes||3;
-  $("active").textContent=activeNode?1:0; 
-  
-  const statusMessage = state.last_check_message || "";
-  const activeNodeInfo = activeNode ? `<span class="badge available" style="margin-left:8px; padding:2px 8px;">${esc(translateCountry(activeNode.country))} (${activeNode.id})</span>` : `<span class="badge unavailable" style="margin-left:8px; padding:2px 8px;">无</span>`;
-  $("status").innerHTML=`<span class="status-dot"></span>HTTP 代理本地接口：http://127.0.0.1:7928 | 活动节点：${activeNodeInfo} | 状态：${statusMessage}`;
-  
-  // Update proxy test status card based on background checks
-  const pBadge = $("proxy_status_badge");
-  const pIpVal = $("proxy_ip_val");
-  const pLatVal = $("proxy_latency_val");
-  const pBtn = $("btn_test_proxy");
-  
-  if (state.is_connecting) {
-    pBadge.className = "badge";
-    pBadge.style.background = "rgba(245, 158, 11, 0.15)";
-    pBadge.style.color = "#f59e0b";
-    pBadge.style.borderColor = "rgba(245, 158, 11, 0.3)";
-    pBadge.innerHTML = `<span class="badge-pulse" style="background: #f59e0b;"></span>正在连接`;
-    pIpVal.textContent = state.active_node_latency || "正在连接...";
-    pLatVal.innerHTML = `<span style="color: var(--text-secondary); font-size: 12px;">${esc(state.last_check_message || "正在与 VPN 节点建立加密隧道，请稍候...")}</span>`;
-    pBtn.disabled = true;
-    pBtn.style.opacity = "0.5";
-    pBtn.style.cursor = "not-allowed";
-  } else {
-    pBtn.disabled = false;
-    pBtn.style.opacity = "";
-    pBtn.style.cursor = "";
-    pBadge.style.background = "";
-    pBadge.style.color = "";
-    pBadge.style.borderColor = "";
-    if (state.proxy_ok !== undefined) {
-      if (state.proxy_ok) {
-        pBadge.className = "badge available";
-        pBadge.textContent = "可用";
-        pIpVal.textContent = state.proxy_ip || "-";
-        const latencyClass = getLatencyClass(state.proxy_latency_ms);
-        pLatVal.innerHTML = `<span class="latency-val ${latencyClass}" style="margin-left:8px;">${state.proxy_latency_ms} ms</span>`;
-      } else {
-        pBadge.className = "badge unavailable";
-        pBadge.textContent = "不可用";
-        pIpVal.textContent = "-";
-        if (state.last_check_message) {
-          pLatVal.innerHTML = `<span style="color: var(--text-secondary); font-size: 12px;">${esc(state.last_check_message)}</span>`;
-        } else {
-          pLatVal.innerHTML = `<span class="latency-val latency-poor" style="margin-left:8px; font-size:11px;" title="${esc(state.proxy_error)}">${esc(state.proxy_error || "连接失败")}</span>`;
-        }
-      }
-    } else {
-      pBadge.className = "badge not_checked";
-      pBadge.textContent = "未检测";
-      pIpVal.textContent = "-";
-      if (state.last_check_message) {
-        pLatVal.innerHTML = `<span style="color: var(--text-secondary); font-size: 12px;">${esc(state.last_check_message)}</span>`;
-      } else {
-        pLatVal.innerHTML = "";
-      }
-    }
-  }
-
-  // Pagination calculation
-  const totalPages = Math.ceil(shown.length / pageSize) || 1;
-  if (currentPage > totalPages) currentPage = totalPages;
-  if (currentPage < 1) currentPage = 1;
-  
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, shown.length);
-  currentPageNodes = shown.slice(startIndex, endIndex);
-
-  // Render table rows
-  if (currentPageNodes.length === 0) {
-    $("rows").innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
-  } else {
-    $("rows").innerHTML=currentPageNodes.map(n=>{
-      const isCurrentlyActive = activeNode && n.id === activeNode.id;
-      const rowClass = isCurrentlyActive ? 'class="active-row"' : '';
-      
-      const badgeClass = isCurrentlyActive ? 'available' : (n.probe_status || 'not_checked');
-      const badgeText = isCurrentlyActive ? '<span class="badge-pulse"></span>已连接' : translateStatus(n.probe_status);
-      const latencyClass = getLatencyClass(n.latency_ms);
-      const latencyText = n.latency_ms ? `<span class="latency-val ${latencyClass}">${n.latency_ms} ms</span>` : "-";
-      const displayLocation = n.location || translateCountry(n.country) || "-";
-      
-      const isTesting = testingNodeIds.has(n.id);
-      const testSpinner = `<svg style="animation: spin 1s linear infinite; width: 12px; height: 12px; display: inline-block; margin-right: 4px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.2" fill="none"></circle><path d="M4 12a8 8 0 018-8" stroke="currentColor" fill="none"></path></svg>`;
-      const testBtnText = isTesting ? `${testSpinner}检测中` : '检测';
-      const testBtn = `<button class="test-btn" data-node-id="${esc(n.id)}" ${isTesting ? 'disabled' : ''} onclick="testNode(this, '${esc(n.id)}', event)">${testBtnText}</button>`;
-      
-      // Connect button is disabled if probe status is "unavailable" and not already active, or if we are already connecting
-      const isUnavailable = n.probe_status === "unavailable";
-      const connectBtn = isCurrentlyActive 
-        ? `<button class="connect-btn" disabled style="background: var(--success-gradient); color: white; cursor: default; opacity: 1;">已连接</button>`
-        : `<button class="connect-btn" ${(isUnavailable || state.is_connecting) ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} onclick="connectNode('${esc(n.id)}')">切换</button>`;
-      
-      return `<tr ${rowClass}>
-        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-        <td>${latencyText}</td>
-        <td class="mono">${esc(n.ip||n.remote_host)}:${n.remote_port||""}</td>
-        <td>${esc(displayLocation)}</td>
-        <td class="mono" style="font-size:12px; color:var(--text-secondary);">${esc(n.asn||"-")}</td>
-        <td>${esc(n.owner||n.as_name||"-")}</td>
-        <td>${esc(translateQuality(n.quality))}</td>
-        <td>${esc(translateIpType(n.ip_type))}</td>
-        <td>
-          <div class="table-actions">
-            ${testBtn}
-            ${connectBtn}
-          </div>
-        </td>
-      </tr>`;
-    }).join("");
-  }
-
-  // Render pagination controls
-  $("page_start").textContent = shown.length > 0 ? startIndex + 1 : 0;
-  $("page_end").textContent = endIndex;
-  $("filtered_count").textContent = shown.length;
-  $("current_page_val").textContent = currentPage;
-  $("total_pages_val").textContent = totalPages;
-  
-  $("btn_first_page").disabled = currentPage === 1;
-  $("btn_prev_page").disabled = currentPage === 1;
-  $("btn_next_page").disabled = currentPage === totalPages;
-  $("btn_last_page").disabled = currentPage === totalPages;
-}
-
 function channelStatusMeta(ch) {
   if (ch && ch.is_connecting) return {text: "连接中", cls: "connecting"};
   if (ch && (ch.running || ch.node_id)) return {text: "已连接", cls: ""};
@@ -3711,7 +3318,7 @@ function countryLockOptions(channel, currentValue) {
   const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
   const normalized = currentValue || "";
   const allClass = normalized ? "" : " active";
-  const options = [`<button type="button" class="country-lock-option${allClass}" onclick="setChannelCountry(${channel}, '')">全部国家</button>`];
+  const options = [`<button type="button" class="country-lock-option${allClass}" onclick="setChannelCountry(${channel}, '')">🌐 全部国家</button>`];
   countries.forEach(country => {
     const active = country === normalized ? " active" : "";
     const sample = nodes.find(n => n.country === country && n.country_short);
@@ -3735,15 +3342,15 @@ function asnCheckboxOptions(channel, currentValue) {
   const asns = Array.from(new Set([...selected, ...currentAsns])).sort();
   if (!asns.length) return '<div class="asn-check-option" style="color: var(--text-secondary); cursor: default;">暂无 ASN</div>';
   return asns.map(asn => {
-    const checked = selected.has(asn) ? "checked" : "";
+    const active = selected.has(asn) ? " active" : "";
     const present = currentAsns.has(asn);
     const label = present ? asnOptionLabel(asn, scopedNodes) : `${asn} 暂无节点`;
-    return `<label class="asn-check-option${present ? "" : " stale"}"><input type="checkbox" value="${esc(asn)}" ${checked} onchange="setChannelAsn(${channel})"><span>${esc(label)}</span></label>`;
+    return `<button type="button" class="asn-check-option${active}${present ? "" : " stale"}" onclick="setChannelAsn(${channel}, decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(label)}</button>`;
   }).join("");
 }
 
 function countryLockLabel(ch) {
-  if (!ch || !ch.country_lock) return "全部国家锁定";
+  if (!ch || !ch.country_lock) return "🌐 全部国家锁定";
   const sample = nodes.find(n => (n.country === ch.country_lock || n.country_short === ch.country_lock) && n.country_short);
   const flag = countryFlag(sample && sample.country_short);
   return `国家锁定：${flag ? flag : ""}${translateCountry(ch.country_lock)}`;
@@ -3803,13 +3410,13 @@ function renderChannelCards() {
         </div>
         <div class="channel-options">
           <div class="lock-menu">
-            <button type="button" class="lock-mode-btn country-lock-btn" onclick="toggleLockMenu('country', ${idx})">${esc(countryLockLabel(ch))}</button>
+            <button type="button" id="country_lock_btn_${idx}" class="lock-mode-btn country-lock-btn" onclick="toggleLockMenu('country', ${idx})">${esc(countryLockLabel(ch))}</button>
             <div id="country_select_${idx}" class="lock-list-menu">
               ${countryLockOptions(idx, ch.country_lock || "")}
             </div>
           </div>
           <div class="lock-menu">
-            <button type="button" class="lock-mode-btn asn-lock-btn" onclick="toggleLockMenu('asn', ${idx})">${esc(asnLockLabel(ch))}</button>
+            <button type="button" id="asn_lock_btn_${idx}" class="lock-mode-btn asn-lock-btn" onclick="toggleLockMenu('asn', ${idx})">${esc(asnLockLabel(ch))}</button>
             <div id="asn_select_${idx}" class="asn-check-menu">
               ${asnCheckboxOptions(idx, ch.asn_lock)}
             </div>
@@ -3821,7 +3428,13 @@ function renderChannelCards() {
   if (activeLockMenuId) {
     const restored = $(activeLockMenuId);
     if (restored) {
-      restored.classList.add("open");
+      const triggerId = activeLockMenuId.startsWith("country_select_")
+        ? activeLockMenuId.replace("country_select_", "country_lock_btn_")
+        : activeLockMenuId.replace("asn_select_", "asn_lock_btn_");
+      const trigger = $(triggerId);
+      if (trigger) {
+        toggleFloatingMenu(restored, trigger, {minWidth: trigger.getBoundingClientRect().width});
+      }
       restored.scrollTop = activeLockMenuScrollTop;
     }
   }
@@ -3838,7 +3451,7 @@ function render(){
   const endIndex = Math.min(startIndex + pageSize, shown.length);
   currentPageNodes = shown.slice(startIndex, endIndex);
 
-  $("status").innerHTML = `<span class="status-dot"></span>代理端口 ${state.proxy_base_port || 7928}-${(state.proxy_base_port || 7928) + (state.channel_count || 6) - 1} | 通道 ${state.channel_count || 6} 个 | ${esc(state.last_check_message || "服务运行中")}`;
+  $("status").innerHTML = `<span class="status-dot"></span>代理端口 ${state.proxy_base_port || 7928}-${(state.proxy_base_port || 7928) + (state.channel_count || 6) - 1} · 通道 ${state.channel_count || 6} 个 · ${esc(state.last_check_message || "服务运行中")}`;
 
   if (currentPageNodes.length === 0) {
     $("rows").innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
@@ -3962,9 +3575,6 @@ function startConnectionPolling() {
         clearInterval(pollInterval);
         pollInterval = null;
         if (manualRefreshActive) resetRefreshButton();
-        try {
-          await fetch("./api/test_proxy", { method: "POST" });
-        } catch(pe){}
         load();
       }
     } catch(pe) {
@@ -4019,9 +3629,6 @@ async function disconnectNode(){
     const response = await fetch("./api/disconnect", { method: "POST" });
     const result = await response.json();
     if (result.ok) {
-      try {
-        await fetch("./api/test_proxy", { method: "POST" });
-      } catch(pe){}
       load();
     } else {
       alert("断开连接失败: " + (result.error || "未知错误"));
@@ -4029,13 +3636,6 @@ async function disconnectNode(){
   } catch (e) {
     alert("请求断开连接失败");
   }
-}
-
-function firstAvailableChannel() {
-  const channels = state.channels || [];
-  const idle = channels.find(ch => !ch.node_id && !ch.running && !ch.is_connecting);
-  if (idle) return idle.index || 0;
-  return 0;
 }
 
 function buildChannelChooser(nodeId) {
@@ -4049,7 +3649,7 @@ function buildChannelChooser(nodeId) {
     const active = idx === current ? " active" : "";
     return `<button type="button" class="filter-option${active}" onclick="setNodeChannel('${esc(nodeId)}', ${idx})">通道 ${idx}</button>`;
   }).join("");
-  return `<div class="filter-menu compact">
+  return `<div class="filter-menu compact node-channel-menu">
     <button type="button" class="filter-menu-btn" onclick="toggleNodeChannelMenu(this)">${esc(buttonText)}</button>
     <div class="filter-list-menu">
       <button type="button" class="filter-option${current === null ? " active" : ""}" onclick="setNodeChannel('${esc(nodeId)}', null)">选择通道</button>
@@ -4061,9 +3661,7 @@ function buildChannelChooser(nodeId) {
 function toggleNodeChannelMenu(button) {
   const menu = button && button.nextElementSibling;
   if (!menu) return;
-  const willOpen = !menu.classList.contains("open");
-  closeFilterMenus(menu.id || "");
-  menu.classList.toggle("open", willOpen);
+  toggleFloatingMenu(menu, button, {minWidth: button.getBoundingClientRect().width});
 }
 
 function setNodeChannel(nodeId, channel) {
@@ -4072,18 +3670,16 @@ function setNodeChannel(nodeId, channel) {
   } else {
     selectedManualChannels[nodeId] = channel;
   }
+  closeAllMenus();
   render();
 }
 
 function toggleLockMenu(kind, channel) {
   const targetId = `${kind}_select_${channel}`;
-  document.querySelectorAll(".lock-select.open, .lock-list-menu.open, .asn-check-menu.open").forEach(select => {
-    if (select.id !== targetId) select.classList.remove("open");
-  });
   const select = $(targetId);
+  const trigger = $(`${kind}_lock_btn_${channel}`);
   if (!select) return;
-  select.classList.toggle("open");
-  openLockMenuId = select.classList.contains("open") ? targetId : null;
+  toggleFloatingMenu(select, trigger, {minWidth: trigger ? trigger.getBoundingClientRect().width : 0});
 }
 
 async function connectNodeSmart(id) {
@@ -4163,8 +3759,7 @@ async function setChannelCountry(channel, country) {
       body: JSON.stringify({channel, country: String(country || "").trim()})
     });
     const select = $(`country_select_${channel}`);
-    if (select) select.classList.remove("open");
-    if (openLockMenuId === `country_select_${channel}`) openLockMenuId = null;
+    if (select) closeFloatingMenu(select);
   } catch (e) {
     alert("国家锁定保存失败");
   } finally {
@@ -4172,19 +3767,19 @@ async function setChannelCountry(channel, country) {
   }
 }
 
-async function setChannelAsn(channel) {
-  const menu = $(`asn_select_${channel}`);
-  const asns = menu
-    ? Array.from(menu.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value)
-    : [];
+async function setChannelAsn(channel, asn) {
   const currentChannel = state.channels && state.channels.find(ch => (ch.index || 0) === channel);
-  if (currentChannel) currentChannel.asn_lock = asns;
-  render();
+  const asns = new Set(normalizeAsnLocks(currentChannel && currentChannel.asn_lock));
+  if (asns.has(asn)) asns.delete(asn);
+  else asns.add(asn);
+  const nextAsns = Array.from(asns);
+  if (currentChannel) currentChannel.asn_lock = nextAsns;
+  renderChannelCards();
   try {
     const response = await fetch("./api/channel/asn_lock", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({channel, asns})
+      body: JSON.stringify({channel, asns: nextAsns})
     });
     if (!response.ok) throw new Error("save failed");
   } catch (e) {
@@ -4225,45 +3820,6 @@ $("refresh").onclick=async()=>{
     await load();
   }
 };
-if ($("btn_test_proxy")) $("btn_test_proxy").onclick = async () => {
-  const btn = $("btn_test_proxy");
-  const badge = $("proxy_status_badge");
-  const ipVal = $("proxy_ip_val");
-  const latVal = $("proxy_latency_val");
-  
-  btn.disabled = true;
-  btn.innerHTML = `<span class="badge-pulse"></span>测试中...`;
-  badge.className = "badge not_checked";
-  badge.textContent = "检测中...";
-  ipVal.textContent = "-";
-  latVal.textContent = "";
-  
-  try {
-    const response = await fetch("./api/test_proxy", { method: "POST" });
-    const result = await response.json();
-    if (result.ok) {
-      badge.className = "badge available";
-      badge.textContent = "可用";
-      ipVal.textContent = result.ip || "-";
-      
-      const latencyClass = getLatencyClass(result.latency_ms);
-      latVal.innerHTML = `<span class="latency-val ${latencyClass}" style="margin-left:8px;">${result.latency_ms} ms</span>`;
-    } else {
-      badge.className = "badge unavailable";
-      badge.textContent = "不可用";
-      ipVal.textContent = "-";
-      latVal.innerHTML = `<span class="latency-val latency-poor" style="margin-left:8px; font-size:11px;" title="${esc(result.error)}">连接失败</span>`;
-    }
-  } catch (e) {
-    badge.className = "badge unavailable";
-    badge.textContent = "网络错误";
-    ipVal.textContent = "-";
-    latVal.innerHTML = `<span class="latency-val latency-poor" style="margin-left:8px; font-size:11px;">请求出错</span>`;
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" style="width:16px; height:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> 测试代理`;
-  }
-};
 
 async function logoutAdmin() {
   try {
@@ -4276,6 +3832,19 @@ async function logoutAdmin() {
     window.location.reload();
   }
 }
+
+document.addEventListener("click", event => {
+  if (!event.target.closest(".filter-menu") && !event.target.closest(".lock-menu")) {
+    closeAllMenus();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeAllMenus();
+});
+
+window.addEventListener("resize", refreshOpenMenuPosition);
+window.addEventListener("scroll", refreshOpenMenuPosition, true);
 
 // 页面加载时自动初始化数据
 load();
