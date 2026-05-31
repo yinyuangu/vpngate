@@ -2920,24 +2920,19 @@ INDEX_HTML = r"""<!doctype html>
 
   <section class="toolbar">
     <div class="filter-menu">
-      <input type="hidden" id="status_filter" value="">
+      <input type="hidden" id="status_filter" value="[]">
       <button type="button" id="status_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('status_filter')">状态: 全部</button>
-      <div id="status_filter_menu" class="filter-list-menu"></div>
+      <div id="status_filter_menu" class="filter-list-menu multi-select-menu"></div>
     </div>
     <div class="filter-menu">
-      <input type="hidden" id="country_filter" value="">
+      <input type="hidden" id="country_filter" value="[]">
       <button type="button" id="country_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('country_filter')">国家: 全部</button>
-      <div id="country_filter_menu" class="filter-list-menu"></div>
+      <div id="country_filter_menu" class="filter-list-menu multi-select-menu"></div>
     </div>
     <div class="filter-menu">
-      <input type="hidden" id="type_filter" value="">
+      <input type="hidden" id="type_filter" value="[]">
       <button type="button" id="type_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('type_filter')">类型: 全部</button>
-      <div id="type_filter_menu" class="filter-list-menu"></div>
-    </div>
-    <div class="filter-menu">
-      <input type="hidden" id="latency_sort" value="">
-      <button type="button" id="latency_sort_btn" class="filter-menu-btn" onclick="toggleFilterMenu('latency_sort')">延迟: 默认</button>
-      <div id="latency_sort_menu" class="filter-list-menu"></div>
+      <div id="type_filter_menu" class="filter-list-menu multi-select-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="asn_filter" value="[]">
@@ -3141,22 +3136,20 @@ function countryOptionLabel(country) {
   return `${flag ? `${flag} ` : ""}${translateCountry(country)}`;
 }
 
-function countryButtonLabel(country) {
-  return `国家: ${country ? countryOptionLabel(country) : "全部"}`;
+function selectionCountLabel(prefix, values, emptyLabel = "全部") {
+  return `${prefix}: ${values.length ? `已选 ${values.length}` : emptyLabel}`;
 }
 
-function statusButtonLabel(status) {
-  return `状态: ${status ? translateStatus(status) : "全部"}`;
+function statusButtonLabel(values) {
+  return selectionCountLabel("状态", values);
 }
 
-function typeButtonLabel(type) {
-  return `类型: ${type ? translateIpType(type) : "全部"}`;
+function countryButtonLabel(values) {
+  return selectionCountLabel("国家", values);
 }
 
-function latencyButtonLabel(sort) {
-  if (sort === "asc") return "延迟: 升序";
-  if (sort === "desc") return "延迟: 降序";
-  return "延迟: 默认";
+function typeButtonLabel(values) {
+  return selectionCountLabel("类型", values);
 }
 
 function nodeCountryLabel(node) {
@@ -3306,7 +3299,7 @@ function renderFilterMenu(key, options, selectedValue, buttonLabel) {
   button.textContent = buttonLabel !== undefined ? buttonLabel : (selected ? selected.label : "");
   menu.innerHTML = options.map(option => {
     const active = option.value === selectedValue ? " active" : "";
-    return `<button type="button" class="filter-option${active}" onclick="event.stopPropagation(); setFilterValue('${key}', decodeURIComponent('${encodeURIComponent(option.value)}')); return false;">${esc(option.label)}</button>`;
+    return `<button type="button" class="filter-option${active}" onclick="setFilterValue('${key}', decodeURIComponent('${encodeURIComponent(option.value)}')); return false;">${esc(option.label)}</button>`;
   }).join("");
 }
 
@@ -3317,13 +3310,41 @@ function splitLegacyAsnString(value) {
     .filter(Boolean);
 }
 
-function selectedAsnFilters() {
-  const input = $("asn_filter");
-  return normalizeAsnLocks(input ? input.value : "");
+function normalizeStringSelections(value) {
+  let rawValues = [];
+  if (Array.isArray(value)) {
+    rawValues = value;
+  } else {
+    const text = String(value || "").trim();
+    if (!text) rawValues = [];
+    else if (text.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(text);
+        rawValues = Array.isArray(parsed) ? parsed : [parsed];
+      } catch (err) {
+        rawValues = [text];
+      }
+    } else {
+      rawValues = [text];
+    }
+  }
+  const seen = new Set();
+  return rawValues
+    .map(v => String(v || "").trim())
+    .filter(v => {
+      if (!v || seen.has(v)) return false;
+      seen.add(v);
+      return true;
+    });
 }
 
-function serializeAsnLocks(values) {
-  return JSON.stringify(normalizeAsnLocks(values));
+function selectedFilterValues(key) {
+  const input = $(key);
+  return normalizeStringSelections(input ? input.value : "");
+}
+
+function serializeSelections(values) {
+  return JSON.stringify(normalizeStringSelections(values));
 }
 
 function setRefreshButtonLabel(text) {
@@ -3341,13 +3362,6 @@ function setFilterValue(key, value) {
   input.value = value || "";
   if (menu) closeFloatingMenu(menu);
 
-  if (key === "country_filter") {
-    currentPage = 1;
-    updateCountryFilter();
-    updateAsnFilter();
-    render();
-    return;
-  }
   if (key === "page_size") {
     pageSize = parseInt(input.value, 10) || 100;
     currentPage = 1;
@@ -3360,25 +3374,56 @@ function setFilterValue(key, value) {
   render();
 }
 
+function setMultiFilterValue(key, value) {
+  const input = $(key);
+  const menu = $(`${key}_menu`);
+  if (!input) return;
+  const selected = new Set(selectedFilterValues(key));
+  if (selected.has(value)) selected.delete(value);
+  else selected.add(value);
+  input.value = serializeSelections(Array.from(selected));
+  currentPage = 1;
+  if (key === "country_filter") updateCountryFilter();
+  updateStaticFilterMenus();
+  updateAsnFilter();
+  render();
+  if (menu && menu.classList.contains("open") && menu.__triggerEl) {
+    positionFloatingMenu(menu, menu.__triggerEl, menu.__menuOptions || {});
+  }
+}
+
+function renderMultiFilterMenu(key, options, selectedValues, buttonLabel) {
+  const menu = $(`${key}_menu`);
+  const button = $(`${key}_btn`);
+  if (!menu || !button) return;
+  const selectedSet = new Set(selectedValues);
+  button.textContent = buttonLabel;
+  menu.innerHTML = options.length
+    ? options.map(option => {
+        const active = selectedSet.has(option.value) ? " active" : "";
+        return `<button type="button" class="filter-option${active}" onclick="setMultiFilterValue('${key}', decodeURIComponent('${encodeURIComponent(option.value)}')); return false;">${esc(option.label)}</button>`;
+      }).join("")
+    : `<div class="filter-option" style="cursor: default; color: var(--text-secondary);">暂无选项</div>`;
+}
+
 function updateStaticFilterMenus() {
-  renderFilterMenu("status_filter", [
-    {value: "", label: "全部"},
+  const selectedStatuses = selectedFilterValues("status_filter");
+  renderMultiFilterMenu("status_filter", [
     {value: "available", label: "可用"},
     {value: "not_checked", label: "待检测"},
     {value: "unavailable", label: "不可用"},
-  ], $("status_filter") ? $("status_filter").value : "", statusButtonLabel($("status_filter") ? $("status_filter").value : ""));
-  renderFilterMenu("type_filter", [
-    {value: "", label: "全部"},
+  ], selectedStatuses, statusButtonLabel(selectedStatuses));
+  $("status_filter").value = serializeSelections(selectedStatuses);
+
+  const selectedTypes = selectedFilterValues("type_filter");
+  renderMultiFilterMenu("type_filter", [
     {value: "residential", label: "住宅 IP"},
     {value: "hosting", label: "机房 IP"},
     {value: "mobile", label: "移动网"},
     {value: "proxy", label: "代理 IP"},
-  ], $("type_filter") ? $("type_filter").value : "", typeButtonLabel($("type_filter") ? $("type_filter").value : ""));
-  renderFilterMenu("latency_sort", [
-    {value: "", label: "默认"},
-    {value: "asc", label: "升序"},
-    {value: "desc", label: "降序"},
-  ], $("latency_sort") ? $("latency_sort").value : "", latencyButtonLabel($("latency_sort") ? $("latency_sort").value : ""));
+  ], selectedTypes, typeButtonLabel(selectedTypes));
+  $("type_filter").value = serializeSelections(selectedTypes);
+
   renderFilterMenu("page_size", [
     {value: "25", label: "每页 25"},
     {value: "50", label: "每页 50"},
@@ -3389,19 +3434,15 @@ function updateStaticFilterMenus() {
 function updateCountryFilter() {
   const input = $("country_filter");
   if (!input) return;
-  const selectedValue = input.value;
+  const selectedValues = selectedFilterValues("country_filter");
   const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
-
-  if (countries.includes(selectedValue)) {
-    input.value = selectedValue;
-  } else {
-    input.value = "";
-  }
-  renderFilterMenu(
+  const validSelected = selectedValues.filter(country => countries.includes(country));
+  input.value = serializeSelections(validSelected);
+  renderMultiFilterMenu(
     "country_filter",
-    [{value: "", label: "全部"}].concat(countries.map(c => ({value: c, label: countryOptionLabel(c)}))),
-    input.value,
-    countryButtonLabel(input.value)
+    countries.map(c => ({value: c, label: countryOptionLabel(c)})),
+    validSelected,
+    countryButtonLabel(validSelected)
   );
 }
 
@@ -3410,71 +3451,43 @@ function updateAsnFilter() {
   const menu = $("asn_filter_menu");
   const button = $("asn_filter_btn");
   if (!input || !menu || !button) return;
-  const selectedValues = selectedAsnFilters();
-  const selectedCountry = $("country_filter") ? $("country_filter").value : "";
-  const scopedNodes = selectedCountry ? nodes.filter(n => n.country === selectedCountry) : nodes;
+  const selectedValues = selectedFilterValues("asn_filter");
+  const selectedCountries = selectedFilterValues("country_filter");
+  const scopedNodes = selectedCountries.length ? nodes.filter(n => selectedCountries.includes(n.country)) : nodes;
   const asns = Array.from(new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
   const validSelected = selectedValues.filter(asn => asns.includes(asn));
-  input.value = serializeAsnLocks(validSelected);
+  input.value = serializeSelections(validSelected);
   const selectedSet = new Set(validSelected);
 
   menu.innerHTML = asns.length
     ? asns.map(asn => {
         const active = selectedSet.has(asn) ? " active" : "";
-        return `<button type="button" class="filter-option${active}" onclick="event.stopPropagation(); setAsnFilter(decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+        return `<button type="button" class="filter-option${active}" onclick="setMultiFilterValue('asn_filter', decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
       }).join("")
     : `<div class="filter-option" style="cursor: default; color: var(--text-secondary);">暂无 ASN</div>`;
-  button.textContent = selectedSet.size ? `ASN: 已选 ${selectedSet.size}` : "ASN: 全部";
-}
-
-function setAsnFilter(asn) {
-  const input = $("asn_filter");
-  if (!input) return;
-  const menu = $("asn_filter_menu");
-  if (!asn) {
-    input.value = "[]";
-  } else {
-    const selected = new Set(selectedAsnFilters());
-    if (selected.has(asn)) selected.delete(asn);
-    else selected.add(asn);
-    input.value = serializeAsnLocks(Array.from(selected));
-  }
-  currentPage = 1;
-  updateAsnFilter();
-  render();
-  if (menu && menu.classList.contains("open") && menu.__triggerEl) {
-    positionFloatingMenu(menu, menu.__triggerEl, menu.__menuOptions || {});
-  }
+  button.textContent = selectionCountLabel("ASN", validSelected);
 }
 
 function getFilteredNodes() {
-  const selectedCountry = $("country_filter").value;
-  const selectedAsns = selectedAsnFilters();
-  const selectedStatus = $("status_filter") ? $("status_filter").value : "";
-  const selectedType = $("type_filter") ? $("type_filter").value : "";
-  const latencySort = $("latency_sort") ? $("latency_sort").value : "";
+  const selectedCountries = selectedFilterValues("country_filter");
+  const selectedAsns = selectedFilterValues("asn_filter");
+  const selectedStatuses = selectedFilterValues("status_filter");
+  const selectedTypes = selectedFilterValues("type_filter");
   const filtered = nodes.filter(n => {
-    if (selectedCountry && n.country !== selectedCountry) {
+    if (selectedCountries.length && !selectedCountries.includes(n.country)) {
       return false;
     }
     if (selectedAsns.length && !selectedAsns.includes(String(n.asn || ""))) {
       return false;
     }
-    if (selectedStatus && (n.probe_status || "not_checked") !== selectedStatus) {
+    if (selectedStatuses.length && !selectedStatuses.includes(n.probe_status || "not_checked")) {
       return false;
     }
-    if (selectedType && String(n.ip_type || "") !== selectedType) {
+    if (selectedTypes.length && !selectedTypes.includes(String(n.ip_type || ""))) {
       return false;
     }
     return true;
   });
-  if (latencySort) {
-    filtered.sort((a, b) => {
-      const aLatency = Number(a.latency_ms) || 999999;
-      const bLatency = Number(b.latency_ms) || 999999;
-      return latencySort === "asc" ? aLatency - bLatency : bLatency - aLatency;
-    });
-  }
   return filtered;
 }
 
@@ -3511,7 +3524,7 @@ function countryLockOptions(channel, currentValue) {
     const active = country === normalized ? " active" : "";
     const sample = nodes.find(n => n.country === country && n.country_short);
     const flag = countryFlag(sample && sample.country_short);
-    return `<button type="button" class="country-lock-option${active}" onclick="event.stopPropagation(); setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}')); return false;">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country))}</span></button>`;
+    return `<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}')); return false;">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country))}</span></button>`;
   }).join("");
 }
 
@@ -3555,7 +3568,7 @@ function asnCheckboxOptions(channel, currentValue) {
     const active = selected.has(asn) ? " active" : "";
     const present = currentAsns.has(asn);
     const label = present ? asnOptionLabel(asn, scopedNodes) : `${asn} 暂无节点`;
-    return `<button type="button" class="asn-check-option${active}${present ? "" : " stale"}" onclick="event.stopPropagation(); setChannelAsn(${channel}, decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(label)}</button>`;
+    return `<button type="button" class="asn-check-option${active}${present ? "" : " stale"}" onclick="setChannelAsn(${channel}, decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(label)}</button>`;
   }).join("");
 }
 
