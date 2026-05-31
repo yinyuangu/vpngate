@@ -1577,28 +1577,6 @@ INDEX_HTML = r"""<!doctype html>
       gap: 8px;
     }
 
-    .status {
-      display: none;
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-      align-items: center;
-      gap: 8px;
-      max-width: min(760px, 52vw);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 10px var(--success);
-      display: inline-block;
-    }
-
     button {
       height: 38px;
       border: 1px solid var(--border-color);
@@ -1667,7 +1645,6 @@ INDEX_HTML = r"""<!doctype html>
     .filter-menu {
       position: relative;
       min-width: 0;
-      z-index: 3;
     }
 
     .filter-menu-btn {
@@ -1713,15 +1690,15 @@ INDEX_HTML = r"""<!doctype html>
       position: fixed;
       left: 0;
       top: 0;
-      z-index: 5200;
+      z-index: 90000;
       width: 100%;
       max-height: 260px;
       overflow-y: auto;
       border-radius: 8px;
-      border: 1px solid rgba(126, 146, 178, 0.2);
-      background: linear-gradient(180deg, rgba(15, 26, 43, 0.985), rgba(10, 19, 33, 0.985));
+      border: 1px solid rgba(126, 146, 178, 0.32);
+      background: linear-gradient(180deg, #0f1a2b, #0a1321);
       padding: 6px;
-      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
       scrollbar-width: none;
       overscroll-behavior: contain;
     }
@@ -1761,7 +1738,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .filter-menu.compact .filter-list-menu {
-      width: 98px;
+      width: 100%;
     }
 
     .node-channel-menu {
@@ -1773,6 +1750,17 @@ INDEX_HTML = r"""<!doctype html>
       width: 104px;
       min-width: 104px;
       justify-content: center;
+    }
+
+    .node-channel-menu .filter-option {
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    .node-channel-list-menu .filter-option {
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
     }
 
     .filter-option {
@@ -2350,7 +2338,6 @@ INDEX_HTML = r"""<!doctype html>
     .lock-menu {
       position: relative;
       min-width: 0;
-      z-index: 4;
     }
 
     .lock-mode-btn {
@@ -2419,15 +2406,15 @@ INDEX_HTML = r"""<!doctype html>
       position: fixed;
       left: 0;
       top: 0;
-      z-index: 5300;
+      z-index: 91000;
       width: 100%;
-      max-height: 180px;
+      max-height: 240px;
       overflow-y: auto;
       border-radius: 6px;
-      border: 1px solid var(--border-color);
-      background: rgba(13, 24, 40, 0.98);
+      border: 1px solid rgba(126, 146, 178, 0.32);
+      background: linear-gradient(180deg, #0f1a2b, #0a1321);
       padding: 6px;
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
       scrollbar-width: none;
       overscroll-behavior: contain;
     }
@@ -2655,12 +2642,6 @@ INDEX_HTML = r"""<!doctype html>
         font-size: 17px;
       }
 
-      .status {
-        align-items: flex-start;
-        line-height: 1.45;
-        word-break: break-word;
-      }
-
       .dashboard-toolbar {
         width: 100%;
         display: grid;
@@ -2812,7 +2793,6 @@ INDEX_HTML = r"""<!doctype html>
       <svg xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px; color:#818cf8;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
       多通道管理
     </h1>
-    <div id="status" class="status"><span class="status-dot"></span>服务加载中...</div>
   </div>
   <div class="dashboard-toolbar">
     <button id="refresh" class="btn-dark">
@@ -2848,7 +2828,7 @@ INDEX_HTML = r"""<!doctype html>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="country_filter" value="">
-      <button type="button" id="country_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('country_filter')">🌐 全部国家</button>
+      <button type="button" id="country_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('country_filter')">国家：全部</button>
       <div id="country_filter_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
@@ -2957,6 +2937,7 @@ const translateCountry = c => {
     "United Kingdom": "英国",
     "Russian Federation": "俄罗斯",
     "Russian": "俄罗斯",
+    "Russia": "俄罗斯",
     "Viet Nam": "越南",
     "Vietnam": "越南",
     "China": "中国",
@@ -2984,6 +2965,7 @@ const translateCountry = c => {
     "Argentina": "阿根廷",
     "Chile": "智利",
     "Mexico": "墨西哥",
+    "Peru": "秘鲁",
     "Egypt": "埃及",
     "Romania": "罗马尼亚",
     "Poland": "波兰",
@@ -3055,10 +3037,16 @@ function asnOptionLabel(asn, scopedNodes) {
 }
 
 function countryMenuLabel(country) {
-  if (!country) return "🌐 全部国家";
+  if (!country) return "国家：全部";
   const sample = nodes.find(n => (n.country === country || n.country_short === country) && n.country_short);
   const flag = countryFlag(sample && sample.country_short);
   return `${flag ? `${flag} ` : ""}${translateCountry(country)}`;
+}
+
+function nodeCountryLabel(node) {
+  if (!node) return "-";
+  const flag = countryFlag(node.country_short);
+  return `${flag ? `${flag} ` : ""}${translateCountry(node.country)}`;
 }
 
 function getAllOpenMenus() {
@@ -3067,6 +3055,33 @@ function getAllOpenMenus() {
 
 function isLockMenu(menu) {
   return !!(menu && (menu.classList.contains("lock-list-menu") || menu.classList.contains("asn-check-menu")));
+}
+
+function portalFloatingMenu(menu) {
+  if (!menu || menu.parentNode === document.body) return;
+  const parent = menu.parentNode;
+  if (!parent) return;
+  if (parent.classList && parent.classList.contains("node-channel-menu")) {
+    menu.classList.add("node-channel-list-menu");
+  }
+  const placeholder = document.createComment(`floating-menu:${menu.id || "inline"}`);
+  parent.insertBefore(placeholder, menu);
+  menu.__placeholder = placeholder;
+  menu.__originalParent = parent;
+  document.body.appendChild(menu);
+}
+
+function restoreFloatingMenu(menu) {
+  if (!menu) return;
+  const placeholder = menu.__placeholder;
+  if (placeholder && placeholder.parentNode) {
+    placeholder.parentNode.insertBefore(menu, placeholder);
+    placeholder.remove();
+  } else if (menu.parentNode === document.body && menu.__originalParent && document.body.contains(menu)) {
+    menu.remove();
+  }
+  menu.__placeholder = null;
+  menu.__originalParent = null;
 }
 
 function closeFloatingMenu(menu) {
@@ -3080,6 +3095,7 @@ function closeFloatingMenu(menu) {
   if (menu.__triggerEl) menu.__triggerEl.classList.remove("menu-open");
   if (activeFloatingMenu === menu) activeFloatingMenu = null;
   if (isLockMenu(menu) && openLockMenuId === menu.id) openLockMenuId = null;
+  restoreFloatingMenu(menu);
 }
 
 function closeAllMenus(exceptMenu = null) {
@@ -3093,19 +3109,25 @@ function positionFloatingMenu(menu, trigger, options = {}) {
   const gap = options.gap || 6;
   const viewportPadding = 12;
   const minHeight = options.minHeight || 120;
+  const heightCap = options.maxHeight || (isLockMenu(menu) ? 240 : 260);
+  const triggerRect = trigger.getBoundingClientRect();
+  const rawWidth = Math.max(options.minWidth || 0, triggerRect.width);
+  const desiredWidth = Math.min(rawWidth, Math.max(120, window.innerWidth - viewportPadding * 2));
+
   menu.classList.add("open");
   menu.style.visibility = "hidden";
   menu.style.left = "-9999px";
   menu.style.top = "0";
-  menu.style.width = `${Math.max(options.minWidth || 0, trigger.getBoundingClientRect().width)}px`;
+  menu.style.maxHeight = "";
+  menu.style.width = `${desiredWidth}px`;
 
-  const triggerRect = trigger.getBoundingClientRect();
-  const measuredHeight = Math.max(menu.scrollHeight, minHeight);
+  const measuredHeight = Math.min(Math.max(menu.scrollHeight, minHeight), heightCap);
   const spaceBelow = window.innerHeight - triggerRect.bottom - viewportPadding;
   const spaceAbove = triggerRect.top - viewportPadding;
-  const openUp = spaceBelow < Math.min(measuredHeight, 220) && spaceAbove > spaceBelow;
-  const maxHeight = Math.max(96, openUp ? spaceAbove - gap : spaceBelow - gap);
-  const desiredWidth = Math.max(options.minWidth || 0, triggerRect.width);
+  const preferUp = !!options.preferUp || triggerRect.top > window.innerHeight * 0.62;
+  const openUp = spaceAbove > 110 && (spaceBelow < measuredHeight || (preferUp && spaceAbove > spaceBelow * 0.7));
+  const availableHeight = Math.max(96, (openUp ? spaceAbove : spaceBelow) - gap);
+  const maxHeight = Math.min(heightCap, availableHeight);
   const left = Math.min(
     Math.max(viewportPadding, triggerRect.left),
     Math.max(viewportPadding, window.innerWidth - desiredWidth - viewportPadding)
@@ -3134,6 +3156,8 @@ function toggleFloatingMenu(menu, trigger, options = {}) {
   }
   menu.__triggerEl = trigger;
   menu.__menuOptions = options;
+  trigger.__floatingMenu = menu;
+  portalFloatingMenu(menu);
   trigger.classList.add("menu-open");
   positionFloatingMenu(menu, trigger, options);
   activeFloatingMenu = menu;
@@ -3150,7 +3174,12 @@ function toggleFilterMenu(key) {
   const menu = $(`${key}_menu`);
   const button = $(`${key}_btn`);
   if (!menu || !button) return;
-  toggleFloatingMenu(menu, button, {minWidth: button.getBoundingClientRect().width});
+  const compact = button.closest(".compact");
+  toggleFloatingMenu(menu, button, {
+    minWidth: button.getBoundingClientRect().width,
+    maxHeight: key === "page_size" ? 150 : 280,
+    preferUp: key === "page_size" || !!compact
+  });
 }
 
 function renderFilterMenu(key, options, selectedValue) {
@@ -3318,7 +3347,7 @@ function countryLockOptions(channel, currentValue) {
   const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
   const normalized = currentValue || "";
   const allClass = normalized ? "" : " active";
-  const options = [`<button type="button" class="country-lock-option${allClass}" onclick="setChannelCountry(${channel}, '')">🌐 全部国家</button>`];
+  const options = [`<button type="button" class="country-lock-option${allClass}" onclick="setChannelCountry(${channel}, '')">全部国家</button>`];
   countries.forEach(country => {
     const active = country === normalized ? " active" : "";
     const sample = nodes.find(n => n.country === country && n.country_short);
@@ -3350,7 +3379,7 @@ function asnCheckboxOptions(channel, currentValue) {
 }
 
 function countryLockLabel(ch) {
-  if (!ch || !ch.country_lock) return "🌐 全部国家锁定";
+  if (!ch || !ch.country_lock) return "全部国家锁定";
   const sample = nodes.find(n => (n.country === ch.country_lock || n.country_short === ch.country_lock) && n.country_short);
   const flag = countryFlag(sample && sample.country_short);
   return `国家锁定：${flag ? flag : ""}${translateCountry(ch.country_lock)}`;
@@ -3368,6 +3397,9 @@ function renderChannelCards() {
   const activeLockMenuId = openLockMenuId;
   const activeLockMenu = activeLockMenuId ? $(activeLockMenuId) : null;
   const activeLockMenuScrollTop = activeLockMenu ? activeLockMenu.scrollTop : 0;
+  if (activeLockMenu && activeLockMenu.parentNode === document.body) {
+    closeFloatingMenu(activeLockMenu);
+  }
   const count = state.channel_count || 6;
   const channels = state.channels && state.channels.length
     ? state.channels
@@ -3442,6 +3474,14 @@ function renderChannelCards() {
 
 function render(){
   renderChannelCards();
+  const rowsEl = $("rows");
+  if (activeFloatingMenu &&
+      activeFloatingMenu.parentNode === document.body &&
+      activeFloatingMenu.__originalParent &&
+      rowsEl &&
+      rowsEl.contains(activeFloatingMenu.__originalParent)) {
+    closeFloatingMenu(activeFloatingMenu);
+  }
   const shown = getFilteredNodes();
   const totalPages = Math.ceil(shown.length / pageSize) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
@@ -3451,12 +3491,10 @@ function render(){
   const endIndex = Math.min(startIndex + pageSize, shown.length);
   currentPageNodes = shown.slice(startIndex, endIndex);
 
-  $("status").innerHTML = `<span class="status-dot"></span>代理端口 ${state.proxy_base_port || 7928}-${(state.proxy_base_port || 7928) + (state.channel_count || 6) - 1} · 通道 ${state.channel_count || 6} 个 · ${esc(state.last_check_message || "服务运行中")}`;
-
   if (currentPageNodes.length === 0) {
-    $("rows").innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
+    rowsEl.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 40px 0;">未找到符合过滤条件的备选节点。</td></tr>`;
   } else {
-    $("rows").innerHTML = currentPageNodes.map(n => {
+    rowsEl.innerHTML = currentPageNodes.map(n => {
       const activeIndexes = activeIndexesForNode(n);
       const isActive = activeIndexes.length > 0;
       const rowClass = isActive ? 'class="active-row"' : '';
@@ -3472,7 +3510,7 @@ function render(){
       const channelSelect = buildChannelChooser(n.id);
       return `<tr ${rowClass}>
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-        <td><span class="country-cell">${esc(translateCountry(n.country))}</span></td>
+        <td><span class="country-cell">${esc(nodeCountryLabel(n))}</span></td>
         <td class="mono ip-cell">${esc(n.ip||n.remote_host)}</td>
         <td>${esc(translateIpType(n.ip_type))}</td>
         <td>${latencyText}</td>
@@ -3659,9 +3697,16 @@ function buildChannelChooser(nodeId) {
 }
 
 function toggleNodeChannelMenu(button) {
-  const menu = button && button.nextElementSibling;
+  let menu = button && button.__floatingMenu;
+  if (!menu || !document.body.contains(menu)) {
+    menu = button && button.nextElementSibling;
+  }
   if (!menu) return;
-  toggleFloatingMenu(menu, button, {minWidth: button.getBoundingClientRect().width});
+  toggleFloatingMenu(menu, button, {
+    minWidth: button.getBoundingClientRect().width,
+    maxHeight: 240,
+    preferUp: true
+  });
 }
 
 function setNodeChannel(nodeId, channel) {
@@ -3679,7 +3724,10 @@ function toggleLockMenu(kind, channel) {
   const select = $(targetId);
   const trigger = $(`${kind}_lock_btn_${channel}`);
   if (!select) return;
-  toggleFloatingMenu(select, trigger, {minWidth: trigger ? trigger.getBoundingClientRect().width : 0});
+  toggleFloatingMenu(select, trigger, {
+    minWidth: trigger ? trigger.getBoundingClientRect().width : 0,
+    maxHeight: 240
+  });
 }
 
 async function connectNodeSmart(id) {
@@ -3834,7 +3882,11 @@ async function logoutAdmin() {
 }
 
 document.addEventListener("click", event => {
-  if (!event.target.closest(".filter-menu") && !event.target.closest(".lock-menu")) {
+  if (!event.target.closest(".filter-menu") &&
+      !event.target.closest(".lock-menu") &&
+      !event.target.closest(".filter-list-menu") &&
+      !event.target.closest(".lock-list-menu") &&
+      !event.target.closest(".asn-check-menu")) {
     closeAllMenus();
   }
 });
