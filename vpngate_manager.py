@@ -125,10 +125,25 @@ def active_channel_map() -> dict[str, list[int]]:
     return result
 
 def normalize_asn_locks(value: Any) -> list[str]:
-    if isinstance(value, list):
-        raw_values = value
+    if isinstance(value, (list, tuple, set)):
+        raw_values = list(value)
     elif isinstance(value, str):
-        raw_values = [part for part in re.split(r"[,\\s]+", value) if part]
+        text = value.strip()
+        if not text:
+            raw_values = []
+        else:
+            parsed: Any | None = None
+            if text.startswith("["):
+                try:
+                    parsed = json.loads(text)
+                except Exception:
+                    parsed = None
+            if isinstance(parsed, list):
+                raw_values = parsed
+            elif isinstance(parsed, str):
+                raw_values = [parsed]
+            else:
+                raw_values = [part for part in re.split(r",(?=AS\d+)", text) if part]
     else:
         raw_values = []
     result: list[str] = []
@@ -2925,7 +2940,7 @@ INDEX_HTML = r"""<!doctype html>
       <div id="latency_sort_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
-      <input type="hidden" id="asn_filter" value="">
+      <input type="hidden" id="asn_filter" value="[]">
       <button type="button" id="asn_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('asn_filter')">ASN: 全部</button>
       <div id="asn_filter_menu" class="filter-list-menu multi-select-menu"></div>
     </div>
@@ -3291,13 +3306,24 @@ function renderFilterMenu(key, options, selectedValue, buttonLabel) {
   button.textContent = buttonLabel !== undefined ? buttonLabel : (selected ? selected.label : "");
   menu.innerHTML = options.map(option => {
     const active = option.value === selectedValue ? " active" : "";
-    return `<button type="button" class="filter-option${active}" onclick="setFilterValue('${key}', decodeURIComponent('${encodeURIComponent(option.value)}'))">${esc(option.label)}</button>`;
+    return `<button type="button" class="filter-option${active}" onclick="event.stopPropagation(); setFilterValue('${key}', decodeURIComponent('${encodeURIComponent(option.value)}')); return false;">${esc(option.label)}</button>`;
   }).join("");
+}
+
+function splitLegacyAsnString(value) {
+  return String(value || "")
+    .split(/,(?=AS\d+)/)
+    .map(part => part.trim())
+    .filter(Boolean);
 }
 
 function selectedAsnFilters() {
   const input = $("asn_filter");
   return normalizeAsnLocks(input ? input.value : "");
+}
+
+function serializeAsnLocks(values) {
+  return JSON.stringify(normalizeAsnLocks(values));
 }
 
 function setRefreshButtonLabel(text) {
@@ -3389,13 +3415,13 @@ function updateAsnFilter() {
   const scopedNodes = selectedCountry ? nodes.filter(n => n.country === selectedCountry) : nodes;
   const asns = Array.from(new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
   const validSelected = selectedValues.filter(asn => asns.includes(asn));
-  input.value = validSelected.join(",");
+  input.value = serializeAsnLocks(validSelected);
   const selectedSet = new Set(validSelected);
 
   menu.innerHTML = asns.length
     ? asns.map(asn => {
         const active = selectedSet.has(asn) ? " active" : "";
-        return `<button type="button" class="filter-option${active}" onclick="setAsnFilter(decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+        return `<button type="button" class="filter-option${active}" onclick="event.stopPropagation(); setAsnFilter(decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
       }).join("")
     : `<div class="filter-option" style="cursor: default; color: var(--text-secondary);">暂无 ASN</div>`;
   button.textContent = selectedSet.size ? `ASN: 已选 ${selectedSet.size}` : "ASN: 全部";
@@ -3404,18 +3430,21 @@ function updateAsnFilter() {
 function setAsnFilter(asn) {
   const input = $("asn_filter");
   if (!input) return;
+  const menu = $("asn_filter_menu");
   if (!asn) {
-    input.value = "";
+    input.value = "[]";
   } else {
     const selected = new Set(selectedAsnFilters());
     if (selected.has(asn)) selected.delete(asn);
     else selected.add(asn);
-    input.value = Array.from(selected).join(",");
+    input.value = serializeAsnLocks(Array.from(selected));
   }
   currentPage = 1;
   updateAsnFilter();
   render();
-  refreshOpenMenuPosition();
+  if (menu && menu.classList.contains("open") && menu.__triggerEl) {
+    positionFloatingMenu(menu, menu.__triggerEl, menu.__menuOptions || {});
+  }
 }
 
 function getFilteredNodes() {
@@ -3487,8 +3516,31 @@ function countryLockOptions(channel, currentValue) {
 }
 
 function normalizeAsnLocks(value) {
-  if (Array.isArray(value)) return value.map(v => String(v || "").trim()).filter(Boolean);
-  return String(value || "").split(/[,\s]+/).map(v => v.trim()).filter(Boolean);
+  let rawValues = [];
+  if (Array.isArray(value)) {
+    rawValues = value;
+  } else {
+    const text = String(value || "").trim();
+    if (!text) rawValues = [];
+    else if (text.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(text);
+        rawValues = Array.isArray(parsed) ? parsed : [parsed];
+      } catch (err) {
+        rawValues = splitLegacyAsnString(text);
+      }
+    } else {
+      rawValues = splitLegacyAsnString(text);
+    }
+  }
+  const seen = new Set();
+  return rawValues
+    .map(v => String(v || "").trim())
+    .filter(v => {
+      if (!v || seen.has(v)) return false;
+      seen.add(v);
+      return true;
+    });
 }
 
 function asnCheckboxOptions(channel, currentValue) {
