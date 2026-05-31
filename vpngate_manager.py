@@ -3374,10 +3374,10 @@ function updateAsnFilter() {
   const selectedSet = new Set(validSelected);
 
   const selectedClass = selectedSet.size ? "" : " active";
-  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" data-asn-filter="">ASN：全部</button>` +
+  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" data-asn-filter="" onclick="handleAsnFilterClick(event)">ASN：全部</button>` +
     asns.map(asn => {
       const active = selectedSet.has(asn) ? " active" : "";
-      return `<button type="button" class="filter-option${active}" data-asn-filter="${esc(asn)}">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+      return `<button type="button" class="filter-option${active}" data-asn-filter="${esc(asn)}" onclick="handleAsnFilterClick(event)">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
     }).join("");
   menu.onclick = handleAsnFilterClick;
   if (!selectedSet.size) {
@@ -4015,6 +4015,11 @@ async function logoutAdmin() {
 }
 
 document.addEventListener("click", event => {
+  const asnFilterOption = event.target.closest("#asn_filter_menu [data-asn-filter]");
+  if (asnFilterOption) {
+    handleAsnFilterClick(event);
+    return;
+  }
   if (!event.target.closest(".filter-menu") &&
       !event.target.closest(".lock-menu") &&
       !event.target.closest(".filter-list-menu") &&
