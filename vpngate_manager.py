@@ -3511,7 +3511,7 @@ function countryLockOptions(channel, currentValue) {
     const active = country === normalized ? " active" : "";
     const sample = nodes.find(n => n.country === country && n.country_short);
     const flag = countryFlag(sample && sample.country_short);
-    return `<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}'))">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country))}</span></button>`;
+    return `<button type="button" class="country-lock-option${active}" onclick="event.stopPropagation(); setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}')); return false;">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country))}</span></button>`;
   }).join("");
 }
 
@@ -3555,7 +3555,7 @@ function asnCheckboxOptions(channel, currentValue) {
     const active = selected.has(asn) ? " active" : "";
     const present = currentAsns.has(asn);
     const label = present ? asnOptionLabel(asn, scopedNodes) : `${asn} 暂无节点`;
-    return `<button type="button" class="asn-check-option${active}${present ? "" : " stale"}" onclick="setChannelAsn(${channel}, decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(label)}</button>`;
+    return `<button type="button" class="asn-check-option${active}${present ? "" : " stale"}" onclick="event.stopPropagation(); setChannelAsn(${channel}, decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(label)}</button>`;
   }).join("");
 }
 
@@ -3995,11 +3995,14 @@ async function setChannelCountry(channel, country) {
   if (currentChannel) currentChannel.country_lock = nextCountry;
   renderChannelCards();
   try {
-    await fetch("./api/channel/country_lock", {
+    const response = await fetch("./api/channel/country_lock", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({channel, country: nextCountry})
     });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok === false) throw new Error("save failed");
+    if (currentChannel) currentChannel.country_lock = String(result.country_lock || "");
     const select = $(`country_select_${channel}`);
     if (select) closeFloatingMenu(select);
   } catch (e) {
@@ -4023,7 +4026,10 @@ async function setChannelAsn(channel, asn) {
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({channel, asns: nextAsns})
     });
-    if (!response.ok) throw new Error("save failed");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok === false) throw new Error("save failed");
+    if (currentChannel) currentChannel.asn_lock = normalizeAsnLocks(result.asn_lock);
+    renderChannelCards();
   } catch (e) {
     alert("ASN锁定保存失败");
     await load();
