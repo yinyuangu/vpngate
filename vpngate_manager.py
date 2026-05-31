@@ -1507,16 +1507,16 @@ INDEX_HTML = r"""<!doctype html>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>多通道管理</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     
     :root {
-      --bg-dark: #0b0f19;
-      --bg-surface: rgba(22, 30, 49, 0.6);
-      --bg-surface-hover: rgba(30, 41, 67, 0.85);
-      --border-color: rgba(255, 255, 255, 0.08);
-      --border-color-hover: rgba(99, 102, 241, 0.35);
-      --text-primary: #f3f4f6;
-      --text-secondary: #9ca3af;
+      --bg-dark: #070d16;
+      --bg-surface: rgba(14, 25, 42, 0.72);
+      --bg-surface-hover: rgba(24, 38, 61, 0.9);
+      --border-color: rgba(137, 160, 198, 0.13);
+      --border-color-hover: rgba(94, 234, 212, 0.3);
+      --text-primary: #eef5ff;
+      --text-secondary: #91a4bf;
       --primary: #6366f1;
       --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
       --primary-hover: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
@@ -1526,18 +1526,18 @@ INDEX_HTML = r"""<!doctype html>
       --danger-gradient: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
       --warning: #f59e0b;
       --warning-gradient: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-      --active-row-bg: rgba(16, 185, 129, 0.06);
-      --active-row-border: rgba(16, 185, 129, 0.25);
+      --active-row-bg: rgba(16, 185, 129, 0.065);
+      --active-row-border: rgba(16, 185, 129, 0.28);
     }
 
     body {
       margin: 0;
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+      font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(79, 70, 229, 0.05) 0px, transparent 50%);
+        radial-gradient(circle at 12% -8%, rgba(59, 130, 246, 0.16) 0, transparent 32%),
+        radial-gradient(circle at 88% 2%, rgba(20, 184, 166, 0.12) 0, transparent 30%),
+        linear-gradient(180deg, #07111f 0%, #06111a 56%, #050a12 100%);
       background-attachment: fixed;
       color: var(--text-primary);
       min-height: 100vh;
@@ -1754,12 +1754,11 @@ INDEX_HTML = r"""<!doctype html>
 
     .node-channel-menu .filter-option {
       white-space: nowrap;
-      text-align: center;
+      text-align: left;
     }
 
     .node-channel-list-menu .filter-option {
-      justify-content: center;
-      text-align: center;
+      text-align: left;
       white-space: nowrap;
     }
 
@@ -1792,6 +1791,11 @@ INDEX_HTML = r"""<!doctype html>
       color: #f8fafc;
     }
 
+    .multi-select-menu .filter-option.active {
+      background: rgba(16, 185, 129, 0.14);
+      color: #86efac;
+    }
+
     .app-toast {
       position: fixed;
       right: 24px;
@@ -1800,11 +1804,11 @@ INDEX_HTML = r"""<!doctype html>
       min-width: 220px;
       max-width: min(360px, calc(100vw - 48px));
       padding: 12px 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      background: rgba(13, 24, 40, 0.96);
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      background: linear-gradient(180deg, rgba(15, 29, 49, 0.98), rgba(8, 18, 32, 0.98));
       color: #e0f2fe;
-      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.05);
       font-size: 13px;
       font-weight: 700;
       line-height: 1.45;
@@ -1820,8 +1824,8 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .app-toast.error {
-      border-color: rgba(244, 63, 94, 0.34);
-      color: #fecdd3;
+      border-color: rgba(248, 113, 113, 0.38);
+      color: #ffe4e6;
     }
 
     .table-wrapper {
@@ -2055,27 +2059,28 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     body {
-      background: #080d17;
+      background: #070d16;
       background-image:
-        radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 28%),
-        radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 24%),
-        linear-gradient(180deg, rgba(8, 13, 23, 1) 0%, rgba(7, 17, 24, 1) 100%);
+        radial-gradient(circle at 12% -10%, rgba(56, 189, 248, 0.15), transparent 28%),
+        radial-gradient(circle at 88% -6%, rgba(45, 212, 191, 0.1), transparent 26%),
+        radial-gradient(circle at 50% 118%, rgba(99, 102, 241, 0.08), transparent 34%),
+        linear-gradient(180deg, #07111f 0%, #06111a 58%, #050a12 100%);
     }
 
     header {
       padding: 18px 30px 16px;
       background:
-        linear-gradient(135deg, rgba(11, 27, 54, 0.72), rgba(7, 16, 29, 0.92)),
-        rgba(8, 13, 23, 0.86);
-      border-bottom: 1px solid rgba(90, 119, 168, 0.16);
-      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+        linear-gradient(135deg, rgba(11, 29, 57, 0.78), rgba(6, 14, 25, 0.94)),
+        rgba(7, 13, 22, 0.9);
+      border-bottom: 1px solid rgba(110, 139, 190, 0.16);
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.035), 0 16px 38px rgba(0, 0, 0, 0.2);
     }
 
     h1 {
       font-size: 19px;
       background: none;
       -webkit-text-fill-color: unset;
-      color: #a8b5ff;
+      color: #aebcff;
       letter-spacing: 0;
     }
 
@@ -2110,7 +2115,7 @@ INDEX_HTML = r"""<!doctype html>
       overflow: visible;
       border: 1px solid var(--border-color);
       border-radius: 14px;
-      background: linear-gradient(180deg, rgba(13, 23, 38, 0.96), rgba(10, 18, 31, 0.96));
+      background: linear-gradient(180deg, rgba(14, 26, 43, 0.96), rgba(8, 18, 31, 0.96));
       box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
       padding: 14px;
       min-height: 0;
@@ -2435,6 +2440,7 @@ INDEX_HTML = r"""<!doctype html>
     .asn-check-option {
       display: flex;
       align-items: center;
+      justify-content: flex-start;
       gap: 7px;
       min-height: 28px;
       padding: 4px 6px;
@@ -2448,6 +2454,10 @@ INDEX_HTML = r"""<!doctype html>
       background: transparent;
       text-align: left;
       font-family: inherit;
+      line-height: 1.35;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .country-lock-option {
@@ -2504,11 +2514,18 @@ INDEX_HTML = r"""<!doctype html>
     .btn-dark {
       height: 36px;
       border-radius: 8px;
-      background: rgba(8, 24, 38, 0.72);
+      background: linear-gradient(180deg, rgba(9, 28, 47, 0.82), rgba(7, 20, 35, 0.82));
       border: 1px solid rgba(56, 189, 248, 0.32);
       color: #bae6fd;
       font-weight: 700;
       box-shadow: none;
+    }
+
+    .btn-icon {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+      stroke-width: 2.2;
     }
 
     .btn-dark:hover {
@@ -2517,7 +2534,8 @@ INDEX_HTML = r"""<!doctype html>
       color: #e0f2fe;
     }
 
-    .nodes-panel-title {
+    .nodes-panel-title,
+    .channels-panel-title {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -2525,14 +2543,20 @@ INDEX_HTML = r"""<!doctype html>
       margin: 4px 0 14px;
     }
 
-    .nodes-panel-title h2 {
+    .channels-panel-title {
+      margin: 0 0 14px;
+    }
+
+    .nodes-panel-title h2,
+    .channels-panel-title h2 {
       margin: 0;
       font-size: 18px;
       color: #f8fafc;
-      letter-spacing: 0.01em;
+      letter-spacing: 0;
     }
 
-    .nodes-panel-copy {
+    .nodes-panel-copy,
+    .channels-panel-copy {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -2555,6 +2579,12 @@ INDEX_HTML = r"""<!doctype html>
       background: linear-gradient(180deg, rgba(25, 51, 89, 0.9), rgba(14, 29, 49, 0.9));
       border: 1px solid rgba(77, 124, 214, 0.24);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .channels-panel-icon {
+      color: #99f6e4;
+      background: linear-gradient(180deg, rgba(14, 82, 78, 0.68), rgba(14, 43, 58, 0.88));
+      border-color: rgba(45, 212, 191, 0.26);
     }
 
     .toolbar {
@@ -2716,7 +2746,8 @@ INDEX_HTML = r"""<!doctype html>
         gap: 6px;
       }
 
-      .nodes-panel-title {
+      .nodes-panel-title,
+      .channels-panel-title {
         align-items: stretch;
         flex-direction: column;
       }
@@ -2796,8 +2827,8 @@ INDEX_HTML = r"""<!doctype html>
   </div>
   <div class="dashboard-toolbar">
     <button id="refresh" class="btn-dark">
-      <svg xmlns="http://www.w3.org/2000/svg" style="width:15px; height:15px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M5.64 18.36A9 9 0 1018.36 5.64" /></svg>
-      刷新节点
+      <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4v6h-6" /><path d="M3 20v-6h6" /><path d="M18.5 8A7.5 7.5 0 0 0 5.2 6.2L3 8" /><path d="M5.5 16A7.5 7.5 0 0 0 18.8 17.8L21 16" /></svg>
+      <span class="btn-label">刷新节点</span>
     </button>
     <button id="logout_btn" class="btn-rose" onclick="logoutAdmin()">
       <svg xmlns="http://www.w3.org/2000/svg" style="width:15px; height:15px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H9m4 8H6a2 2 0 01-2-2V6a2 2 0 012-2h7" /></svg>
@@ -2806,6 +2837,16 @@ INDEX_HTML = r"""<!doctype html>
   </div>
 </header>
 <main>
+  <section class="channels-panel-title">
+    <div class="channels-panel-copy">
+      <span class="nodes-panel-icon channels-panel-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h5l2 3h9M4 17h5l2-3h9M16 5l3 2-3 2M16 12l3 2-3 2" /></svg>
+      </span>
+      <div>
+        <h2>通道池</h2>
+      </div>
+    </div>
+  </section>
   <section class="channels-grid" id="channels_grid"></section>
 
   <section class="nodes-panel-title">
@@ -2815,7 +2856,6 @@ INDEX_HTML = r"""<!doctype html>
       </span>
       <div>
         <h2>节点池</h2>
-        <p>按状态、国家、类型、延迟与 ASN 快速筛选当前可用节点</p>
       </div>
     </div>
   </section>
@@ -2844,7 +2884,7 @@ INDEX_HTML = r"""<!doctype html>
     <div class="filter-menu">
       <input type="hidden" id="asn_filter" value="">
       <button type="button" id="asn_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('asn_filter')">ASN：全部</button>
-      <div id="asn_filter_menu" class="filter-list-menu"></div>
+      <div id="asn_filter_menu" class="filter-list-menu multi-select-menu"></div>
     </div>
   </section>
   <div class="table-wrapper">
@@ -3194,6 +3234,19 @@ function renderFilterMenu(key, options, selectedValue) {
   }).join("");
 }
 
+function selectedAsnFilters() {
+  const input = $("asn_filter");
+  return normalizeAsnLocks(input ? input.value : "");
+}
+
+function setRefreshButtonLabel(text) {
+  const btn = $("refresh");
+  if (!btn) return;
+  const label = btn.querySelector(".btn-label");
+  if (label) label.textContent = text;
+  else btn.textContent = text;
+}
+
 function setFilterValue(key, value) {
   const input = $(key);
   const menu = $(`${key}_menu`);
@@ -3269,29 +3322,49 @@ function updateAsnFilter() {
   const menu = $("asn_filter_menu");
   const button = $("asn_filter_btn");
   if (!input || !menu || !button) return;
-  const selectedValue = input.value;
+  const selectedValues = selectedAsnFilters();
   const selectedCountry = $("country_filter") ? $("country_filter").value : "";
   const scopedNodes = selectedCountry ? nodes.filter(n => n.country === selectedCountry) : nodes;
   const asns = Array.from(new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
+  const validSelected = selectedValues.filter(asn => asns.includes(asn));
+  input.value = validSelected.join(",");
+  const selectedSet = new Set(validSelected);
 
-  if (asns.includes(selectedValue)) {
-    input.value = selectedValue;
-  } else {
-    input.value = "";
-  }
-
-  const selectedClass = input.value ? "" : " active";
-  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" onclick="setFilterValue('asn_filter', '')">ASN：全部</button>` +
+  const selectedClass = selectedSet.size ? "" : " active";
+  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" onclick="setAsnFilter('')">ASN：全部</button>` +
     asns.map(asn => {
-      const active = asn === input.value ? " active" : "";
-      return `<button type="button" class="filter-option${active}" onclick="setFilterValue('asn_filter', decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+      const active = selectedSet.has(asn) ? " active" : "";
+      return `<button type="button" class="filter-option${active}" onclick="setAsnFilter(decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
     }).join("");
-  button.textContent = input.value ? `ASN：${asnOptionLabel(input.value, scopedNodes)}` : "ASN：全部";
+  if (!selectedSet.size) {
+    button.textContent = "ASN：全部";
+  } else if (selectedSet.size === 1) {
+    button.textContent = `ASN：${asnOptionLabel(validSelected[0], scopedNodes)}`;
+  } else {
+    button.textContent = `ASN：已选 ${selectedSet.size}`;
+  }
+}
+
+function setAsnFilter(asn) {
+  const input = $("asn_filter");
+  if (!input) return;
+  if (!asn) {
+    input.value = "";
+  } else {
+    const selected = new Set(selectedAsnFilters());
+    if (selected.has(asn)) selected.delete(asn);
+    else selected.add(asn);
+    input.value = Array.from(selected).join(",");
+  }
+  currentPage = 1;
+  updateAsnFilter();
+  render();
+  refreshOpenMenuPosition();
 }
 
 function getFilteredNodes() {
   const selectedCountry = $("country_filter").value;
-  const selectedAsn = $("asn_filter") ? $("asn_filter").value : "";
+  const selectedAsns = selectedAsnFilters();
   const selectedStatus = $("status_filter") ? $("status_filter").value : "";
   const selectedType = $("type_filter") ? $("type_filter").value : "";
   const latencySort = $("latency_sort") ? $("latency_sort").value : "";
@@ -3299,7 +3372,7 @@ function getFilteredNodes() {
     if (selectedCountry && n.country !== selectedCountry) {
       return false;
     }
-    if (selectedAsn && String(n.asn || "") !== selectedAsn) {
+    if (selectedAsns.length && !selectedAsns.includes(String(n.asn || ""))) {
       return false;
     }
     if (selectedStatus && (n.probe_status || "not_checked") !== selectedStatus) {
@@ -3587,7 +3660,7 @@ function setRefreshButtonBusy(text) {
   if (!btn) return;
   manualRefreshActive = true;
   btn.disabled = true;
-  btn.textContent = text || "正在全量检测...";
+  setRefreshButtonLabel(text || "正在全量检测...");
 }
 
 function resetRefreshButton() {
@@ -3595,7 +3668,7 @@ function resetRefreshButton() {
   if (!btn) return;
   manualRefreshActive = false;
   btn.disabled = false;
-  btn.textContent = "刷新节点";
+  setRefreshButtonLabel("刷新节点");
 }
 
 function startConnectionPolling() {
@@ -3662,17 +3735,18 @@ async function connectNode(id){
 }
 
 async function disconnectNode(){
-  if (!confirm("确定要断开当前的 VPN 连接吗？")) return;
   try {
+    showToast("正在断开连接...");
     const response = await fetch("./api/disconnect", { method: "POST" });
     const result = await response.json();
     if (result.ok) {
+      showToast("连接已断开");
       load();
     } else {
-      alert("断开连接失败: " + (result.error || "未知错误"));
+      showToast("断开连接失败: " + (result.error || "未知错误"), "error");
     }
   } catch (e) {
-    alert("请求断开连接失败");
+    showToast("请求断开连接失败", "error");
   }
 }
 
@@ -3785,15 +3859,22 @@ async function autoConnectChannel(channel) {
 }
 
 async function disconnectChannel(channel) {
-  if (!confirm(`确定要断开通道 ${channel} 吗？`)) return;
+  closeAllMenus();
+  showToast(`正在断开通道 ${channel}...`);
   try {
-    await fetch("./api/channel/disconnect", {
+    const response = await fetch("./api/channel/disconnect", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({channel})
     });
+    const result = await response.json().catch(() => ({ok: response.ok}));
+    if (!response.ok || result.ok === false) {
+      showToast("断开通道失败: " + (result.error || "未知错误"), "error");
+      return;
+    }
+    showToast(`通道 ${channel} 已断开`);
   } catch (e) {
-    alert("断开通道失败");
+    showToast("断开通道失败", "error");
   } finally {
     await load();
   }
