@@ -2906,27 +2906,27 @@ INDEX_HTML = r"""<!doctype html>
   <section class="toolbar">
     <div class="filter-menu">
       <input type="hidden" id="status_filter" value="">
-      <button type="button" id="status_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('status_filter')">状态：全部</button>
+      <button type="button" id="status_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('status_filter')">状态: 全部</button>
       <div id="status_filter_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="country_filter" value="">
-      <button type="button" id="country_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('country_filter')">国家：全部</button>
+      <button type="button" id="country_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('country_filter')">国家: 全部</button>
       <div id="country_filter_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="type_filter" value="">
-      <button type="button" id="type_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('type_filter')">类型：全部</button>
+      <button type="button" id="type_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('type_filter')">类型: 全部</button>
       <div id="type_filter_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="latency_sort" value="">
-      <button type="button" id="latency_sort_btn" class="filter-menu-btn" onclick="toggleFilterMenu('latency_sort')">延迟：默认</button>
+      <button type="button" id="latency_sort_btn" class="filter-menu-btn" onclick="toggleFilterMenu('latency_sort')">延迟: 默认</button>
       <div id="latency_sort_menu" class="filter-list-menu"></div>
     </div>
     <div class="filter-menu">
       <input type="hidden" id="asn_filter" value="">
-      <button type="button" id="asn_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('asn_filter')">ASN：全部</button>
+      <button type="button" id="asn_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('asn_filter')">ASN: 全部</button>
       <div id="asn_filter_menu" class="filter-list-menu multi-select-menu"></div>
     </div>
   </section>
@@ -3119,11 +3119,29 @@ function asnOptionLabel(asn, scopedNodes) {
   return asnDisplay(asn, node ? (node.as_name || node.owner) : "").full;
 }
 
-function countryMenuLabel(country) {
-  if (!country) return "国家：全部";
+function countryOptionLabel(country) {
+  if (!country) return "全部";
   const sample = nodes.find(n => (n.country === country || n.country_short === country) && n.country_short);
   const flag = countryFlag(sample && sample.country_short);
   return `${flag ? `${flag} ` : ""}${translateCountry(country)}`;
+}
+
+function countryButtonLabel(country) {
+  return `国家: ${country ? countryOptionLabel(country) : "全部"}`;
+}
+
+function statusButtonLabel(status) {
+  return `状态: ${status ? translateStatus(status) : "全部"}`;
+}
+
+function typeButtonLabel(type) {
+  return `类型: ${type ? translateIpType(type) : "全部"}`;
+}
+
+function latencyButtonLabel(sort) {
+  if (sort === "asc") return "延迟: 升序";
+  if (sort === "desc") return "延迟: 降序";
+  return "延迟: 默认";
 }
 
 function nodeCountryLabel(node) {
@@ -3265,12 +3283,12 @@ function toggleFilterMenu(key) {
   });
 }
 
-function renderFilterMenu(key, options, selectedValue) {
+function renderFilterMenu(key, options, selectedValue, buttonLabel) {
   const menu = $(`${key}_menu`);
   const button = $(`${key}_btn`);
   if (!menu || !button) return;
   const selected = options.find(option => option.value === selectedValue) || options[0];
-  button.textContent = selected ? selected.label : "";
+  button.textContent = buttonLabel !== undefined ? buttonLabel : (selected ? selected.label : "");
   menu.innerHTML = options.map(option => {
     const active = option.value === selectedValue ? " active" : "";
     return `<button type="button" class="filter-option${active}" onclick="setFilterValue('${key}', decodeURIComponent('${encodeURIComponent(option.value)}'))">${esc(option.label)}</button>`;
@@ -3318,23 +3336,23 @@ function setFilterValue(key, value) {
 
 function updateStaticFilterMenus() {
   renderFilterMenu("status_filter", [
-    {value: "", label: "状态：全部"},
-    {value: "available", label: "状态：可用"},
-    {value: "not_checked", label: "状态：待检测"},
-    {value: "unavailable", label: "状态：不可用"},
-  ], $("status_filter") ? $("status_filter").value : "");
+    {value: "", label: "全部"},
+    {value: "available", label: "可用"},
+    {value: "not_checked", label: "待检测"},
+    {value: "unavailable", label: "不可用"},
+  ], $("status_filter") ? $("status_filter").value : "", statusButtonLabel($("status_filter") ? $("status_filter").value : ""));
   renderFilterMenu("type_filter", [
-    {value: "", label: "类型：全部"},
-    {value: "residential", label: "类型：住宅 IP"},
-    {value: "hosting", label: "类型：机房 IP"},
-    {value: "mobile", label: "类型：移动网"},
-    {value: "proxy", label: "类型：代理 IP"},
-  ], $("type_filter") ? $("type_filter").value : "");
+    {value: "", label: "全部"},
+    {value: "residential", label: "住宅 IP"},
+    {value: "hosting", label: "机房 IP"},
+    {value: "mobile", label: "移动网"},
+    {value: "proxy", label: "代理 IP"},
+  ], $("type_filter") ? $("type_filter").value : "", typeButtonLabel($("type_filter") ? $("type_filter").value : ""));
   renderFilterMenu("latency_sort", [
-    {value: "", label: "延迟：默认"},
-    {value: "asc", label: "延迟：升序"},
-    {value: "desc", label: "延迟：降序"},
-  ], $("latency_sort") ? $("latency_sort").value : "");
+    {value: "", label: "默认"},
+    {value: "asc", label: "升序"},
+    {value: "desc", label: "降序"},
+  ], $("latency_sort") ? $("latency_sort").value : "", latencyButtonLabel($("latency_sort") ? $("latency_sort").value : ""));
   renderFilterMenu("page_size", [
     {value: "25", label: "每页 25"},
     {value: "50", label: "每页 50"},
@@ -3355,8 +3373,9 @@ function updateCountryFilter() {
   }
   renderFilterMenu(
     "country_filter",
-    [{value: "", label: countryMenuLabel("")}].concat(countries.map(c => ({value: c, label: countryMenuLabel(c)}))),
-    input.value
+    [{value: "", label: "全部"}].concat(countries.map(c => ({value: c, label: countryOptionLabel(c)}))),
+    input.value,
+    countryButtonLabel(input.value)
   );
 }
 
@@ -3373,28 +3392,13 @@ function updateAsnFilter() {
   input.value = validSelected.join(",");
   const selectedSet = new Set(validSelected);
 
-  const selectedClass = selectedSet.size ? "" : " active";
-  menu.innerHTML = `<button type="button" class="filter-option${selectedClass}" data-asn-filter="" onclick="handleAsnFilterClick(event)">ASN：全部</button>` +
-    asns.map(asn => {
-      const active = selectedSet.has(asn) ? " active" : "";
-      return `<button type="button" class="filter-option${active}" data-asn-filter="${esc(asn)}" onclick="handleAsnFilterClick(event)">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
-    }).join("");
-  menu.onclick = handleAsnFilterClick;
-  if (!selectedSet.size) {
-    button.textContent = "ASN：全部";
-  } else if (selectedSet.size === 1) {
-    button.textContent = `ASN：${asnOptionLabel(validSelected[0], scopedNodes)}`;
-  } else {
-    button.textContent = `ASN：已选 ${selectedSet.size}`;
-  }
-}
-
-function handleAsnFilterClick(event) {
-  const option = event && event.target ? event.target.closest("[data-asn-filter]") : null;
-  if (!option) return;
-  event.preventDefault();
-  event.stopPropagation();
-  setAsnFilter(option.dataset.asnFilter || "");
+  menu.innerHTML = asns.length
+    ? asns.map(asn => {
+        const active = selectedSet.has(asn) ? " active" : "";
+        return `<button type="button" class="filter-option${active}" onclick="setAsnFilter(decodeURIComponent('${encodeURIComponent(asn)}'))">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+      }).join("")
+    : `<div class="filter-option" style="cursor: default; color: var(--text-secondary);">暂无 ASN</div>`;
+  button.textContent = selectedSet.size ? `ASN: 已选 ${selectedSet.size}` : "ASN: 全部";
 }
 
 function setAsnFilter(asn) {
@@ -3471,15 +3475,15 @@ function activeIndexesForNode(node) {
 function countryLockOptions(channel, currentValue) {
   const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
   const normalized = currentValue || "";
-  const allClass = normalized ? "" : " active";
-  const options = [`<button type="button" class="country-lock-option${allClass}" onclick="setChannelCountry(${channel}, '')">全部国家</button>`];
-  countries.forEach(country => {
+  if (!countries.length) {
+    return '<div class="country-lock-option" style="color: var(--text-secondary); cursor: default;">暂无国家</div>';
+  }
+  return countries.map(country => {
     const active = country === normalized ? " active" : "";
     const sample = nodes.find(n => n.country === country && n.country_short);
     const flag = countryFlag(sample && sample.country_short);
-    options.push(`<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}'))">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country))}</span></button>`);
-  });
-  return options.join("");
+    return `<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}'))">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country))}</span></button>`;
+  }).join("");
 }
 
 function normalizeAsnLocks(value) {
@@ -3504,16 +3508,16 @@ function asnCheckboxOptions(channel, currentValue) {
 }
 
 function countryLockLabel(ch) {
-  if (!ch || !ch.country_lock) return "全部国家锁定";
+  if (!ch || !ch.country_lock) return "国家锁定: 全部";
   const sample = nodes.find(n => (n.country === ch.country_lock || n.country_short === ch.country_lock) && n.country_short);
   const flag = countryFlag(sample && sample.country_short);
-  return `国家锁定：${flag ? flag : ""}${translateCountry(ch.country_lock)}`;
+  return `国家锁定: ${flag ? `${flag} ` : ""}${translateCountry(ch.country_lock)}`;
 }
 
 function asnLockLabel(ch) {
   const asns = normalizeAsnLocks(ch && ch.asn_lock);
-  if (!asns.length) return "全部 ASN 锁定";
-  return asns.length === 1 ? `ASN锁定：${asns[0]}` : `ASN锁定：已选 ${asns.length}`;
+  if (!asns.length) return "ASN锁定: 全部";
+  return `ASN锁定: 已选 ${asns.length}`;
 }
 
 function renderChannelCards() {
@@ -3933,11 +3937,16 @@ async function disconnectChannel(channel) {
 }
 
 async function setChannelCountry(channel, country) {
+  const currentChannel = state.channels && state.channels.find(ch => (ch.index || 0) === channel);
+  const normalizedCountry = String(country || "").trim();
+  const nextCountry = currentChannel && currentChannel.country_lock === normalizedCountry ? "" : normalizedCountry;
+  if (currentChannel) currentChannel.country_lock = nextCountry;
+  renderChannelCards();
   try {
     await fetch("./api/channel/country_lock", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({channel, country: String(country || "").trim()})
+      body: JSON.stringify({channel, country: nextCountry})
     });
     const select = $(`country_select_${channel}`);
     if (select) closeFloatingMenu(select);
@@ -4015,11 +4024,6 @@ async function logoutAdmin() {
 }
 
 document.addEventListener("click", event => {
-  const asnFilterOption = event.target.closest("#asn_filter_menu [data-asn-filter]");
-  if (asnFilterOption) {
-    handleAsnFilterClick(event);
-    return;
-  }
   if (!event.target.closest(".filter-menu") &&
       !event.target.closest(".lock-menu") &&
       !event.target.closest(".filter-list-menu") &&
