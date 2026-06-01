@@ -1,4 +1,4 @@
-# AimiliVPN 🌐
+# VPNgate 🌐
 
 Bilingual: [中文](#中文) | [English](#english)
 
@@ -14,7 +14,7 @@ Bilingual: [中文](#中文) | [English](#english)
 
 ---
 
-**AimiliVPN** 是一个专为 Linux VPS（如 Ubuntu / Debian）设计的智能 VPN 代理网关管理器。它能够自动采集 VPNGate 开放节点，进行多线程可用性测试与延迟过滤，利用 OpenVPN 隧道与策略路由（Policy Routing）实现出站网络，并在本地提供高性能的 HTTP/SOCKS5 代理网关服务，适合用作 Xray 的落地出站代理。
+**VPNgate** 是一个专为 Linux VPS（如 Ubuntu / Debian）设计的智能 VPN 代理网关管理器。它能够自动采集 VPNGate 开放节点，进行多线程可用性测试与延迟过滤，利用 OpenVPN 隧道与策略路由（Policy Routing）实现出站网络，并在本地提供高性能的 HTTP/SOCKS5 代理网关服务，适合用作 Xray 的落地出站代理。
 
 ---
 
@@ -32,8 +32,8 @@ bash <(curl -Ls https://raw.githubusercontent.com/yinyuangu/vpngate/myself/insta
 
 安装成功后，系统会在全局注册 `ml` 快捷管理指令，直接运行 `ml` 可打开图形化交互终端，也可通过以下指令执行：
 * **`ml status`** 或 **`ml`**：查看当前运行状态（代理端口、活动 VPN 节点、直连延迟、网页后台登录地址等）。
-* **`ml start`**：启动 AimiliVPN 服务。
-* **`ml stop`**：停止 AimiliVPN 服务（并自动清理策略路由与 OpenVPN 进程）。
+* **`ml start`**：启动 VPNgate 服务。
+* **`ml stop`**：停止 VPNgate 服务（并自动清理策略路由与 OpenVPN 进程）。
 * **`ml restart`**：重启服务。
 * **`ml logs`**：查看实时的 Systemd 服务运行日志。
 * **`ml web`**：切换网页绑定地址（127.0.0.1 仅本地，或 0.0.0.0 允许公网访问）与重置安全后缀。
@@ -96,7 +96,7 @@ sudo apt-get update
 
 ---
 
-**AimiliVPN** is an intelligent VPN proxy gateway manager designed specifically for Linux VPS (e.g. Ubuntu / Debian). It automatically collects open VPNGate nodes, conducts multi-threaded availability testing and latency filtering, establishes secure out-of-band routing via OpenVPN and policy routing to **prevent VPS lockouts**, and hosts a high-performance local SOCKS5/HTTP proxy gateway. It is highly optimized to serve as a residential/unlocked egress node for upstream proxies like 3x-ui / Xray.
+**VPNgate** is an intelligent VPN proxy gateway manager designed specifically for Linux VPS (e.g. Ubuntu / Debian). It automatically collects open VPNGate nodes, conducts multi-threaded availability testing and latency filtering, establishes secure out-of-band routing via OpenVPN and policy routing to **prevent VPS lockouts**, and hosts a high-performance local SOCKS5/HTTP proxy gateway. It is highly optimized to serve as a residential/unlocked egress node for upstream proxies like 3x-ui / Xray.
 
 ### ✨ Key Features
 
@@ -122,7 +122,7 @@ sudo apt-get update
 
 ### 🚀 Quick Start
 
-To install and deploy AimiliVPN on your **Ubuntu / Debian** server, copy and paste the following command:
+To install and deploy VPNgate on your **Ubuntu / Debian** server, copy and paste the following command:
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/yinyuangu/vpngate/myself/install.sh)

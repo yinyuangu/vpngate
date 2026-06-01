@@ -568,7 +568,7 @@ def kill_existing_openvpn_processes() -> None:
         # Terminate existing openvpn processes managing tun0 or using our vpngate configuration
         subprocess.run(["pkill", "-f", "openvpn.*tun0"], capture_output=True, timeout=2)
         subprocess.run(["pkill", "-f", "openvpn.*vpngate_data"], capture_output=True, timeout=2)
-        print("[Cleanup] Terminated existing AimiliVPN OpenVPN processes.", flush=True)
+        print("[Cleanup] Terminated existing VPNgate OpenVPN processes.", flush=True)
     except Exception as e:
         print(f"[Cleanup Error] Failed to kill existing OpenVPN processes: {e}", flush=True)
 

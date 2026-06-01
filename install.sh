@@ -28,10 +28,11 @@ if ! command -v apt-get >/dev/null 2>&1; then
 fi
 
 echo -e "${BLUE}==========================================================${PLAIN}"
-echo -e "${BLUE}        欢迎使用 AimiliVPN 一键源码部署与管理脚本${PLAIN}"
+echo -e "${BLUE}        欢迎使用 VPNgate 一键源码部署与管理脚本${PLAIN}"
 echo -e "${BLUE}==========================================================${PLAIN}"
 
 # 3. Configure GitHub Repository URL
+# Default to the official repository (yinyuangu/vpngate)
 DEFAULT_USER="yinyuangu"
 DEFAULT_REPO="vpngate"
 DEFAULT_BRANCH="myself"
@@ -50,7 +51,7 @@ echo -e "  -> 正在运行 apt-get install 安装基础依赖包 (openvpn, curl,
 apt-get install -y openvpn curl git ca-certificates iptables iproute2 psmisc python3
 
 # 4. Clone or pull the repository
-INSTALL_DIR="/opt/aimilivpn"
+INSTALL_DIR="/opt/vpngate"
 echo -e "\n${YELLOW}[2/4] 正在从 GitHub 部署源代码到 ${INSTALL_DIR}...${PLAIN}"
 if [ -f "${INSTALL_DIR}/.local_dev" ]; then
     echo -e "${GREEN}检测到本地开发模式 (.local_dev)，跳过 git pull/reset 保持本地修改。${PLAIN}"
@@ -95,10 +96,10 @@ fi
 
 # 5. Configure Systemd Service (direct python3 run)
 echo -e "\n${YELLOW}[3/4] 正在配置 systemd 系统服务...${PLAIN}"
-echo -e "  -> 正在创建服务配置 /lib/systemd/system/aimilivpn.service ..."
-cat > /lib/systemd/system/aimilivpn.service <<EOF
+echo -e "  -> 正在创建服务配置 /lib/systemd/system/vpngate.service ..."
+cat > /lib/systemd/system/vpngate.service <<EOF
 [Unit]
-Description=AimiliVPN OpenVPN Manager with HTTP/SOCKS5 Proxy
+Description=VPNgate OpenVPN Manager with HTTP/SOCKS5 Proxy
 After=network.target
 
 [Service]
@@ -107,7 +108,7 @@ WorkingDirectory=${INSTALL_DIR}
 ExecStart=/usr/bin/python3 vpngate_manager.py
 Restart=always
 RestartSec=5
-EnvironmentFile=-/etc/default/aimilivpn
+EnvironmentFile=-/etc/default/vpngate
 
 [Install]
 WantedBy=multi-user.target
@@ -115,7 +116,7 @@ EOF
 
 echo -e "  -> 正在重新加载 systemd 系统服务列表并启用开机自启..."
 systemctl daemon-reload
-systemctl enable aimilivpn.service
+systemctl enable vpngate.service
 
 # 6. Configure global command shortcut "ml"
 echo -e "\n${YELLOW}[4/4] 正在创建全局命令快捷接口 'ml'...${PLAIN}"
@@ -130,8 +131,8 @@ import time
 import tty
 import termios
 
-INSTALL_DIR = "/opt/aimilivpn"
-LOG_FILE = "/opt/aimilivpn/vpngate_data/vpngate.log"
+INSTALL_DIR = "/opt/vpngate"
+LOG_FILE = "/opt/vpngate/vpngate_data/vpngate.log"
 
 def generate_random_password():
     import random
@@ -149,7 +150,7 @@ def generate_random_suffix():
 
 def load_ui_cfg():
     import json
-    path = "/opt/aimilivpn/vpngate_data/ui_auth.json"
+    path = "/opt/vpngate/vpngate_data/ui_auth.json"
     cfg = {"host": "0.0.0.0", "port": 8787, "secret_path": "EJsW2EeBo9lY", "password": ""}
     if os.path.exists(path):
         try:
@@ -163,7 +164,7 @@ def load_ui_cfg():
 
 def save_ui_cfg(cfg):
     import json
-    path = "/opt/aimilivpn/vpngate_data/ui_auth.json"
+    path = "/opt/vpngate/vpngate_data/ui_auth.json"
     os.makedirs(os.path.dirname(path), exist_ok=True)
     try:
         with open(path, "w", encoding="utf-8") as f:
@@ -174,7 +175,7 @@ def save_ui_cfg(cfg):
 
 def load_state():
     import json
-    path = "/opt/aimilivpn/vpngate_data/state.json"
+    path = "/opt/vpngate/vpngate_data/state.json"
     state = {"active_openvpn_node_id": "", "last_check_message": "", "is_connecting": False}
     if os.path.exists(path):
         try:
@@ -188,7 +189,7 @@ def load_state():
 
 def get_active_node_info():
     import json
-    path = "/opt/aimilivpn/vpngate_data/nodes.json"
+    path = "/opt/vpngate/vpngate_data/nodes.json"
     state = load_state()
     active_id = state.get("active_openvpn_node_id")
     if not active_id:
@@ -208,7 +209,7 @@ def get_active_node_info():
 
 def load_nodes_map():
     import json
-    path = "/opt/aimilivpn/vpngate_data/nodes.json"
+    path = "/opt/vpngate/vpngate_data/nodes.json"
     if not os.path.exists(path):
         return {}
     try:
@@ -295,7 +296,7 @@ def ping_ip(ip):
         return "无法连接"
 
 def get_public_ip():
-    path = "/opt/aimilivpn/vpngate_data/public_ip.txt"
+    path = "/opt/vpngate/vpngate_data/public_ip.txt"
     if os.path.exists(path):
         try:
             with open(path, "r", encoding="utf-8") as f:
@@ -331,7 +332,7 @@ def check_port_listening(port):
     except Exception:
         return False
 
-def get_service_pid(service_name="aimilivpn.service"):
+def get_service_pid(service_name="vpngate.service"):
     try:
         for pid_dir in os.listdir('/proc'):
             if pid_dir.isdigit():
@@ -346,7 +347,7 @@ def get_service_pid(service_name="aimilivpn.service"):
         pass
     return None
 
-def check_service_active(service_name="aimilivpn.service"):
+def check_service_active(service_name="vpngate.service"):
     return get_service_pid(service_name) is not None
 
 def check_openvpn_process():
@@ -393,9 +394,9 @@ def print_status():
     is_connecting = state.get("is_connecting", False)
     
     gateway_ok = check_port_listening(7928)
-    service_ok = check_service_active("aimilivpn.service")
+    service_ok = check_service_active("vpngate.service")
     openvpn_ok = check_openvpn_process()
-    pid = get_service_pid("aimilivpn.service")
+    pid = get_service_pid("vpngate.service")
     
     active_ip, active_loc = get_active_node_info()
     latency = state.get("active_node_latency", "测试中...") if active_ip else "无活动连接"
@@ -416,7 +417,7 @@ def print_status():
         openvpn_status = f"{green}[已连接]{reset}" if openvpn_ok else f"{red}[未连接]{reset}"
     
     print_line("=======================================================")
-    print_line(f"               {bold}AimiliVPN 管理终端 v2.0{reset}                  ")
+    print_line(f"                {bold}VPNgate 管理终端 v2.0{reset}                   ")
     print_line("=======================================================")
     print_line("【核心服务状态】")
     print_line(format_line("代理网关 (Port 7928)", gateway_status))
@@ -490,25 +491,25 @@ def print_status():
     print_line("=======================================================")
 
 def start_service():
-    print("正在启动 AimiliVPN 服务...", flush=True)
-    subprocess.run(["systemctl", "start", "aimilivpn.service"])
+    print("正在启动 VPNgate 服务...", flush=True)
+    subprocess.run(["systemctl", "start", "vpngate.service"])
     print("已发送启动指令。")
     time.sleep(1)
 
 def stop_service():
-    print("正在停止 AimiliVPN 服务...", flush=True)
-    subprocess.run(["systemctl", "stop", "aimilivpn.service"])
+    print("正在停止 VPNgate 服务...", flush=True)
+    subprocess.run(["systemctl", "stop", "vpngate.service"])
     print("已发送停止指令。")
     time.sleep(1)
 
 def restart_service():
-    print("正在重启 AimiliVPN 服务...", flush=True)
-    subprocess.run(["systemctl", "restart", "aimilivpn.service"])
+    print("正在重启 VPNgate 服务...", flush=True)
+    subprocess.run(["systemctl", "restart", "vpngate.service"])
     print("已发送重启指令。")
     time.sleep(1)
 
 def show_logs():
-    print("正在查看 AimiliVPN 日志 (按 Ctrl+C 退出)...", flush=True)
+    print("正在查看 VPNgate 日志 (按 Ctrl+C 退出)...", flush=True)
     if os.path.exists(LOG_FILE):
         try:
             subprocess.run(["tail", "-f", "-n", "50", LOG_FILE])
@@ -603,13 +604,13 @@ def update_service():
         time.sleep(2)
 
 def uninstall_service():
-    confirm = input("确定要完全卸载 AimiliVPN 吗？(y/N): ")
+    confirm = input("确定要完全卸载 VPNgate 吗？(y/N): ")
     if confirm.lower() == 'y':
-        print("正在完全卸载 AimiliVPN...", flush=True)
-        subprocess.run(["systemctl", "stop", "aimilivpn.service"])
-        subprocess.run(["systemctl", "disable", "aimilivpn.service"])
+        print("正在完全卸载 VPNgate...", flush=True)
+        subprocess.run(["systemctl", "stop", "vpngate.service"])
+        subprocess.run(["systemctl", "disable", "vpngate.service"])
         try:
-            os.unlink("/lib/systemd/system/aimilivpn.service")
+            os.unlink("/lib/systemd/system/vpngate.service")
         except Exception:
             pass
         try:
@@ -617,7 +618,7 @@ def uninstall_service():
         except Exception:
             pass
         subprocess.run(["rm", "-rf", INSTALL_DIR])
-        print("AimiliVPN 已卸载！")
+        print("VPNgate 已卸载！")
         sys.exit(0)
     else:
         print("已取消卸载。")
@@ -626,8 +627,8 @@ def uninstall_service():
 def ask_restart():
     ans = input("配置已保存。是否立即重启服务生效？(Y/n): ").strip().lower()
     if ans in ('', 'y', 'yes'):
-        print("正在重启 AimiliVPN 服务...", flush=True)
-        subprocess.run(["systemctl", "restart", "aimilivpn.service"])
+        print("正在重启 VPNgate 服务...", flush=True)
+        subprocess.run(["systemctl", "restart", "vpngate.service"])
         print("服务已重启。")
         time.sleep(1.5)
 
@@ -803,9 +804,9 @@ def get_status_state():
         state.get("proxy_ok", False),
         str(state.get("channels", "")),
         check_port_listening(7928),
-        check_service_active("aimilivpn.service"),
+        check_service_active("vpngate.service"),
         check_openvpn_process(),
-        get_service_pid("aimilivpn.service")
+        get_service_pid("vpngate.service")
     )
 
 def main():
@@ -1042,11 +1043,11 @@ with open('$AUTH_FILE', 'w', encoding='utf-8') as f:
 fi
 
 # 8. Start service
-echo -e "\n正在启动 AimiliVPN 服务并初始化网络..."
-systemctl restart aimilivpn.service || true
+echo -e "\n正在启动 VPNgate 服务并初始化网络..."
+systemctl restart vpngate.service || true
 
 # Wait and poll for node loading and active connection
-echo -e "\n正在等待 AimiliVPN 首次获取节点并建立加密通道 (此过程可能需要 5-30 秒)..."
+echo -e "\n正在等待 VPNgate 首次获取节点并建立加密通道 (此过程可能需要 5-30 秒)..."
 ACTIVE_ID=""
 LAST_MSG=""
 for i in {1..90}; do
@@ -1098,7 +1099,7 @@ PUBLIC_IP=$(curl -s --max-time 3 https://api.ipify.org || curl -s --max-time 3 h
 echo -n "$PUBLIC_IP" > "${INSTALL_DIR}/vpngate_data/public_ip.txt"
 
 echo -e "\n${GREEN}==========================================================${PLAIN}"
-echo -e "${GREEN}             AimiliVPN 源码一键部署已完成！${PLAIN}"
+echo -e "${GREEN}              VPNgate 源码一键部署已完成！${PLAIN}"
 echo -e "${GREEN}==========================================================${PLAIN}"
 echo -e "  * 网页控制面板:  ${BLUE}http://${PUBLIC_IP}:${UI_PORT}/${SECRET_PATH}/${PLAIN}"
 echo -e "  * 网页管理账号:  ${YELLOW}${USERNAME}${PLAIN}"
