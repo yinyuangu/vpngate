@@ -1661,6 +1661,30 @@ INDEX_HTML = r"""<!doctype html>
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
+    .toolbar-action {
+      display: flex;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+
+    .filter-reset-btn {
+      width: 100%;
+      height: 38px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: linear-gradient(180deg, rgba(20, 31, 49, 0.72), rgba(10, 18, 31, 0.84));
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 750;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .filter-reset-btn:hover {
+      border-color: rgba(99, 102, 241, 0.36);
+      color: #eef2ff;
+      background: linear-gradient(180deg, rgba(29, 42, 67, 0.8), rgba(13, 22, 38, 0.9));
+    }
+
 
     .filter-menu {
       position: relative;
@@ -1731,6 +1755,10 @@ INDEX_HTML = r"""<!doctype html>
 
     .filter-list-menu.open {
       display: block;
+    }
+
+    .filter-list-menu.asn-wide-menu {
+      min-width: min(420px, calc(100vw - 24px));
     }
 
     .filter-menu.compact {
@@ -2648,6 +2676,10 @@ INDEX_HTML = r"""<!doctype html>
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
+    .toolbar-action {
+      align-self: stretch;
+    }
+
     .filter-menu-btn {
       height: 36px;
       box-sizing: border-box;
@@ -2755,6 +2787,10 @@ INDEX_HTML = r"""<!doctype html>
         grid-template-columns: 1fr;
         gap: 8px;
         padding: 10px;
+      }
+
+      .toolbar-action {
+        justify-content: stretch;
       }
 
       .channel-card {
@@ -2937,7 +2973,10 @@ INDEX_HTML = r"""<!doctype html>
     <div class="filter-menu">
       <input type="hidden" id="asn_filter" value="[]">
       <button type="button" id="asn_filter_btn" class="filter-menu-btn" onclick="toggleFilterMenu('asn_filter')">ASN: 全部</button>
-      <div id="asn_filter_menu" class="filter-list-menu multi-select-menu"></div>
+      <div id="asn_filter_menu" class="filter-list-menu multi-select-menu asn-wide-menu"></div>
+    </div>
+    <div class="toolbar-action">
+      <button type="button" class="filter-reset-btn" onclick="clearNodeFilters()">清除筛选</button>
     </div>
   </section>
   <div class="table-wrapper">
@@ -3284,8 +3323,11 @@ function toggleFilterMenu(key) {
   const button = $(`${key}_btn`);
   if (!menu || !button) return;
   const compact = button.closest(".compact");
+  const menuMinWidth = key === "asn_filter"
+    ? Math.max(button.getBoundingClientRect().width, Math.min(420, window.innerWidth - 24))
+    : button.getBoundingClientRect().width;
   toggleFloatingMenu(menu, button, {
-    minWidth: button.getBoundingClientRect().width,
+    minWidth: menuMinWidth,
     maxHeight: key === "page_size" ? 150 : 280,
     preferUp: key === "page_size" || !!compact
   });
@@ -3392,6 +3434,15 @@ function setMultiFilterValue(key, value) {
   }
 }
 
+function handleMultiFilterOptionClick(event, key, value) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  setMultiFilterValue(key, value);
+  return false;
+}
+
 function renderMultiFilterMenu(key, options, selectedValues, buttonLabel) {
   const menu = $(`${key}_menu`);
   const button = $(`${key}_btn`);
@@ -3401,9 +3452,22 @@ function renderMultiFilterMenu(key, options, selectedValues, buttonLabel) {
   menu.innerHTML = options.length
     ? options.map(option => {
         const active = selectedSet.has(option.value) ? " active" : "";
-        return `<button type="button" class="filter-option${active}" onclick="setMultiFilterValue('${key}', decodeURIComponent('${encodeURIComponent(option.value)}')); return false;">${esc(option.label)}</button>`;
+        return `<button type="button" class="filter-option${active}" onclick="return handleMultiFilterOptionClick(event, '${key}', decodeURIComponent('${encodeURIComponent(option.value)}'));">${esc(option.label)}</button>`;
       }).join("")
     : `<div class="filter-option" style="cursor: default; color: var(--text-secondary);">暂无选项</div>`;
+}
+
+function clearNodeFilters() {
+  ["status_filter", "country_filter", "type_filter", "asn_filter"].forEach(key => {
+    const input = $(key);
+    if (input) input.value = "[]";
+  });
+  currentPage = 1;
+  closeAllMenus();
+  updateStaticFilterMenus();
+  updateCountryFilter();
+  updateAsnFilter();
+  render();
 }
 
 function updateStaticFilterMenus() {
@@ -3462,7 +3526,7 @@ function updateAsnFilter() {
   menu.innerHTML = asns.length
     ? asns.map(asn => {
         const active = selectedSet.has(asn) ? " active" : "";
-        return `<button type="button" class="filter-option${active}" onclick="setMultiFilterValue('asn_filter', decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+        return `<button type="button" class="filter-option${active}" onclick="return handleMultiFilterOptionClick(event, 'asn_filter', decodeURIComponent('${encodeURIComponent(asn)}'));">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
       }).join("")
     : `<div class="filter-option" style="cursor: default; color: var(--text-secondary);">暂无 ASN</div>`;
   button.textContent = selectionCountLabel("ASN", validSelected);
