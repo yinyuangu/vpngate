@@ -1630,7 +1630,7 @@ INDEX_HTML = r"""<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>多通道管理</title>
+  <title>VPNgate</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
     
@@ -2209,6 +2209,22 @@ INDEX_HTML = r"""<!doctype html>
       font-size: 13px;
       font-weight: 650;
       letter-spacing: 0;
+    }
+
+    .type-cell {
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
+      color: #d7e2f2;
+      font-size: 12px;
+      font-weight: 620;
+      letter-spacing: 0;
+      font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .type-cell.empty {
+      color: var(--text-secondary);
+      font-weight: 560;
     }
 
     .asn-cell {
@@ -3061,7 +3077,7 @@ INDEX_HTML = r"""<!doctype html>
   <div class="brand">
     <h1>
       <svg xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px; color:#818cf8;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-      多通道管理
+      VPNgate
     </h1>
   </div>
   <div class="dashboard-toolbar">
@@ -3913,6 +3929,7 @@ function render(){
       const showNodeMetadata = isActive || n.probe_status === "available";
       const asnLabel = showNodeMetadata ? nodeAsnLabel(n) : "-";
       const typeLabel = showNodeMetadata ? translateIpType(n.ip_type) : "-";
+      const typeClass = typeLabel === "-" ? "type-cell empty" : "type-cell";
       const isTesting = testingNodeIds.has(n.id);
       const connectLabel = isActive ? "已连接" : "连接";
       const connectDisabled = state.is_connecting || n.probe_status === "unavailable" ? "disabled" : "";
@@ -3922,7 +3939,7 @@ function render(){
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
         <td><span class="country-cell">${esc(nodeCountryLabel(n))}</span></td>
         <td class="mono ip-cell">${esc(n.ip||n.remote_host)}</td>
-        <td>${esc(typeLabel)}</td>
+        <td><span class="${typeClass}">${esc(typeLabel)}</span></td>
         <td>${latencyText}</td>
         <td><span class="asn-cell" title="${esc(asnLabel)}">${esc(asnLabel)}</span></td>
         <td>
