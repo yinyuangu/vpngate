@@ -3287,80 +3287,6 @@ const translateIpType = t => {
   return dict[t] || t || "-";
 };
 
-const COUNTRY_NAME_TRANSLATIONS = {
-    "Japan": "日本",
-    "Korea Republic of": "韩国",
-    "Korea": "韩国",
-    "Republic of Korea": "韩国",
-    "Thailand": "泰国",
-    "United States": "美国",
-    "United Kingdom": "英国",
-    "Russian Federation": "俄罗斯",
-    "Russian": "俄罗斯",
-    "Russia": "俄罗斯",
-    "Viet Nam": "越南",
-    "Vietnam": "越南",
-    "Laos": "老挝",
-    "Lao People's Democratic Republic": "老挝",
-    "Lao PDR": "老挝",
-    "China": "中国",
-    "Taiwan": "台湾",
-    "Taiwan Province of China": "台湾",
-    "Hong Kong": "香港",
-    "Singapore": "新加坡",
-    "Malaysia": "马来西亚",
-    "Indonesia": "印度尼西亚",
-    "India": "印度",
-    "Philippines": "菲律宾",
-    "Australia": "澳大利亚",
-    "New Zealand": "新西兰",
-    "Canada": "加拿大",
-    "Ukraine": "乌克兰",
-    "France": "法国",
-    "Germany": "德国",
-    "Netherlands": "荷兰",
-    "Sweden": "瑞典",
-    "Norway": "挪威",
-    "Spain": "西班牙",
-    "Turkey": "土耳其",
-    "South Africa": "南非",
-    "Brazil": "巴西",
-    "Argentina": "阿根廷",
-    "Chile": "智利",
-    "Mexico": "墨西哥",
-    "Peru": "秘鲁",
-    "Egypt": "埃及",
-    "Romania": "罗马尼亚",
-    "Poland": "波兰",
-    "Kazakhstan": "哈萨克斯坦",
-    "Georgia": "格鲁吉亚",
-    "Mongolia": "蒙古",
-    "Saudi Arabia": "沙特阿拉伯",
-    "Iran": "伊朗",
-    "Iraq": "伊拉克",
-    "Colombia": "哥伦比亚",
-    "Cambodia": "柬埔寨",
-    "Ireland": "爱尔兰",
-    "Italy": "意大利",
-    "Switzerland": "瑞士",
-    "Belgium": "比利时",
-    "Austria": "奥地利",
-    "Denmark": "丹麦",
-    "Finland": "芬兰",
-    "Portugal": "葡萄牙",
-    "Greece": "希腊",
-    "Czech Republic": "捷克",
-    "Hungary": "匈牙利",
-    "Israel": "以色列",
-    "United Arab Emirates": "阿联酋",
-    "UAE": "阿联酋",
-    "European Union": "欧盟",
-    "Macao": "澳门",
-    "Macau": "澳门",
-    "Iceland": "冰岛",
-    "Luxembourg": "卢森堡"
-};
-
 const COUNTRY_CODE_TRANSLATIONS = {
   "AD": "安道尔", "AE": "阿联酋", "AF": "阿富汗", "AG": "安提瓜和巴布达", "AI": "安圭拉",
   "AL": "阿尔巴尼亚", "AM": "亚美尼亚", "AO": "安哥拉", "AR": "阿根廷", "AT": "奥地利",
@@ -3410,7 +3336,7 @@ const COUNTRY_CODE_TRANSLATIONS = {
 function translateCountry(c, code = "") {
   const cc = String(code || "").trim().toUpperCase();
   if (cc && COUNTRY_CODE_TRANSLATIONS[cc]) return COUNTRY_CODE_TRANSLATIONS[cc];
-  return COUNTRY_NAME_TRANSLATIONS[c] || c || "-";
+  return c || "-";
 }
 
 function countryFlag(code) {

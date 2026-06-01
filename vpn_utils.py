@@ -64,80 +64,6 @@ COUNTRY_CODE_TRANSLATIONS = {
     "YT": "马约特", "ZA": "南非", "ZM": "赞比亚", "ZW": "津巴布韦",
 }
 
-COUNTRY_TRANSLATIONS = {
-    "Japan": "日本",
-    "Korea Republic of": "韩国",
-    "Korea": "韩国",
-    "Republic of Korea": "韩国",
-    "Thailand": "泰国",
-    "United States": "美国",
-    "United Kingdom": "英国",
-    "Russian Federation": "俄罗斯",
-    "Russian": "俄罗斯",
-    "Russia": "俄罗斯",
-    "Viet Nam": "越南",
-    "Vietnam": "越南",
-    "Laos": "老挝",
-    "Lao People's Democratic Republic": "老挝",
-    "Lao PDR": "老挝",
-    "China": "中国",
-    "Taiwan": "台湾",
-    "Taiwan Province of China": "台湾",
-    "Hong Kong": "香港",
-    "Singapore": "新加坡",
-    "Malaysia": "马来西亚",
-    "Indonesia": "印度尼西亚",
-    "India": "印度",
-    "Philippines": "菲律宾",
-    "Australia": "澳大利亚",
-    "New Zealand": "新西兰",
-    "Canada": "加拿大",
-    "Ukraine": "乌克兰",
-    "France": "法国",
-    "Germany": "德国",
-    "Netherlands": "荷兰",
-    "Sweden": "瑞典",
-    "Norway": "挪威",
-    "Spain": "西班牙",
-    "Turkey": "土耳其",
-    "South Africa": "南非",
-    "Brazil": "巴西",
-    "Argentina": "阿根廷",
-    "Chile": "智利",
-    "Mexico": "墨西哥",
-    "Peru": "秘鲁",
-    "Egypt": "埃及",
-    "Romania": "罗马尼亚",
-    "Poland": "波兰",
-    "Kazakhstan": "哈萨克斯坦",
-    "Georgia": "格鲁吉亚",
-    "Mongolia": "蒙古",
-    "Saudi Arabia": "沙特阿拉伯",
-    "Iran": "伊朗",
-    "Iraq": "伊拉克",
-    "Colombia": "哥伦比亚",
-    "Cambodia": "柬埔寨",
-    "Ireland": "爱尔兰",
-    "Italy": "意大利",
-    "Switzerland": "瑞士",
-    "Belgium": "比利时",
-    "Austria": "奥地利",
-    "Denmark": "丹麦",
-    "Finland": "芬兰",
-    "Portugal": "葡萄牙",
-    "Greece": "希腊",
-    "Czech Republic": "捷克",
-    "Hungary": "匈牙利",
-    "Israel": "以色列",
-    "United Arab Emirates": "阿联酋",
-    "UAE": "阿联酋",
-    "European Union": "欧盟",
-    "Macao": "澳门",
-    "Macau": "澳门",
-    "Iceland": "冰岛",
-    "Luxembourg": "卢森堡",
-}
-
 def translate_country(country: str, country_short: str = "") -> str:
     code = str(country_short or "").strip().upper()
     if code and code in COUNTRY_CODE_TRANSLATIONS:
@@ -145,7 +71,7 @@ def translate_country(country: str, country_short: str = "") -> str:
     clean_country = str(country or "").strip()
     if not clean_country:
         return ""
-    return COUNTRY_TRANSLATIONS.get(clean_country, clean_country)
+    return clean_country
 
 def get_upstream_proxy() -> tuple[str | None, str | None, int | None]:
     """
@@ -382,7 +308,7 @@ def save_ip_cache(cache: dict[str, dict[str, Any]]) -> None:
         except Exception:
             pass
 
-IP_INFO_FIELDS = "status,message,query,country,regionName,city,isp,org,as,asname,proxy,hosting,mobile"
+IP_INFO_FIELDS = "status,message,query,country,countryCode,regionName,city,isp,org,as,asname,proxy,hosting,mobile"
 
 def _build_ip_info_entry(item: dict[str, Any], cached_at: float) -> dict[str, Any] | None:
     if item.get("status") != "success":
@@ -407,7 +333,7 @@ def _build_ip_info_entry(item: dict[str, Any], cached_at: float) -> dict[str, An
     elif item.get("mobile"):
         quality = "mobile"
 
-    translated_country = translate_country(item.get("country", ""))
+    translated_country = translate_country(item.get("country", ""), item.get("countryCode", ""))
     loc = " ".join(part for part in [translated_country, item.get("regionName"), item.get("city")] if part)
     return {
         "owner": item.get("org") or item.get("isp") or "",
