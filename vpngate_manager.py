@@ -2619,9 +2619,9 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .channel-options {
-      display: grid;
-      grid-template-columns: minmax(98px, 1fr) minmax(98px, 1fr);
-      gap: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       align-items: center;
       margin-top: 4px;
     }
@@ -2629,18 +2629,24 @@ INDEX_HTML = r"""<!doctype html>
     .lock-menu {
       position: relative;
       min-width: 0;
+      flex: 0 0 auto;
     }
 
     .lock-mode-btn {
-      width: 100%;
-      height: 30px;
-      border-radius: 8px;
+      width: auto;
+      min-width: 148px;
+      max-width: 196px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      border-radius: 999px;
       border: 1px solid rgba(148, 163, 184, 0.13);
       background: linear-gradient(180deg, rgba(22, 32, 50, 0.76), rgba(12, 21, 35, 0.76));
       color: #eef5ff;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 750;
-      padding: 0 25px 0 8px;
+      padding: 0 24px 0 10px;
       text-align: left;
       cursor: pointer;
       overflow: hidden;
@@ -2660,10 +2666,10 @@ INDEX_HTML = r"""<!doctype html>
     .lock-mode-btn::after {
       content: "";
       position: absolute;
-      right: 10px;
+      right: 9px;
       top: 50%;
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
       border-right: 2px solid rgba(203, 213, 225, 0.75);
       border-bottom: 2px solid rgba(203, 213, 225, 0.75);
       transform: translateY(-65%) rotate(45deg);
@@ -2891,7 +2897,7 @@ INDEX_HTML = r"""<!doctype html>
     .channels-grid,
     .toolbar,
     .table-wrapper {
-      max-width: 1216px;
+      max-width: 1120px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -2902,22 +2908,25 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 11px 11px 0 0;
       background: linear-gradient(180deg, rgba(18, 27, 45, 0.74), rgba(10, 18, 31, 0.76));
       display: grid;
-      grid-template-columns: 138px 142px 132px minmax(184px, 228px) 1fr;
+      grid-template-columns: 116px 122px 110px minmax(156px, 188px) auto;
       gap: 6px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
       align-items: center;
+      justify-content: start;
+      width: fit-content;
+      max-width: 100%;
     }
 
     .toolbar-action {
       align-self: stretch;
-      justify-self: end;
+      justify-self: start;
     }
 
     .filter-menu-btn {
-      height: 32px;
+      height: 31px;
       box-sizing: border-box;
-      padding: 0 24px 0 9px;
-      font-size: 11.5px;
+      padding: 0 22px 0 8px;
+      font-size: 11px;
     }
 
     .table-wrapper {
@@ -2929,8 +2938,8 @@ INDEX_HTML = r"""<!doctype html>
 
     th,
     td {
-      padding: 7px 6px;
-      font-size: 11.5px;
+      padding: 6px 5px;
+      font-size: 11px;
     }
 
     th {
@@ -2944,7 +2953,7 @@ INDEX_HTML = r"""<!doctype html>
     .country-cell {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       white-space: nowrap;
       color: #e5edf7;
       font-weight: 650;
@@ -2952,34 +2961,34 @@ INDEX_HTML = r"""<!doctype html>
 
     td:nth-child(7),
     th:nth-child(7) {
-      min-width: 94px;
+      min-width: 82px;
       white-space: nowrap;
       word-break: keep-all;
     }
 
     td:nth-child(6),
     th:nth-child(6) {
-      min-width: 154px;
+      min-width: 138px;
     }
 
     td:nth-child(2),
     th:nth-child(2) {
-      min-width: 74px;
+      min-width: 64px;
     }
 
     td:nth-child(3),
     th:nth-child(3) {
-      min-width: 106px;
+      min-width: 96px;
     }
 
     td:nth-child(4),
     th:nth-child(4) {
-      min-width: 56px;
+      min-width: 48px;
     }
 
     td:nth-child(5),
     th:nth-child(5) {
-      min-width: 52px;
+      min-width: 46px;
     }
 
     @media (max-width: 1100px) {
@@ -2988,6 +2997,7 @@ INDEX_HTML = r"""<!doctype html>
       }
       .toolbar {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
       }
       .channel-actions {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3058,6 +3068,7 @@ INDEX_HTML = r"""<!doctype html>
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 7px;
         padding: 8px;
+        width: 100%;
       }
 
       .toolbar-action {
@@ -3105,7 +3116,20 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       .channel-options {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .lock-menu {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .lock-mode-btn {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
       }
 
       .channel-actions button {
@@ -3266,13 +3290,13 @@ INDEX_HTML = r"""<!doctype html>
       <table>
         <thead>
           <tr>
-            <th style="width: 64px;">状态</th>
-            <th style="width: 78px;">国家</th>
-            <th style="width: 112px;">IP</th>
-            <th style="width: 60px;">类型</th>
-            <th style="width: 54px;">延迟</th>
-            <th style="width: 160px;">ASN</th>
-            <th style="width: 98px;">操作</th>
+            <th style="width: 58px;">状态</th>
+            <th style="width: 70px;">国家</th>
+            <th style="width: 102px;">IP</th>
+            <th style="width: 52px;">类型</th>
+            <th style="width: 48px;">延迟</th>
+            <th style="width: 146px;">ASN</th>
+            <th style="width: 88px;">操作</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
