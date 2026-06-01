@@ -2285,7 +2285,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .asn-cell {
       display: inline-block;
-      max-width: 156px;
+      max-width: 176px;
       line-height: 1.35;
       white-space: normal;
       overflow-wrap: anywhere;
@@ -2634,8 +2634,8 @@ INDEX_HTML = r"""<!doctype html>
 
     .lock-mode-btn {
       width: auto;
-      min-width: 148px;
-      max-width: 196px;
+      min-width: 150px;
+      max-width: 200px;
       height: 28px;
       display: inline-flex;
       align-items: center;
@@ -2655,6 +2655,16 @@ INDEX_HTML = r"""<!doctype html>
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
       transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
       position: relative;
+    }
+
+    .country-lock-btn {
+      min-width: 148px;
+      max-width: 148px;
+    }
+
+    .asn-lock-btn {
+      min-width: 236px;
+      max-width: 252px;
     }
 
     .lock-mode-btn:hover {
@@ -2904,22 +2914,22 @@ INDEX_HTML = r"""<!doctype html>
 
     .toolbar {
       margin-bottom: 6px;
-      padding: 8px;
-      border-radius: 11px 11px 0 0;
-      background: linear-gradient(180deg, rgba(18, 27, 45, 0.74), rgba(10, 18, 31, 0.76));
-      display: grid;
-      grid-template-columns: 116px 122px 110px minmax(156px, 188px) auto;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      display: flex;
+      flex-wrap: wrap;
       gap: 6px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
       align-items: center;
-      justify-content: start;
-      width: fit-content;
-      max-width: 100%;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 1120px;
     }
 
     .toolbar-action {
-      align-self: stretch;
+      align-self: center;
       justify-self: start;
+      margin-left: 2px;
     }
 
     .filter-menu-btn {
@@ -2927,6 +2937,26 @@ INDEX_HTML = r"""<!doctype html>
       box-sizing: border-box;
       padding: 0 22px 0 8px;
       font-size: 11px;
+    }
+
+    .toolbar > .filter-menu {
+      flex: 0 0 auto;
+    }
+
+    .toolbar > .filter-menu:nth-child(1) {
+      width: 118px;
+    }
+
+    .toolbar > .filter-menu:nth-child(2) {
+      width: 126px;
+    }
+
+    .toolbar > .filter-menu:nth-child(3) {
+      width: 118px;
+    }
+
+    .toolbar > .filter-menu:nth-child(4) {
+      width: 286px;
     }
 
     .table-wrapper {
@@ -2968,7 +2998,7 @@ INDEX_HTML = r"""<!doctype html>
 
     td:nth-child(6),
     th:nth-child(6) {
-      min-width: 138px;
+      min-width: 152px;
     }
 
     td:nth-child(2),
@@ -3065,15 +3095,20 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       .toolbar {
+        display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 7px;
         padding: 8px;
         width: 100%;
+        border-radius: 11px 11px 0 0;
+        background: linear-gradient(180deg, rgba(18, 27, 45, 0.74), rgba(10, 18, 31, 0.76));
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
       }
 
       .toolbar-action {
         justify-content: stretch;
         grid-column: 1 / -1;
+        margin-left: 0;
       }
 
       .toolbar-action .filter-reset-btn {
@@ -3295,7 +3330,7 @@ INDEX_HTML = r"""<!doctype html>
             <th style="width: 102px;">IP</th>
             <th style="width: 52px;">类型</th>
             <th style="width: 48px;">延迟</th>
-            <th style="width: 146px;">ASN</th>
+            <th style="width: 162px;">ASN</th>
             <th style="width: 88px;">操作</th>
           </tr>
         </thead>
