@@ -4157,22 +4157,34 @@ async function disconnectNode(){
 }
 
 function buildChannelChooser(nodeId) {
+  const options = renderNodeChannelOptions(nodeId);
+  const buttonText = nodeChannelButtonText(nodeId);
+  return `<div class="filter-menu compact node-channel-menu" data-node-id="${esc(nodeId)}">
+    <button type="button" class="filter-menu-btn" data-node-id="${esc(nodeId)}" onclick="toggleNodeChannelMenu(this)">${esc(buttonText)}</button>
+    <div class="filter-list-menu" data-node-id="${esc(nodeId)}">
+      ${options}
+    </div>
+  </div>`;
+}
+
+function nodeChannelButtonText(nodeId) {
+  const channels = state.channels || [];
+  const count = state.channel_count || 6;
+  const current = Number.isInteger(selectedManualChannels[nodeId]) ? selectedManualChannels[nodeId] : null;
+  return current === null ? "选择通道" : `通道 ${current}`;
+}
+
+function renderNodeChannelOptions(nodeId) {
   const channels = state.channels || [];
   const count = state.channel_count || 6;
   const list = channels.length ? channels : Array.from({length: count}, (_, index) => ({index}));
   const current = Number.isInteger(selectedManualChannels[nodeId]) ? selectedManualChannels[nodeId] : null;
-  const buttonText = current === null ? "选择通道" : `通道 ${current}`;
   const options = list.map(ch => {
     const idx = ch.index || 0;
     const active = idx === current ? " active" : "";
-    return `<button type="button" class="filter-option${active}" onclick="setNodeChannel('${esc(nodeId)}', ${idx})">通道 ${idx}</button>`;
+    return `<button type="button" class="filter-option${active}" onclick="setNodeChannel(event, '${esc(nodeId)}', ${idx}); return false;">通道 ${idx}</button>`;
   }).join("");
-  return `<div class="filter-menu compact node-channel-menu">
-    <button type="button" class="filter-menu-btn" onclick="toggleNodeChannelMenu(this)">${esc(buttonText)}</button>
-    <div class="filter-list-menu">
-      ${options}
-    </div>
-  </div>`;
+  return options;
 }
 
 function toggleNodeChannelMenu(button) {
@@ -4188,14 +4200,27 @@ function toggleNodeChannelMenu(button) {
   });
 }
 
-function setNodeChannel(nodeId, channel) {
-  if (channel === null || channel === undefined) {
+function refreshNodeChannelChooser(nodeId) {
+  document.querySelectorAll(`.node-channel-menu[data-node-id="${CSS.escape(nodeId)}"] .filter-menu-btn[data-node-id="${CSS.escape(nodeId)}"]`).forEach(button => {
+    button.textContent = nodeChannelButtonText(nodeId);
+  });
+  document.querySelectorAll(`.filter-list-menu[data-node-id="${CSS.escape(nodeId)}"]`).forEach(menu => {
+    menu.innerHTML = renderNodeChannelOptions(nodeId);
+  });
+}
+
+function setNodeChannel(event, nodeId, channel) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const current = Number.isInteger(selectedManualChannels[nodeId]) ? selectedManualChannels[nodeId] : null;
+  if (channel === null || channel === undefined || current === channel) {
     delete selectedManualChannels[nodeId];
   } else {
     selectedManualChannels[nodeId] = channel;
   }
-  closeAllMenus();
-  render();
+  refreshNodeChannelChooser(nodeId);
 }
 
 function toggleLockMenu(kind, channel) {
