@@ -1044,10 +1044,20 @@ fi
 
 # 8. Start service
 echo -e "\n正在启动 VPNgate 服务并初始化网络..."
+STATE_FILE="${INSTALL_DIR}/vpngate_data/state.json"
+mkdir -p "${INSTALL_DIR}/vpngate_data"
+cat > "${STATE_FILE}" <<'EOF'
+{
+  "active_openvpn_node_id": "",
+  "last_check_message": "正在启动 VPNgate 服务...",
+  "is_connecting": true,
+  "channels": []
+}
+EOF
 systemctl restart vpngate.service || true
 
-# Wait and poll for node loading and active connection
-echo -e "\n正在等待 VPNgate 首次获取节点并建立加密通道 (此过程可能需要 5-30 秒)..."
+# Wait and poll for node loading and initial classification
+echo -e "\n正在等待 VPNgate 首次获取并全量检测节点 (此过程可能需要 5-30 秒)..."
 ACTIVE_ID=""
 LAST_MSG=""
 for i in {1..90}; do
@@ -1055,10 +1065,15 @@ for i in {1..90}; do
         ACTIVE_ID=$(python3 -c "import json; print(json.load(open('${INSTALL_DIR}/vpngate_data/state.json')).get('active_openvpn_node_id', ''))" 2>/dev/null || echo "")
         IS_CONN=$(python3 -c "import json; print(json.load(open('${INSTALL_DIR}/vpngate_data/state.json')).get('is_connecting', False))" 2>/dev/null || echo "False")
         CUR_MSG=$(python3 -c "import json; print(json.load(open('${INSTALL_DIR}/vpngate_data/state.json')).get('last_check_message', ''))" 2>/dev/null || echo "")
+        READY_CHANNELS=$(python3 -c "import json; data=json.load(open('${INSTALL_DIR}/vpngate_data/state.json')); ch=data.get('channels') or []; print(sum(1 for c in ch if c.get('running') and c.get('node_id')))" 2>/dev/null || echo "0")
+        NODE_COUNT=$(python3 -c "import json; print(len(json.load(open('${INSTALL_DIR}/vpngate_data/nodes.json'))))" 2>/dev/null || echo "0")
         
         if [ "$IS_CONN" = "False" ] || [ "$IS_CONN" = "false" ]; then
-            if [ -n "$ACTIVE_ID" ]; then
-                echo -e "  -> ${GREEN}[已就绪]${PLAIN} 首次节点连接成功，活动节点: ${GREEN}$ACTIVE_ID${PLAIN}"
+            if [ "${READY_CHANNELS}" -gt 0 ] && [ -n "$ACTIVE_ID" ]; then
+                echo -e "  -> ${GREEN}[已就绪]${PLAIN} 通道已建立连接，活动节点: ${GREEN}$ACTIVE_ID${PLAIN}"
+                break
+            elif [ "${NODE_COUNT}" -gt 0 ]; then
+                echo -e "  -> ${GREEN}[已就绪]${PLAIN} 节点池初始化完成，当前未自动连接通道。"
                 break
             else
                 if [ -n "$CUR_MSG" ] && [ "$CUR_MSG" != "$LAST_MSG" ]; then
@@ -1077,8 +1092,8 @@ for i in {1..90}; do
     fi
     sleep 1
 done
-if [ -z "$ACTIVE_ID" ]; then
-    echo -e "  -> ${YELLOW}[加载超时]${PLAIN} 首次节点获取或连接超时，将在后台继续尝试..."
+if [ -z "$ACTIVE_ID" ] && [ "${NODE_COUNT:-0}" -eq 0 ]; then
+    echo -e "  -> ${YELLOW}[加载超时]${PLAIN} 首次节点获取或检测超时，将在后台继续尝试..."
 fi
 
 SECRET_PATH="EJsW2EeBo9lY"
