@@ -2198,7 +2198,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .table-actions {
       display: flex;
-      gap: 4px;
+      gap: 3px;
       align-items: center;
       flex-wrap: nowrap;
     }
@@ -2208,9 +2208,9 @@ INDEX_HTML = r"""<!doctype html>
       color: #a5b4fc;
       border: 1px solid rgba(129, 140, 248, 0.32);
       border-radius: 7px;
-      padding: 0 7px;
-      height: 28px;
-      font-size: 11px;
+      padding: 0 6px;
+      height: 27px;
+      font-size: 10.5px;
       font-weight: 750;
       transition: all 0.2s ease;
       cursor: pointer;
@@ -2233,9 +2233,9 @@ INDEX_HTML = r"""<!doctype html>
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.32);
       border-radius: 7px;
-      padding: 0 7px;
-      height: 28px;
-      font-size: 11px;
+      padding: 0 6px;
+      height: 27px;
+      font-size: 10.5px;
       font-weight: 750;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -2255,14 +2255,14 @@ INDEX_HTML = r"""<!doctype html>
 
     .mono {
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-      font-size: 12px;
+      font-size: 11.5px;
       color: #dbe4f1;
       font-variant-numeric: tabular-nums;
     }
 
     .ip-cell {
       color: #dbe4f1;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 650;
       letter-spacing: 0;
     }
@@ -2272,7 +2272,7 @@ INDEX_HTML = r"""<!doctype html>
       align-items: center;
       min-height: 18px;
       color: #d7e2f2;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 620;
       letter-spacing: 0;
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
@@ -2285,13 +2285,13 @@ INDEX_HTML = r"""<!doctype html>
 
     .asn-cell {
       display: inline-block;
-      max-width: 180px;
+      max-width: 156px;
       line-height: 1.35;
       white-space: normal;
       overflow-wrap: anywhere;
       word-break: break-word;
       color: #d7e2f2;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 650;
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
       vertical-align: middle;
@@ -2384,22 +2384,22 @@ INDEX_HTML = r"""<!doctype html>
 
     .channels-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(360px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(2, minmax(332px, 1fr));
+      gap: 7px;
       align-items: start;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .channel-card {
       position: relative;
       overflow: visible;
       border: 1px solid var(--border-color);
-      border-radius: 13px;
+      border-radius: 12px;
       background:
         linear-gradient(180deg, rgba(17, 24, 39, 0.58), rgba(9, 16, 28, 0.76)),
         rgba(15, 23, 42, 0.5);
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255,255,255,0.035);
-      padding: 10px;
+      padding: 9px;
       min-height: 0;
     }
 
@@ -2419,7 +2419,7 @@ INDEX_HTML = r"""<!doctype html>
         rgba(15, 23, 42, 0.56);
       border: 2px solid rgba(16, 185, 129, 0.86);
       box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), 0 20px 42px rgba(0, 0, 0, 0.22), 0 0 24px rgba(16, 185, 129, 0.08);
-      padding: 10px;
+      padding: 9px;
     }
 
     .channel-card.connecting {
@@ -2435,23 +2435,23 @@ INDEX_HTML = r"""<!doctype html>
     .channel-top {
       display: flex;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
     .channel-head-actions {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
       flex-shrink: 0;
     }
 
     .channel-title {
       display: flex;
       align-items: center;
-      gap: 7px;
-      font-size: 13px;
+      gap: 6px;
+      font-size: 12px;
       font-weight: 800;
       color: #f8fafc;
     }
@@ -2461,14 +2461,14 @@ INDEX_HTML = r"""<!doctype html>
     .mini-pill {
       display: inline-flex;
       align-items: center;
-      height: 18px;
-      padding: 0 6px;
+      height: 17px;
+      padding: 0 5px;
       border-radius: 6px;
       background: rgba(83, 104, 139, 0.22);
       border: 1px solid rgba(128, 147, 178, 0.12);
       color: #b7c3d8;
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
     }
@@ -2476,14 +2476,14 @@ INDEX_HTML = r"""<!doctype html>
     .channel-status {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      height: 20px;
-      padding: 0 8px;
+      gap: 4px;
+      height: 19px;
+      padding: 0 7px;
       border-radius: 999px;
       color: #34d399;
       background: rgba(16, 185, 129, 0.12);
       box-shadow: none;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
     }
 
@@ -2500,8 +2500,8 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-status::before {
       content: "";
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: currentColor;
       box-shadow: 0 0 10px currentColor;
@@ -2509,30 +2509,30 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: minmax(100px, 0.88fr) minmax(190px, 1.5fr) minmax(72px, 0.5fr);
-      gap: 5px;
-      padding: 7px 8px;
+      grid-template-columns: minmax(92px, 0.84fr) minmax(168px, 1.36fr) minmax(64px, 0.45fr);
+      gap: 4px;
+      padding: 6px 7px;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.07);
       background: rgba(9, 16, 28, 0.48);
-      margin-bottom: 7px;
+      margin-bottom: 6px;
     }
 
     .metric-label {
       display: block;
       color: var(--text-secondary);
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
 
     .metric-value {
       display: block;
       color: var(--text-primary);
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 750;
-      min-height: 16px;
+      min-height: 15px;
       word-break: break-all;
       font-variant-numeric: tabular-nums;
     }
@@ -2551,10 +2551,10 @@ INDEX_HTML = r"""<!doctype html>
     .channel-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 5px;
+      gap: 4px;
       align-items: center;
-      min-height: 22px;
-      margin-bottom: 7px;
+      min-height: 20px;
+      margin-bottom: 6px;
     }
 
     .mini-pill.good {
@@ -2572,14 +2572,14 @@ INDEX_HTML = r"""<!doctype html>
     .channel-actions {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
-      margin-bottom: 7px;
+      margin-bottom: 6px;
     }
 
     .channel-info-pill {
       min-width: 0;
-      height: 28px;
+      height: 27px;
       border-radius: 6px;
       border: 1px solid rgba(126, 146, 178, 0.12);
       background: rgba(13, 25, 40, 0.7);
@@ -2587,9 +2587,9 @@ INDEX_HTML = r"""<!doctype html>
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      padding: 0 8px;
-      font-size: 11px;
+      gap: 4px;
+      padding: 0 7px;
+      font-size: 10.5px;
       font-weight: 800;
       overflow: hidden;
       white-space: nowrap;
@@ -2602,13 +2602,13 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .channel-disconnect-btn {
-      height: 22px;
-      padding: 0 8px;
+      height: 21px;
+      padding: 0 7px;
       border-radius: 999px;
       border: 1px solid rgba(244, 63, 94, 0.26);
       background: rgba(244, 63, 94, 0.12);
       color: #fb7185;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
       cursor: pointer;
     }
@@ -2620,10 +2620,10 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-options {
       display: grid;
-      grid-template-columns: minmax(106px, 1fr) minmax(106px, 1fr);
-      gap: 5px;
+      grid-template-columns: minmax(98px, 1fr) minmax(98px, 1fr);
+      gap: 4px;
       align-items: center;
-      margin-top: 5px;
+      margin-top: 4px;
     }
 
     .lock-menu {
@@ -2891,33 +2891,37 @@ INDEX_HTML = r"""<!doctype html>
     .channels-grid,
     .toolbar,
     .table-wrapper {
-      max-width: 1288px;
+      max-width: 1216px;
       margin-left: auto;
       margin-right: auto;
     }
 
     .toolbar {
-      margin-bottom: 8px;
-      padding: 10px;
-      border-radius: 12px 12px 0 0;
+      margin-bottom: 6px;
+      padding: 8px;
+      border-radius: 11px 11px 0 0;
       background: linear-gradient(180deg, rgba(18, 27, 45, 0.74), rgba(10, 18, 31, 0.76));
       display: grid;
-      grid-template-columns: repeat(4, minmax(96px, 1fr)) auto;
-      gap: 8px;
+      grid-template-columns: 138px 142px 132px minmax(184px, 228px) 1fr;
+      gap: 6px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
+      align-items: center;
     }
 
     .toolbar-action {
       align-self: stretch;
+      justify-self: end;
     }
 
     .filter-menu-btn {
-      height: 34px;
+      height: 32px;
       box-sizing: border-box;
+      padding: 0 24px 0 9px;
+      font-size: 11.5px;
     }
 
     .table-wrapper {
-      border-radius: 14px;
+      border-radius: 12px;
       background: rgba(15, 23, 42, 0.54);
       overflow: visible;
       box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.035);
@@ -2925,8 +2929,8 @@ INDEX_HTML = r"""<!doctype html>
 
     th,
     td {
-      padding: 8px 8px;
-      font-size: 12px;
+      padding: 7px 6px;
+      font-size: 11.5px;
     }
 
     th {
@@ -2940,7 +2944,7 @@ INDEX_HTML = r"""<!doctype html>
     .country-cell {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       white-space: nowrap;
       color: #e5edf7;
       font-weight: 650;
@@ -2948,34 +2952,34 @@ INDEX_HTML = r"""<!doctype html>
 
     td:nth-child(7),
     th:nth-child(7) {
-      min-width: 104px;
+      min-width: 94px;
       white-space: nowrap;
       word-break: keep-all;
     }
 
     td:nth-child(6),
     th:nth-child(6) {
-      min-width: 176px;
+      min-width: 154px;
     }
 
     td:nth-child(2),
     th:nth-child(2) {
-      min-width: 84px;
+      min-width: 74px;
     }
 
     td:nth-child(3),
     th:nth-child(3) {
-      min-width: 118px;
+      min-width: 106px;
     }
 
     td:nth-child(4),
     th:nth-child(4) {
-      min-width: 68px;
+      min-width: 56px;
     }
 
     td:nth-child(5),
     th:nth-child(5) {
-      min-width: 58px;
+      min-width: 52px;
     }
 
     @media (max-width: 1100px) {
@@ -3262,13 +3266,13 @@ INDEX_HTML = r"""<!doctype html>
       <table>
         <thead>
           <tr>
-            <th style="width: 72px;">状态</th>
-            <th style="width: 88px;">国家</th>
-            <th style="width: 126px;">IP</th>
-            <th style="width: 68px;">类型</th>
-            <th style="width: 58px;">延迟</th>
-            <th style="width: 184px;">ASN</th>
-            <th style="width: 112px;">操作</th>
+            <th style="width: 64px;">状态</th>
+            <th style="width: 78px;">国家</th>
+            <th style="width: 112px;">IP</th>
+            <th style="width: 60px;">类型</th>
+            <th style="width: 54px;">延迟</th>
+            <th style="width: 160px;">ASN</th>
+            <th style="width: 98px;">操作</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
