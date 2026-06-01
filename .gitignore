@@ -3,11 +3,11 @@ vpngate_manager.build/
 vpngate_manager.dist/
 *.build/
 *.dist/
-aimilivpn
+vpngate
 
 # Debian building artifacts
 *.deb
-aimilivpn_*
+vpngate_*
 
 # Python caches and bytecode
 __pycache__/
@@ -33,5 +33,4 @@ scratch/
 *连接配置*
 
 # Local analysis and doc files
-AimiliVPN_Analysis_ZH.md
-
+VPNgate_Analysis_ZH.md

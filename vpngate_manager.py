@@ -276,7 +276,7 @@ def load_ui_config() -> dict[str, Any]:
         return config
 
 def get_session_token(password: str, username: str = "admin") -> str:
-    salt = "aimilivpn_secure_salt_2026"
+    salt = "vpngate_secure_salt_2026"
     return hashlib.sha256((username + ":" + password + salt).encode("utf-8")).hexdigest()
 
 def cleanup_old_logs(logs_dir: Path) -> None:
