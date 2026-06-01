@@ -224,6 +224,21 @@ def merge_node_metadata(target: dict[str, Any], source: dict[str, Any] | None) -
         if value not in ("", None):
             target[field] = value
 
+def clear_node_metadata(target: dict[str, Any]) -> None:
+    for field in NODE_METADATA_FIELDS:
+        target[field] = ""
+
+def clear_unavailable_node_metadata(nodes: list[dict[str, Any]]) -> bool:
+    changed = False
+    for node in nodes:
+        if node.get("probe_status") == "unavailable":
+            before = tuple(node.get(field, "") for field in NODE_METADATA_FIELDS)
+            clear_node_metadata(node)
+            after = tuple(node.get(field, "") for field in NODE_METADATA_FIELDS)
+            if before != after:
+                changed = True
+    return changed
+
 def node_metadata_complete(node: dict[str, Any] | None) -> bool:
     if not node:
         return False
@@ -875,6 +890,9 @@ def test_node_by_id(node_id: str) -> dict[str, Any]:
             node["probed_at"] = time.time()
             if ok:
                 merge_node_metadata(node, temp_node)
+            else:
+                clear_node_metadata(node)
+            clear_unavailable_node_metadata(nodes)
             
             sorted_nodes = sort_all_nodes(nodes)
             write_json(NODES_FILE, sorted_nodes)
@@ -926,14 +944,6 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
             "probed_at": time.time(),
             **copy_node_metadata(n_info),
         }
-        if ok:
-            ip_to_enrich = {
-                "ip": n_info.get("ip"),
-                "remote_host": h,
-                **copy_node_metadata(n_info),
-            }
-            vpn_utils.enrich_ip_info([ip_to_enrich])
-            temp_node.update(ip_to_enrich)
         return temp_node
 
     updated_nodes_map = {}
@@ -959,7 +969,10 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
             nid = n.get("id")
             if nid in updated_nodes_map:
                 n.update(updated_nodes_map[nid])
+                if n.get("probe_status") == "unavailable":
+                    clear_node_metadata(n)
     backfill_available_node_metadata(current_nodes)
+    clear_unavailable_node_metadata(current_nodes)
     with lock:
         sorted_nodes = sort_all_nodes(current_nodes)
         write_json(NODES_FILE, sorted_nodes)
@@ -1097,6 +1110,7 @@ def connect_channel_node(channel_index: int, node_id: str) -> str:
         if not ok or process is None:
             node["probe_status"] = "unavailable"
             node["probe_message"] = message
+            clear_node_metadata(node)
             for item in nodes:
                 active_indexes = [idx for idx in item.get("active_channels", []) if idx != channel_index]
                 item["active_channels"] = active_indexes
@@ -1271,6 +1285,12 @@ def maintain_valid_nodes(force: bool = False) -> str:
         with lock:
             merged = read_json(NODES_FILE, [])
         if backfill_available_node_metadata(merged):
+            with lock:
+                clear_unavailable_node_metadata(merged)
+                sorted_nodes = sort_all_nodes(merged)
+                write_json(NODES_FILE, sorted_nodes)
+                merged = sorted_nodes
+        elif clear_unavailable_node_metadata(merged):
             with lock:
                 sorted_nodes = sort_all_nodes(merged)
                 write_json(NODES_FILE, sorted_nodes)
@@ -3890,7 +3910,9 @@ function render(){
       const badgeText = isActive ? `<span class="badge-pulse"></span>通道 ${activeIndexes.join(",")}` : translateStatus(n.probe_status);
       const latencyClass = getLatencyClass(n.latency_ms);
       const latencyText = n.latency_ms ? `<span class="latency-val ${latencyClass}">${n.latency_ms} ms</span>` : "-";
-      const asnLabel = nodeAsnLabel(n);
+      const showNodeMetadata = isActive || n.probe_status === "available";
+      const asnLabel = showNodeMetadata ? nodeAsnLabel(n) : "-";
+      const typeLabel = showNodeMetadata ? translateIpType(n.ip_type) : "-";
       const isTesting = testingNodeIds.has(n.id);
       const connectLabel = isActive ? "已连接" : "连接";
       const connectDisabled = state.is_connecting || n.probe_status === "unavailable" ? "disabled" : "";
@@ -3900,7 +3922,7 @@ function render(){
         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
         <td><span class="country-cell">${esc(nodeCountryLabel(n))}</span></td>
         <td class="mono ip-cell">${esc(n.ip||n.remote_host)}</td>
-        <td>${esc(translateIpType(n.ip_type))}</td>
+        <td>${esc(typeLabel)}</td>
         <td>${latencyText}</td>
         <td><span class="asn-cell" title="${esc(asnLabel)}">${esc(asnLabel)}</span></td>
         <td>
@@ -4431,6 +4453,7 @@ def background_proxy_checker() -> None:
                         if active_node:
                             mark_blacklisted(active_node, f"通道 {idx} 代理连通性检测失败: {error_msg}")
                             active_node["probe_status"] = "unavailable"
+                            clear_node_metadata(active_node)
                             write_json(NODES_FILE, nodes)
                     try:
                         auto_connect_channel(idx)
