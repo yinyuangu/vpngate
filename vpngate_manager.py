@@ -1917,7 +1917,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .filter-list-menu.asn-wide-menu {
-      min-width: min(360px, calc(100vw - 24px));
+      min-width: 0;
     }
 
     .filter-menu.compact {
@@ -1967,6 +1967,17 @@ INDEX_HTML = r"""<!doctype html>
     .node-channel-list-menu .filter-option {
       text-align: left;
       white-space: nowrap;
+    }
+
+    .asn-option {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      line-height: 1.35;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      text-wrap: pretty;
     }
 
     .filter-option {
@@ -2063,6 +2074,13 @@ INDEX_HTML = r"""<!doctype html>
         0 18px 44px rgba(0, 0, 0, 0.42),
         inset 0 1px 0 rgba(255,255,255,0.04),
         0 0 0 1px rgba(244, 114, 182, 0.06);
+    }
+
+    .app-toast.top-right {
+      top: 18px;
+      right: 18px;
+      bottom: auto;
+      max-width: min(320px, calc(100vw - 36px));
     }
 
     .table-wrapper {
@@ -2304,12 +2322,10 @@ INDEX_HTML = r"""<!doctype html>
 
     @media (max-width: 768px) {
       header {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 16px 20px;
+        padding: 12px 14px;
       }
       main {
-        padding: 16px 20px;
+        padding: 12px 14px 16px;
       }
     }
 
@@ -2980,34 +2996,49 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       header {
-        position: static;
-        padding: 14px 14px 12px;
-        align-items: stretch;
+        position: sticky;
+        top: 0;
+        z-index: 120;
+        padding: 10px 12px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
       }
 
       .brand {
-        width: 100%;
+        width: auto;
+        min-width: 0;
+        flex: 1 1 auto;
       }
 
       h1 {
-        font-size: 17px;
+        font-size: 16px;
+        gap: 6px;
       }
 
       .dashboard-toolbar {
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 7px;
+        width: auto;
+        display: inline-flex;
+        gap: 6px;
+        flex: 0 0 auto;
       }
 
       .dashboard-toolbar > * {
-        width: 100%;
+        width: auto;
       }
 
       .dashboard-toolbar button {
-        height: 34px;
+        min-width: 0;
+        height: 30px;
         justify-content: center;
-        padding: 0 9px;
+        padding: 0 8px;
+        font-size: 11px;
+        gap: 4px;
+      }
+
+      .dashboard-toolbar .btn-icon {
+        width: 13px;
+        height: 13px;
       }
 
       main {
@@ -3032,6 +3063,12 @@ INDEX_HTML = r"""<!doctype html>
 
       .toolbar-action .filter-reset-btn {
         width: 100%;
+      }
+
+      .app-toast.top-right {
+        top: 52px;
+        right: 10px;
+        max-width: min(240px, calc(100vw - 20px));
       }
 
       .channel-card {
@@ -3158,11 +3195,11 @@ INDEX_HTML = r"""<!doctype html>
   <div class="dashboard-toolbar">
     <button id="refresh" class="btn-dark">
       <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.66 5.66" /><path d="M6 21v-4h4" /><path d="M4 12A8 8 0 0 1 17.66 6.34" /><path d="M18 3v4h-4" /></svg>
-      <span class="btn-label">刷新节点</span>
+      <span class="btn-label">刷新</span>
     </button>
     <button id="logout_btn" class="btn-rose" onclick="logoutAdmin()">
       <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h-5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" /><path d="M18 8l4 4-4 4" /><path d="M22 12H12" /></svg>
-      <span class="btn-label">退出登录</span>
+      <span class="btn-label">退出</span>
     </button>
   </div>
 </header>
@@ -3278,12 +3315,13 @@ let activeFloatingMenu = null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 
-function showToast(message, type = "info") {
+function showToast(message, type = "info", placement = "bottom-right") {
   const toast = $("app_toast");
   if (!toast) return;
   toast.textContent = message;
   const toastType = ["info", "success", "error"].includes(type) ? type : "info";
-  toast.className = `app-toast ${toastType} show`;
+  const toastPlacement = placement === "top-right" ? "top-right" : "bottom-right";
+  toast.className = `app-toast ${toastType} ${toastPlacement} show`;
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toast.classList.remove("show");
@@ -3563,9 +3601,7 @@ function toggleFilterMenu(key) {
   const button = $(`${key}_btn`);
   if (!menu || !button) return;
   const compact = button.closest(".compact");
-  const menuMinWidth = key === "asn_filter"
-    ? Math.max(button.getBoundingClientRect().width, Math.min(420, window.innerWidth - 24))
-    : button.getBoundingClientRect().width;
+  const menuMinWidth = button.getBoundingClientRect().width;
   toggleFloatingMenu(menu, button, {
     minWidth: menuMinWidth,
     maxHeight: key === "page_size" ? 150 : 280,
@@ -3766,7 +3802,7 @@ function updateAsnFilter() {
   menu.innerHTML = asns.length
     ? asns.map(asn => {
         const active = selectedSet.has(asn) ? " active" : "";
-        return `<button type="button" class="filter-option${active}" onclick="return handleMultiFilterOptionClick(event, 'asn_filter', decodeURIComponent('${encodeURIComponent(asn)}'));">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
+        return `<button type="button" class="filter-option asn-option${active}" onclick="return handleMultiFilterOptionClick(event, 'asn_filter', decodeURIComponent('${encodeURIComponent(asn)}'));">${esc(asnOptionLabel(asn, scopedNodes))}</button>`;
       }).join("")
     : `<div class="filter-option" style="cursor: default; color: var(--text-secondary);">暂无 ASN</div>`;
   button.textContent = selectionCountLabel("ASN", validSelected);
@@ -3872,7 +3908,7 @@ function asnCheckboxOptions(channel, currentValue) {
     const active = selected.has(asn) ? " active" : "";
     const present = currentAsns.has(asn);
     const label = present ? asnOptionLabel(asn, scopedNodes) : `${asn} 暂无节点`;
-    return `<button type="button" class="asn-check-option${active}${present ? "" : " stale"}" onclick="setChannelAsn(${channel}, decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(label)}</button>`;
+    return `<button type="button" class="asn-check-option asn-option${active}${present ? "" : " stale"}" onclick="setChannelAsn(${channel}, decodeURIComponent('${encodeURIComponent(asn)}')); return false;">${esc(label)}</button>`;
   }).join("");
 }
 
@@ -4097,12 +4133,11 @@ async function testNode(btn, id, event){
 let pollInterval = null;
 let manualRefreshActive = false;
 
-function setRefreshButtonBusy(text) {
+function setRefreshButtonBusy() {
   const btn = $("refresh");
   if (!btn) return;
   manualRefreshActive = true;
   btn.disabled = true;
-  setRefreshButtonLabel(text || "正在全量检测...");
 }
 
 function resetRefreshButton() {
@@ -4110,7 +4145,7 @@ function resetRefreshButton() {
   if (!btn) return;
   manualRefreshActive = false;
   btn.disabled = false;
-  setRefreshButtonLabel("刷新节点");
+  setRefreshButtonLabel("刷新");
 }
 
 function startConnectionPolling() {
@@ -4428,7 +4463,8 @@ async function load(){
 }
 
 $("refresh").onclick=async()=>{ 
-  setRefreshButtonBusy("正在全量检测...");
+  setRefreshButtonBusy();
+  showToast("正在全量检测节点...", "info", "top-right");
   state.is_connecting = true;
   state.last_check_message = "正在手动刷新节点并全量检测可用性...";
   render();
