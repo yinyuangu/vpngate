@@ -3433,20 +3433,17 @@ function getLatencyClass(ms) {
 
 function asnDisplay(asn, asName) {
   const cleanAsn = String(asn || "").trim();
-  const cleanName = String(asName || "").trim().replace(/^AS\d+\s*/i, "");
-  const full = [cleanAsn, cleanName].filter(Boolean).join(" ");
-  if (!full) return {short: "-", full: "-"};
-  return {short: full, full};
+  if (!cleanAsn) return {short: "-", full: "-"};
+  return {short: cleanAsn, full: cleanAsn};
 }
 
 function nodeAsnLabel(node) {
   if (!node) return "-";
-  return asnDisplay(node.asn, node.as_name || node.owner).full;
+  return asnDisplay(node.asn).full;
 }
 
 function asnOptionLabel(asn, scopedNodes) {
-  const node = scopedNodes.find(n => String(n.asn || "").trim() === asn && (n.as_name || n.owner));
-  return asnDisplay(asn, node ? (node.as_name || node.owner) : "").full;
+  return asnDisplay(asn).full;
 }
 
 function countryOptionLabel(country) {
