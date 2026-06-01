@@ -4170,7 +4170,6 @@ function buildChannelChooser(nodeId) {
   return `<div class="filter-menu compact node-channel-menu">
     <button type="button" class="filter-menu-btn" onclick="toggleNodeChannelMenu(this)">${esc(buttonText)}</button>
     <div class="filter-list-menu">
-      <button type="button" class="filter-option${current === null ? " active" : ""}" onclick="setNodeChannel('${esc(nodeId)}', null)">选择通道</button>
       ${options}
     </div>
   </div>`;
