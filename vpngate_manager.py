@@ -2181,7 +2181,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .table-actions {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
       flex-wrap: nowrap;
     }
@@ -2191,7 +2191,7 @@ INDEX_HTML = r"""<!doctype html>
       color: #a5b4fc;
       border: 1px solid rgba(129, 140, 248, 0.32);
       border-radius: 8px;
-      padding: 0 10px;
+      padding: 0 9px;
       height: 30px;
       font-size: 12px;
       font-weight: 750;
@@ -2216,7 +2216,7 @@ INDEX_HTML = r"""<!doctype html>
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.32);
       border-radius: 8px;
-      padding: 0 12px;
+      padding: 0 10px;
       height: 30px;
       font-size: 12px;
       font-weight: 750;
@@ -2268,7 +2268,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .asn-cell {
       display: inline-block;
-      max-width: 260px;
+      max-width: 220px;
       line-height: 1.35;
       white-space: normal;
       overflow-wrap: anywhere;
@@ -2369,21 +2369,21 @@ INDEX_HTML = r"""<!doctype html>
     .channels-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(360px, 1fr));
-      gap: 12px;
+      gap: 10px;
       align-items: start;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .channel-card {
       position: relative;
       overflow: visible;
       border: 1px solid var(--border-color);
-      border-radius: 14px;
+      border-radius: 13px;
       background:
         linear-gradient(180deg, rgba(17, 24, 39, 0.58), rgba(9, 16, 28, 0.76)),
         rgba(15, 23, 42, 0.5);
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255,255,255,0.035);
-      padding: 14px;
+      padding: 12px;
       min-height: 0;
     }
 
@@ -2403,7 +2403,7 @@ INDEX_HTML = r"""<!doctype html>
         rgba(15, 23, 42, 0.56);
       border: 2px solid rgba(16, 185, 129, 0.86);
       box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), 0 20px 42px rgba(0, 0, 0, 0.22), 0 0 24px rgba(16, 185, 129, 0.08);
-      padding: 13px;
+      padding: 11px;
     }
 
     .channel-card.connecting {
@@ -2421,7 +2421,7 @@ INDEX_HTML = r"""<!doctype html>
       justify-content: space-between;
       gap: 12px;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .channel-head-actions {
@@ -2493,13 +2493,13 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: minmax(120px, 0.9fr) minmax(260px, 1.8fr) minmax(90px, 0.6fr);
-      gap: 8px;
-      padding: 10px 12px;
+      grid-template-columns: minmax(112px, 0.9fr) minmax(220px, 1.65fr) minmax(82px, 0.55fr);
+      gap: 6px;
+      padding: 8px 10px;
       border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.07);
       background: rgba(9, 16, 28, 0.48);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .metric-label {
@@ -2605,9 +2605,9 @@ INDEX_HTML = r"""<!doctype html>
     .channel-options {
       display: grid;
       grid-template-columns: minmax(110px, 1fr) minmax(110px, 1fr);
-      gap: 8px;
+      gap: 6px;
       align-items: center;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .lock-menu {
@@ -2617,14 +2617,14 @@ INDEX_HTML = r"""<!doctype html>
 
     .lock-mode-btn {
       width: 100%;
-      height: 34px;
-      border-radius: 10px;
+      height: 32px;
+      border-radius: 9px;
       border: 1px solid rgba(148, 163, 184, 0.13);
       background: linear-gradient(180deg, rgba(22, 32, 50, 0.76), rgba(12, 21, 35, 0.76));
       color: #eef5ff;
       font-size: 12px;
       font-weight: 750;
-      padding: 0 30px 0 10px;
+      padding: 0 28px 0 9px;
       text-align: left;
       cursor: pointer;
       overflow: hidden;
@@ -2871,13 +2871,13 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .toolbar {
-      margin-bottom: 12px;
-      padding: 14px;
+      margin-bottom: 10px;
+      padding: 12px;
       border-radius: 14px 14px 0 0;
       background: linear-gradient(180deg, rgba(18, 27, 45, 0.74), rgba(10, 18, 31, 0.76));
       display: grid;
-      grid-template-columns: repeat(4, minmax(118px, 1fr)) auto;
-      gap: 12px;
+      grid-template-columns: repeat(4, minmax(102px, 1fr)) auto;
+      gap: 10px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
@@ -2899,7 +2899,7 @@ INDEX_HTML = r"""<!doctype html>
 
     th,
     td {
-      padding: 11px 12px;
+      padding: 10px 10px;
       font-size: 13px;
     }
 
@@ -2921,14 +2921,14 @@ INDEX_HTML = r"""<!doctype html>
 
     td:nth-child(7),
     th:nth-child(7) {
-      min-width: 112px;
+      min-width: 124px;
       white-space: nowrap;
       word-break: keep-all;
     }
 
     td:nth-child(6),
     th:nth-child(6) {
-      min-width: 240px;
+      min-width: 212px;
     }
 
     @media (max-width: 1100px) {
@@ -3189,13 +3189,13 @@ INDEX_HTML = r"""<!doctype html>
       <table>
         <thead>
           <tr>
-            <th style="width: 82px;">状态</th>
-            <th style="width: 110px;">国家</th>
-            <th style="width: 150px;">IP</th>
-            <th style="width: 82px;">类型</th>
-            <th style="width: 70px;">延迟</th>
-            <th style="width: 260px;">ASN</th>
-            <th style="width: 150px;">操作</th>
+            <th style="width: 80px;">状态</th>
+            <th style="width: 96px;">国家</th>
+            <th style="width: 142px;">IP</th>
+            <th style="width: 74px;">类型</th>
+            <th style="width: 66px;">延迟</th>
+            <th style="width: 220px;">ASN</th>
+            <th style="width: 126px;">操作</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
