@@ -1716,14 +1716,14 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     header {
-      padding: 16px 32px;
+      padding: 14px 24px;
       background: linear-gradient(180deg, rgba(8, 12, 22, 0.78), rgba(8, 13, 24, 0.64));
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(148, 163, 184, 0.12);
       display: flex;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
       align-items: center;
       position: sticky;
       top: 0;
@@ -1737,7 +1737,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     h1 {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 750;
       margin: 0;
       background: linear-gradient(135deg, #f8fafc 0%, #a5b4fc 58%, #6ee7b7 100%);
@@ -1746,22 +1746,22 @@ INDEX_HTML = r"""<!doctype html>
       letter-spacing: 0;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
     }
 
     button {
-      height: 38px;
+      height: 36px;
       border: 1px solid rgba(148, 163, 184, 0.14);
-      border-radius: 10px;
-      padding: 0 16px;
+      border-radius: 9px;
+      padding: 0 13px;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       line-height: 1;
       background: rgba(15, 23, 42, 0.5);
       color: var(--text-primary);
@@ -1793,8 +1793,8 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     main {
-      padding: 24px 32px;
-      max-width: 1400px;
+      padding: 18px 20px 22px;
+      max-width: 1360px;
       margin: 0 auto;
       position: relative;
       z-index: 1;
@@ -1805,13 +1805,13 @@ INDEX_HTML = r"""<!doctype html>
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
-      border-radius: 14px 14px 0 0;
+      border-radius: 12px 12px 0 0;
       border-bottom: 0;
-      padding: 14px;
+      padding: 10px;
       margin-bottom: 0;
       display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr)) auto;
-      gap: 12px;
+      grid-template-columns: repeat(4, minmax(96px, 1fr)) auto;
+      gap: 8px;
       align-items: center;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
     }
@@ -1825,14 +1825,14 @@ INDEX_HTML = r"""<!doctype html>
 
     .filter-reset-btn {
       width: auto;
-      min-width: 72px;
-      height: 30px;
+      min-width: 56px;
+      height: 28px;
       border-radius: 8px;
-      padding: 0 12px;
+      padding: 0 9px;
       border: 1px solid rgba(129, 140, 248, 0.28);
       background: rgba(79, 70, 229, 0.08);
       color: #a5b4fc;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 750;
       box-shadow: none;
     }
@@ -1852,27 +1852,27 @@ INDEX_HTML = r"""<!doctype html>
 
     .filter-menu-btn {
       width: 100%;
-      height: 38px;
-      border-radius: 12px;
+      height: 34px;
+      border-radius: 10px;
       border: 1px solid rgba(148, 163, 184, 0.13);
       background: linear-gradient(180deg, rgba(22, 32, 50, 0.78), rgba(12, 21, 35, 0.76));
       color: #eef5ff;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 750;
-      padding: 0 32px 0 12px;
+      padding: 0 28px 0 10px;
       justify-content: flex-start;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       position: relative;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.045), 0 10px 22px rgba(0,0,0,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.045), 0 8px 18px rgba(0,0,0,0.08);
     }
 
     .filter-menu-btn::after {
       content: "";
       position: absolute;
-      right: 12px;
+      right: 10px;
       top: 50%;
       width: 7px;
       height: 7px;
@@ -1917,7 +1917,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .filter-list-menu.asn-wide-menu {
-      min-width: min(420px, calc(100vw - 24px));
+      min-width: min(360px, calc(100vw - 24px));
     }
 
     .filter-menu.compact {
@@ -1949,13 +1949,13 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .node-channel-menu {
-      width: 104px;
-      min-width: 104px;
+      width: 96px;
+      min-width: 96px;
     }
 
     .node-channel-menu .filter-menu-btn {
-      width: 104px;
-      min-width: 104px;
+      width: 96px;
+      min-width: 96px;
       justify-content: center;
     }
 
@@ -1971,19 +1971,19 @@ INDEX_HTML = r"""<!doctype html>
 
     .filter-option {
       width: 100%;
-      min-height: 30px;
+      min-height: 28px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 7px;
       background: transparent;
       color: #d7e2f2;
       display: block;
-      padding: 6px 8px;
+      padding: 5px 7px;
       text-align: left;
       white-space: normal;
       overflow-wrap: anywhere;
       word-break: break-word;
       line-height: 1.35;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
     }
@@ -2070,7 +2070,7 @@ INDEX_HTML = r"""<!doctype html>
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
       box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.035);
     }
@@ -2080,23 +2080,22 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     table {
-      width: max-content;
-      min-width: 100%;
+      width: 100%;
       border-collapse: collapse;
       text-align: left;
       table-layout: auto;
     }
 
     th, td {
-      padding: 11px 12px;
+      padding: 8px 8px;
       border-bottom: 1px solid var(--border-color);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.35;
     }
 
     th {
       background: rgba(9, 14, 25, 0.62);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 750;
       text-transform: uppercase;
       letter-spacing: 0.2px;
@@ -2125,13 +2124,13 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .badge {
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       border: 1px solid transparent;
     }
 
@@ -2181,7 +2180,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .table-actions {
       display: flex;
-      gap: 5px;
+      gap: 4px;
       align-items: center;
       flex-wrap: nowrap;
     }
@@ -2190,10 +2189,10 @@ INDEX_HTML = r"""<!doctype html>
       background: rgba(79, 70, 229, 0.08);
       color: #a5b4fc;
       border: 1px solid rgba(129, 140, 248, 0.32);
-      border-radius: 8px;
-      padding: 0 9px;
-      height: 30px;
-      font-size: 12px;
+      border-radius: 7px;
+      padding: 0 7px;
+      height: 28px;
+      font-size: 11px;
       font-weight: 750;
       transition: all 0.2s ease;
       cursor: pointer;
@@ -2215,10 +2214,10 @@ INDEX_HTML = r"""<!doctype html>
       background: rgba(16, 185, 129, 0.07);
       color: #34d399;
       border: 1px solid rgba(16, 185, 129, 0.32);
-      border-radius: 8px;
-      padding: 0 10px;
-      height: 30px;
-      font-size: 12px;
+      border-radius: 7px;
+      padding: 0 7px;
+      height: 28px;
+      font-size: 11px;
       font-weight: 750;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -2238,14 +2237,14 @@ INDEX_HTML = r"""<!doctype html>
 
     .mono {
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-      font-size: 13px;
+      font-size: 12px;
       color: #dbe4f1;
       font-variant-numeric: tabular-nums;
     }
 
     .ip-cell {
       color: #dbe4f1;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 650;
       letter-spacing: 0;
     }
@@ -2253,9 +2252,9 @@ INDEX_HTML = r"""<!doctype html>
     .type-cell {
       display: inline-flex;
       align-items: center;
-      min-height: 20px;
+      min-height: 18px;
       color: #d7e2f2;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 620;
       letter-spacing: 0;
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
@@ -2268,7 +2267,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .asn-cell {
       display: inline-block;
-      max-width: 220px;
+      max-width: 180px;
       line-height: 1.35;
       white-space: normal;
       overflow-wrap: anywhere;
@@ -2324,7 +2323,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     header {
-      padding: 18px 30px 16px;
+      padding: 14px 22px 13px;
       background:
         linear-gradient(135deg, rgba(18, 24, 44, 0.82), rgba(7, 13, 23, 0.94)),
         rgba(9, 13, 22, 0.88);
@@ -2333,7 +2332,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     h1 {
-      font-size: 19px;
+      font-size: 18px;
       background: none;
       -webkit-text-fill-color: unset;
       color: #f8fafc;
@@ -2341,37 +2340,38 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     main {
-      max-width: 1560px;
-      padding: 22px 24px 28px;
+      max-width: 1360px;
+      padding: 18px 18px 22px;
     }
 
     .dashboard-toolbar {
       display: flex;
       justify-content: flex-end;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
     }
 
     .dashboard-toolbar button {
-      min-width: 118px;
-      gap: 8px;
-      border-radius: 10px;
+      min-width: 102px;
+      gap: 6px;
+      border-radius: 9px;
       font-weight: 800;
+      padding-inline: 11px;
     }
 
     @media (min-width: 1600px) {
       header {
-        padding-left: calc((100vw - 1560px) / 2 + 24px);
-        padding-right: calc((100vw - 1560px) / 2 + 24px);
+        padding-left: calc((100vw - 1360px) / 2 + 18px);
+        padding-right: calc((100vw - 1360px) / 2 + 18px);
       }
     }
 
     .channels-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(360px, 1fr));
-      gap: 10px;
+      gap: 8px;
       align-items: start;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .channel-card {
@@ -2383,7 +2383,7 @@ INDEX_HTML = r"""<!doctype html>
         linear-gradient(180deg, rgba(17, 24, 39, 0.58), rgba(9, 16, 28, 0.76)),
         rgba(15, 23, 42, 0.5);
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255,255,255,0.035);
-      padding: 12px;
+      padding: 10px;
       min-height: 0;
     }
 
@@ -2403,7 +2403,7 @@ INDEX_HTML = r"""<!doctype html>
         rgba(15, 23, 42, 0.56);
       border: 2px solid rgba(16, 185, 129, 0.86);
       box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), 0 20px 42px rgba(0, 0, 0, 0.22), 0 0 24px rgba(16, 185, 129, 0.08);
-      padding: 11px;
+      padding: 10px;
     }
 
     .channel-card.connecting {
@@ -2419,9 +2419,9 @@ INDEX_HTML = r"""<!doctype html>
     .channel-top {
       display: flex;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .channel-head-actions {
@@ -2434,8 +2434,8 @@ INDEX_HTML = r"""<!doctype html>
     .channel-title {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 14px;
+      gap: 7px;
+      font-size: 13px;
       font-weight: 800;
       color: #f8fafc;
     }
@@ -2445,14 +2445,14 @@ INDEX_HTML = r"""<!doctype html>
     .mini-pill {
       display: inline-flex;
       align-items: center;
-      height: 20px;
-      padding: 0 7px;
+      height: 18px;
+      padding: 0 6px;
       border-radius: 6px;
       background: rgba(83, 104, 139, 0.22);
       border: 1px solid rgba(128, 147, 178, 0.12);
       color: #b7c3d8;
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
     }
@@ -2460,14 +2460,14 @@ INDEX_HTML = r"""<!doctype html>
     .channel-status {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      height: 22px;
-      padding: 0 9px;
+      gap: 5px;
+      height: 20px;
+      padding: 0 8px;
       border-radius: 999px;
       color: #34d399;
       background: rgba(16, 185, 129, 0.12);
       box-shadow: none;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
     }
 
@@ -2493,28 +2493,28 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: minmax(112px, 0.9fr) minmax(220px, 1.65fr) minmax(82px, 0.55fr);
-      gap: 6px;
-      padding: 8px 10px;
-      border-radius: 12px;
+      grid-template-columns: minmax(100px, 0.88fr) minmax(190px, 1.5fr) minmax(72px, 0.5fr);
+      gap: 5px;
+      padding: 7px 8px;
+      border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.07);
       background: rgba(9, 16, 28, 0.48);
-      margin-bottom: 8px;
+      margin-bottom: 7px;
     }
 
     .metric-label {
       display: block;
       color: var(--text-secondary);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .metric-value {
       display: block;
       color: var(--text-primary);
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 750;
       min-height: 16px;
       word-break: break-all;
@@ -2525,7 +2525,7 @@ INDEX_HTML = r"""<!doctype html>
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
       font-weight: 700;
       line-height: 1.25;
-      min-height: 32px;
+      min-height: 28px;
       overflow-wrap: anywhere;
       word-break: break-word;
       overflow: hidden;
@@ -2535,10 +2535,10 @@ INDEX_HTML = r"""<!doctype html>
     .channel-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 7px;
+      gap: 5px;
       align-items: center;
-      min-height: 24px;
-      margin-bottom: 8px;
+      min-height: 22px;
+      margin-bottom: 7px;
     }
 
     .mini-pill.good {
@@ -2556,14 +2556,14 @@ INDEX_HTML = r"""<!doctype html>
     .channel-actions {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 7px;
     }
 
     .channel-info-pill {
       min-width: 0;
-      height: 30px;
+      height: 28px;
       border-radius: 6px;
       border: 1px solid rgba(126, 146, 178, 0.12);
       background: rgba(13, 25, 40, 0.7);
@@ -2571,9 +2571,9 @@ INDEX_HTML = r"""<!doctype html>
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      padding: 0 10px;
-      font-size: 12px;
+      gap: 5px;
+      padding: 0 8px;
+      font-size: 11px;
       font-weight: 800;
       overflow: hidden;
       white-space: nowrap;
@@ -2586,13 +2586,13 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .channel-disconnect-btn {
-      height: 24px;
-      padding: 0 9px;
+      height: 22px;
+      padding: 0 8px;
       border-radius: 999px;
       border: 1px solid rgba(244, 63, 94, 0.26);
       background: rgba(244, 63, 94, 0.12);
       color: #fb7185;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
       cursor: pointer;
     }
@@ -2604,10 +2604,10 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-options {
       display: grid;
-      grid-template-columns: minmax(110px, 1fr) minmax(110px, 1fr);
-      gap: 6px;
+      grid-template-columns: minmax(106px, 1fr) minmax(106px, 1fr);
+      gap: 5px;
       align-items: center;
-      margin-top: 6px;
+      margin-top: 5px;
     }
 
     .lock-menu {
@@ -2617,14 +2617,14 @@ INDEX_HTML = r"""<!doctype html>
 
     .lock-mode-btn {
       width: 100%;
-      height: 32px;
-      border-radius: 9px;
+      height: 30px;
+      border-radius: 8px;
       border: 1px solid rgba(148, 163, 184, 0.13);
       background: linear-gradient(180deg, rgba(22, 32, 50, 0.76), rgba(12, 21, 35, 0.76));
       color: #eef5ff;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 750;
-      padding: 0 28px 0 9px;
+      padding: 0 25px 0 8px;
       text-align: left;
       cursor: pointer;
       overflow: hidden;
@@ -2644,7 +2644,7 @@ INDEX_HTML = r"""<!doctype html>
     .lock-mode-btn::after {
       content: "";
       position: absolute;
-      right: 11px;
+      right: 10px;
       top: 50%;
       width: 7px;
       height: 7px;
@@ -2711,12 +2711,12 @@ INDEX_HTML = r"""<!doctype html>
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      gap: 7px;
-      min-height: 28px;
+      gap: 6px;
+      min-height: 26px;
       padding: 4px 6px;
       border-radius: 8px;
       color: #d7e2f2;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       width: 100%;
@@ -2751,11 +2751,11 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .channel-actions button {
-      height: 30px;
+      height: 28px;
       min-width: 0;
-      padding: 0 10px;
+      padding: 0 9px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11px;
       white-space: nowrap;
     }
 
@@ -2766,8 +2766,8 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .btn-rose {
-      height: 36px;
-      border-radius: 10px;
+      height: 34px;
+      border-radius: 9px;
       background: linear-gradient(180deg, rgba(76, 29, 48, 0.62), rgba(38, 18, 34, 0.68));
       border: 1px solid rgba(251, 113, 133, 0.34);
       color: #fda4af;
@@ -2782,8 +2782,8 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .btn-dark {
-      height: 36px;
-      border-radius: 10px;
+      height: 34px;
+      border-radius: 9px;
       background: linear-gradient(180deg, rgba(29, 45, 72, 0.72), rgba(12, 24, 41, 0.72));
       border: 1px solid rgba(96, 165, 250, 0.28);
       color: #bfdbfe;
@@ -2792,8 +2792,8 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .btn-icon {
-      width: 17px;
-      height: 17px;
+      width: 15px;
+      height: 15px;
       flex: 0 0 auto;
       display: block;
       stroke-width: 2;
@@ -2810,18 +2810,18 @@ INDEX_HTML = r"""<!doctype html>
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      margin: 4px 0 14px;
+      gap: 10px;
+      margin: 2px 0 10px;
     }
 
     .channels-panel-title {
-      margin: 0 0 14px;
+      margin: 0 0 10px;
     }
 
     .nodes-panel-title h2,
     .channels-panel-title h2 {
       margin: 0;
-      font-size: 18px;
+      font-size: 17px;
       color: #f8fafc;
       font-weight: 800;
       letter-spacing: 0;
@@ -2831,19 +2831,19 @@ INDEX_HTML = r"""<!doctype html>
     .channels-panel-copy {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .nodes-panel-copy p {
       margin: 2px 0 0;
-      font-size: 12px;
+      font-size: 11px;
       color: #8ea2c6;
     }
 
     .nodes-panel-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 12px;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -2854,8 +2854,8 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .nodes-panel-icon svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       display: block;
       stroke-width: 2;
     }
@@ -2870,14 +2870,24 @@ INDEX_HTML = r"""<!doctype html>
         0 10px 24px rgba(20, 184, 166, 0.12);
     }
 
+    .channels-panel-title,
+    .nodes-panel-title,
+    .channels-grid,
+    .toolbar,
+    .table-wrapper {
+      max-width: 1288px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     .toolbar {
-      margin-bottom: 10px;
-      padding: 12px;
-      border-radius: 14px 14px 0 0;
+      margin-bottom: 8px;
+      padding: 10px;
+      border-radius: 12px 12px 0 0;
       background: linear-gradient(180deg, rgba(18, 27, 45, 0.74), rgba(10, 18, 31, 0.76));
       display: grid;
-      grid-template-columns: repeat(4, minmax(102px, 1fr)) auto;
-      gap: 10px;
+      grid-template-columns: repeat(4, minmax(96px, 1fr)) auto;
+      gap: 8px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
@@ -2886,12 +2896,12 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .filter-menu-btn {
-      height: 36px;
+      height: 34px;
       box-sizing: border-box;
     }
 
     .table-wrapper {
-      border-radius: 16px;
+      border-radius: 14px;
       background: rgba(15, 23, 42, 0.54);
       overflow: visible;
       box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.035);
@@ -2899,8 +2909,8 @@ INDEX_HTML = r"""<!doctype html>
 
     th,
     td {
-      padding: 10px 10px;
-      font-size: 13px;
+      padding: 8px 8px;
+      font-size: 12px;
     }
 
     th {
@@ -2908,12 +2918,13 @@ INDEX_HTML = r"""<!doctype html>
       letter-spacing: 0.1px;
       background: rgba(9, 14, 25, 0.72);
       color: #9aa8bd;
+      font-size: 11px;
     }
 
     .country-cell {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 5px;
       white-space: nowrap;
       color: #e5edf7;
       font-weight: 650;
@@ -2921,14 +2932,34 @@ INDEX_HTML = r"""<!doctype html>
 
     td:nth-child(7),
     th:nth-child(7) {
-      min-width: 124px;
+      min-width: 104px;
       white-space: nowrap;
       word-break: keep-all;
     }
 
     td:nth-child(6),
     th:nth-child(6) {
-      min-width: 212px;
+      min-width: 176px;
+    }
+
+    td:nth-child(2),
+    th:nth-child(2) {
+      min-width: 84px;
+    }
+
+    td:nth-child(3),
+    th:nth-child(3) {
+      min-width: 118px;
+    }
+
+    td:nth-child(4),
+    th:nth-child(4) {
+      min-width: 68px;
+    }
+
+    td:nth-child(5),
+    th:nth-child(5) {
+      min-width: 58px;
     }
 
     @media (max-width: 1100px) {
@@ -2936,7 +2967,7 @@ INDEX_HTML = r"""<!doctype html>
         grid-template-columns: 1fr;
       }
       .toolbar {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .channel-actions {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2966,7 +2997,7 @@ INDEX_HTML = r"""<!doctype html>
         width: 100%;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        gap: 7px;
       }
 
       .dashboard-toolbar > * {
@@ -2974,32 +3005,37 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       .dashboard-toolbar button {
-        height: 36px;
+        height: 34px;
         justify-content: center;
-        padding: 0 10px;
+        padding: 0 9px;
       }
 
       main {
-        padding: 12px;
+        padding: 10px;
       }
 
       .channels-grid {
         grid-template-columns: minmax(0, 1fr);
-        gap: 10px;
+        gap: 8px;
       }
 
       .toolbar {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+        padding: 8px;
       }
 
       .toolbar-action {
-        justify-content: flex-end;
+        justify-content: stretch;
+        grid-column: 1 / -1;
+      }
+
+      .toolbar-action .filter-reset-btn {
+        width: 100%;
       }
 
       .channel-card {
-        padding: 11px;
+        padding: 9px;
         min-height: 0;
       }
 
@@ -3014,12 +3050,12 @@ INDEX_HTML = r"""<!doctype html>
 
       .channel-metrics {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 9px;
-        padding: 10px;
+        gap: 7px;
+        padding: 8px;
       }
 
       .metric-value {
-        font-size: 12px;
+        font-size: 11px;
       }
 
       .channel-actions {
@@ -3099,8 +3135,8 @@ INDEX_HTML = r"""<!doctype html>
 
       th,
       td {
-        font-size: 12px;
-        padding: 9px 10px;
+        font-size: 11px;
+        padding: 8px 8px;
       }
 
       .mono,
@@ -3189,13 +3225,13 @@ INDEX_HTML = r"""<!doctype html>
       <table>
         <thead>
           <tr>
-            <th style="width: 80px;">状态</th>
-            <th style="width: 96px;">国家</th>
-            <th style="width: 142px;">IP</th>
-            <th style="width: 74px;">类型</th>
-            <th style="width: 66px;">延迟</th>
-            <th style="width: 220px;">ASN</th>
-            <th style="width: 126px;">操作</th>
+            <th style="width: 72px;">状态</th>
+            <th style="width: 88px;">国家</th>
+            <th style="width: 126px;">IP</th>
+            <th style="width: 68px;">类型</th>
+            <th style="width: 58px;">延迟</th>
+            <th style="width: 184px;">ASN</th>
+            <th style="width: 112px;">操作</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
