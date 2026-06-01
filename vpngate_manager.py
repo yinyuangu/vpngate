@@ -2150,6 +2150,7 @@ INDEX_HTML = r"""<!doctype html>
       align-items: center;
       gap: 5px;
       border: 1px solid transparent;
+      white-space: nowrap;
     }
 
     .badge-pulse {
@@ -2303,6 +2304,7 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 6px;
       font-size: 12px;
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
 
     .latency-good {
@@ -3105,6 +3107,16 @@ INDEX_HTML = r"""<!doctype html>
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
       }
 
+      .toolbar > .filter-menu {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .toolbar > .filter-menu:nth-child(4) {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+
       .toolbar-action {
         justify-content: stretch;
         grid-column: 1 / -1;
@@ -3152,7 +3164,7 @@ INDEX_HTML = r"""<!doctype html>
 
       .channel-options {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
         gap: 5px;
       }
 
@@ -3162,6 +3174,13 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       .lock-mode-btn {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+      }
+
+      .country-lock-btn,
+      .asn-lock-btn {
         width: 100%;
         min-width: 0;
         max-width: none;
@@ -3185,6 +3204,31 @@ INDEX_HTML = r"""<!doctype html>
       .table-wrapper {
         margin-left: -2px;
         margin-right: -2px;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 680px;
+      }
+
+      th,
+      td {
+        padding: 7px 8px;
+      }
+
+      .badge {
+        min-width: 42px;
+        justify-content: center;
+        padding: 3px 7px;
+      }
+
+      .type-cell.empty,
+      .asn-cell[title="-"] {
+        line-height: 1;
+        min-height: 0;
       }
 
       .pagination-container {
@@ -4362,8 +4406,11 @@ function toggleLockMenu(kind, channel) {
   const select = $(targetId);
   const trigger = $(`${kind}_lock_btn_${channel}`);
   if (!select) return;
+  const triggerWidth = trigger ? trigger.getBoundingClientRect().width : 0;
+  const viewportWidth = Math.max(0, window.innerWidth || 0);
+  const asnMenuWidth = Math.min(Math.max(triggerWidth, 280), Math.max(160, viewportWidth - 24));
   toggleFloatingMenu(select, trigger, {
-    minWidth: trigger ? trigger.getBoundingClientRect().width : 0,
+    minWidth: kind === "asn" ? asnMenuWidth : triggerWidth,
     maxHeight: 240
   });
 }
