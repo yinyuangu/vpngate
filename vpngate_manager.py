@@ -2012,10 +2012,14 @@ INDEX_HTML = r"""<!doctype html>
       max-width: min(360px, calc(100vw - 48px));
       padding: 12px 14px;
       border-radius: 12px;
-      border: 1px solid rgba(56, 189, 248, 0.32);
-      background: linear-gradient(180deg, rgba(15, 29, 49, 0.98), rgba(8, 18, 32, 0.98));
-      color: #e0f2fe;
-      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+      border: 1px solid rgba(96, 165, 250, 0.22);
+      background:
+        linear-gradient(180deg, rgba(18, 29, 48, 0.96), rgba(8, 18, 32, 0.98));
+      color: #dbeafe;
+      box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 0 0 1px rgba(96, 165, 250, 0.05);
       font-size: 13px;
       font-weight: 700;
       line-height: 1.45;
@@ -2030,9 +2034,35 @@ INDEX_HTML = r"""<!doctype html>
       transform: translateY(0);
     }
 
+    .app-toast.info {
+      border-color: rgba(96, 165, 250, 0.24);
+      color: #dbeafe;
+      box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 0 0 1px rgba(96, 165, 250, 0.06);
+    }
+
+    .app-toast.success {
+      border-color: rgba(45, 212, 191, 0.24);
+      background:
+        linear-gradient(180deg, rgba(16, 38, 45, 0.96), rgba(8, 20, 28, 0.98));
+      color: #ccfbf1;
+      box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 0 0 1px rgba(45, 212, 191, 0.06);
+    }
+
     .app-toast.error {
-      border-color: rgba(248, 113, 113, 0.38);
-      color: #ffe4e6;
+      border-color: rgba(244, 114, 182, 0.24);
+      background:
+        linear-gradient(180deg, rgba(40, 24, 38, 0.96), rgba(20, 14, 24, 0.98));
+      color: #ffe4f1;
+      box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255,255,255,0.04),
+        0 0 0 1px rgba(244, 114, 182, 0.06);
     }
 
     .table-wrapper {
@@ -3216,7 +3246,8 @@ function showToast(message, type = "info") {
   const toast = $("app_toast");
   if (!toast) return;
   toast.textContent = message;
-  toast.className = `app-toast ${type === "error" ? "error" : ""} show`;
+  const toastType = ["info", "success", "error"].includes(type) ? type : "info";
+  toast.className = `app-toast ${toastType} show`;
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     toast.classList.remove("show");
@@ -4188,11 +4219,11 @@ async function connectNode(id){
 
 async function disconnectNode(){
   try {
-    showToast("正在断开连接...");
+    showToast("正在断开连接...", "info");
     const response = await fetch("./api/disconnect", { method: "POST" });
     const result = await response.json();
     if (result.ok) {
-      showToast("连接已断开");
+      showToast("连接已断开", "success");
       load();
     } else {
       showToast("断开连接失败: " + (result.error || "未知错误"), "error");
@@ -4336,7 +4367,7 @@ async function autoConnectChannel(channel) {
 
 async function disconnectChannel(channel) {
   closeAllMenus();
-  showToast(`正在断开通道 ${channel}...`);
+  showToast(`正在断开通道 ${channel}...`, "info");
   try {
     const response = await fetch("./api/channel/disconnect", {
       method: "POST",
@@ -4348,7 +4379,7 @@ async function disconnectChannel(channel) {
       showToast("断开通道失败: " + (result.error || "未知错误"), "error");
       return;
     }
-    showToast(`通道 ${channel} 已断开`);
+    showToast(`通道 ${channel} 已断开`, "success");
   } catch (e) {
     showToast("断开通道失败", "error");
   } finally {
