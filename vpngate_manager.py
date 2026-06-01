@@ -155,6 +155,21 @@ def normalize_asn_locks(value: Any) -> list[str]:
             result.append(asn)
     return result
 
+def filter_asn_locks_for_country(asn_locks: Any, country_lock: str = "", nodes: list[dict[str, Any]] | None = None) -> list[str]:
+    normalized = normalize_asn_locks(asn_locks)
+    country = str(country_lock or "").strip()
+    if not country or not normalized:
+        return normalized
+    scoped_nodes = nodes if nodes is not None else read_json(NODES_FILE, [])
+    valid_asns = {
+        str(n.get("asn") or "").strip()
+        for n in scoped_nodes
+        if (n.get("country") == country or n.get("country_short") == country) and str(n.get("asn") or "").strip()
+    }
+    if not valid_asns:
+        return []
+    return [asn for asn in normalized if asn in valid_asns]
+
 def serialize_channels(nodes: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     node_map = {str(n.get("id")): n for n in (nodes or read_json(NODES_FILE, []))}
     data = []
@@ -3854,6 +3869,20 @@ function asnCheckboxOptions(channel, currentValue) {
   }).join("");
 }
 
+function filterAsnLocksForCountry(country, asnLocks) {
+  const normalized = normalizeAsnLocks(asnLocks);
+  const targetCountry = String(country || "").trim();
+  if (!targetCountry || !normalized.length) return normalized;
+  const validAsns = new Set(
+    nodes
+      .filter(n => n.country === targetCountry || n.country_short === targetCountry)
+      .map(n => String(n.asn || "").trim())
+      .filter(Boolean)
+  );
+  if (!validAsns.size) return [];
+  return normalized.filter(asn => validAsns.has(asn));
+}
+
 function countryLockLabel(ch) {
   if (!ch || !ch.country_lock) return "国家锁定: 全部";
   const sample = nodes.find(n => (n.country === ch.country_lock || n.country_short === ch.country_lock) && n.country_short);
@@ -4317,9 +4346,13 @@ async function setChannelCountry(event, channel, country) {
   }
   const currentChannel = state.channels && state.channels.find(ch => (ch.index || 0) === channel);
   const previousCountry = currentChannel ? String(currentChannel.country_lock || "") : "";
+  const previousAsnLock = currentChannel ? normalizeAsnLocks(currentChannel.asn_lock) : [];
   const normalizedCountry = String(country || "").trim();
   const nextCountry = currentChannel && currentChannel.country_lock === normalizedCountry ? "" : normalizedCountry;
-  if (currentChannel) currentChannel.country_lock = nextCountry;
+  if (currentChannel) {
+    currentChannel.country_lock = nextCountry;
+    currentChannel.asn_lock = filterAsnLocksForCountry(nextCountry, previousAsnLock);
+  }
   renderChannelCards();
   try {
     const response = await fetch("./api/channel/country_lock", {
@@ -4329,10 +4362,16 @@ async function setChannelCountry(event, channel, country) {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || result.ok === false) throw new Error("save failed");
-    if (currentChannel) currentChannel.country_lock = String(result.country_lock || "");
+    if (currentChannel) {
+      currentChannel.country_lock = String(result.country_lock || "");
+      currentChannel.asn_lock = normalizeAsnLocks(result.asn_lock);
+    }
     renderChannelCards();
   } catch (e) {
-    if (currentChannel) currentChannel.country_lock = previousCountry;
+    if (currentChannel) {
+      currentChannel.country_lock = previousCountry;
+      currentChannel.asn_lock = previousAsnLock;
+    }
     renderChannelCards();
     alert("国家锁定保存失败");
   } finally {
@@ -4912,7 +4951,14 @@ class Handler(BaseHTTPRequestHandler):
                 payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
                 channel = get_channel(parse_int(payload.get("channel")))
                 channel["country_lock"] = str(payload.get("country") or "")
-                self.send_json({"ok": True, "country_lock": channel["country_lock"]})
+                channel["asn_lock"] = filter_asn_locks_for_country(channel.get("asn_lock"), channel["country_lock"])
+                self.send_json(
+                    {
+                        "ok": True,
+                        "country_lock": channel["country_lock"],
+                        "asn_lock": channel["asn_lock"],
+                    }
+                )
             except Exception as exc:
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif effective_path == "/api/channel/asn_lock":
