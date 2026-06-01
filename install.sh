@@ -572,14 +572,14 @@ def update_service():
             
             if local_commit == remote_commit:
                 print(f"\n【版本状态】当前已是最新版本，无需更新！分支: origin/{branch}，版本: {local_commit[:8]}")
-                override = input("是否强制重新拉取代码并覆盖安装？(y/N): ").strip().lower()
+                override = input("是否强制重新拉取代码并覆盖安装？(Y/N): ").strip().lower()
                 if override != 'y':
                     print("已取消更新。")
                     time.sleep(1.5)
                     return
             else:
                 print(f"\n【检测到更新】分支: origin/{branch}，本地版本: {local_commit[:8]}，远程最新版本: {remote_commit[:8]}")
-                confirm = input("是否确认开始更新并重启服务？(Y/n): ").strip().lower()
+                confirm = input("是否确认开始更新并重启服务？(Y/N): ").strip().lower()
                 if confirm not in ('', 'y', 'yes'):
                     print("已取消更新。")
                     time.sleep(1.5)
@@ -604,7 +604,7 @@ def update_service():
         time.sleep(2)
 
 def uninstall_service():
-    confirm = input("确定要完全卸载 VPNgate 吗？(y/N): ")
+    confirm = input("确定要完全卸载 VPNgate 吗？(Y/N): ")
     if confirm.lower() == 'y':
         print("正在完全卸载 VPNgate...", flush=True)
         subprocess.run(["systemctl", "stop", "vpngate.service"])
@@ -625,7 +625,7 @@ def uninstall_service():
         time.sleep(1)
 
 def ask_restart():
-    ans = input("配置已保存。是否立即重启服务生效？(Y/n): ").strip().lower()
+    ans = input("配置已保存。是否立即重启服务生效？(Y/N): ").strip().lower()
     if ans in ('', 'y', 'yes'):
         print("正在重启 VPNgate 服务...", flush=True)
         subprocess.run(["systemctl", "restart", "vpngate.service"])
@@ -950,7 +950,7 @@ mkdir -p "${INSTALL_DIR}/vpngate_data"
 
 if [ ! -f "$AUTH_FILE" ]; then
     echo -e "\n${YELLOW}检测到是首次安装，是否需要自定义配置网页端参数（端口/安全后缀/登录账号密码）？${PLAIN}"
-    read -p "是否自定义配置？[y/N]: " is_custom
+    read -p "是否自定义配置？[Y/N]: " is_custom
     
     # Initialize defaults
     UI_PORT=8787
