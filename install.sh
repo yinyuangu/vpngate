@@ -1073,7 +1073,7 @@ for i in {1..90}; do
                 echo -e "  -> ${GREEN}[已就绪]${PLAIN} 通道已建立连接，活动节点: ${GREEN}$ACTIVE_ID${PLAIN}"
                 break
             elif [ "${NODE_COUNT}" -gt 0 ]; then
-                echo -e "  -> ${GREEN}[已就绪]${PLAIN} 节点池初始化完成，当前未自动连接通道。"
+                echo -e "  -> ${GREEN}[已就绪]${PLAIN} 节点池初始化完成，当前未连接任何通道。"
                 break
             else
                 if [ -n "$CUR_MSG" ] && [ "$CUR_MSG" != "$LAST_MSG" ]; then

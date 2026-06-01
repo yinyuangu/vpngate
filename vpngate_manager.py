@@ -42,7 +42,7 @@ MAX_SCAN_ROWS = int(os.environ.get("MAX_SCAN_ROWS", "300"))
 OPENVPN_TEST_TIMEOUT_SECONDS = int(os.environ.get("OPENVPN_TEST_TIMEOUT_SECONDS", "35"))
 NODE_PROBE_TIMEOUT_SECONDS = int(os.environ.get("NODE_PROBE_TIMEOUT_SECONDS", "5"))
 MAX_BATCH_TEST_NODES = int(os.environ.get("MAX_BATCH_TEST_NODES", "20"))
-NODE_PROBE_WORKERS = int(os.environ.get("NODE_PROBE_WORKERS", "16"))
+NODE_PROBE_WORKERS = int(os.environ.get("NODE_PROBE_WORKERS", "10"))
 OPENVPN_CMD = os.environ.get("OPENVPN_CMD", "openvpn")
 OPENVPN_AUTH_USER = os.environ.get("OPENVPN_AUTH_USER", "vpn")
 OPENVPN_AUTH_PASS = os.environ.get("OPENVPN_AUTH_PASS", "vpn")
@@ -1310,12 +1310,6 @@ def maintain_valid_nodes(force: bool = False) -> str:
                 sorted_nodes = sort_all_nodes(merged)
                 write_json(NODES_FILE, sorted_nodes)
                 merged = sorted_nodes
-        with lock:
-            if not active_openvpn_running():
-                available_candidates = [n for n in merged if n.get("probe_status") == "available"]
-                if available_candidates:
-                    auto_switch_node()
-
         valid_nodes_count = len([n for n in merged if n.get("probe_status") == "available"])
         message = f"Fetched {len(candidates)} nodes. Tested {len(tested_nodes)} nodes."
         set_state(
