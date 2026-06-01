@@ -401,7 +401,7 @@ def enrich_ip_info(nodes: list[dict[str, Any]]) -> None:
 
     # 2. Perform HTTP query outside lock
     new_entries = {}
-    chunk_size = 100
+    chunk_size = 20
     for i in range(0, len(ips_to_query), chunk_size):
         chunk = ips_to_query[i : i + chunk_size]
         payload = json.dumps(chunk).encode("utf-8")
