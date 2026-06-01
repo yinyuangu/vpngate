@@ -3223,6 +3223,29 @@ function showToast(message, type = "info") {
   }, 2400);
 }
 
+function normalizeUiErrorMessage(message, fallback = "未知错误") {
+  const raw = String(message || "").trim();
+  if (!raw) return fallback;
+  const cleaned = raw
+    .replace(/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return fallback;
+  const lower = cleaned.toLowerCase();
+  if (lower.includes("exiting due to fatal error")) return "OpenVPN 启动失败";
+  if (lower.includes("did not complete initialization")) return "OpenVPN 初始化未完成";
+  if (lower.includes("auth_failed")) return "认证失败，请检查节点配置";
+  if (lower.includes("tls error")) return "TLS 握手失败";
+  if (lower.includes("network is unreachable")) return "网络不可达";
+  if (lower.includes("connection timed out")) return "连接超时";
+  return cleaned;
+}
+
+function showErrorToast(prefix, message, fallback = "未知错误") {
+  const detail = normalizeUiErrorMessage(message, fallback);
+  showToast(`${prefix}: ${detail}`, "error");
+}
+
 const translateQuality = q => {
   const dict = {"normal": "普通", "proxy": "代理", "datacenter": "数据中心", "mobile": "移动端"};
   return dict[q] || q || "-";
@@ -4143,7 +4166,7 @@ async function connectNode(id){
     });
     const result = await r.json();
     if (!result.ok) {
-      alert("连接失败: " + (result.error || "未知错误"));
+      showErrorToast("连接失败", result.error);
       if (pollInterval) {
         clearInterval(pollInterval);
         pollInterval = null;
@@ -4153,7 +4176,7 @@ async function connectNode(id){
       return;
     }
   } catch(e) {
-    alert("连接请求错误");
+    showErrorToast("连接请求错误", e && e.message, "请求未完成");
     if (pollInterval) {
       clearInterval(pollInterval);
       pollInterval = null;
@@ -4281,10 +4304,10 @@ async function connectNodeToChannel(channel, id) {
     });
     const result = await r.json();
     if (!result.ok) {
-      alert("连接失败: " + (result.error || "未知错误"));
+      showErrorToast("连接失败", result.error);
     }
   } catch (e) {
-    alert("连接请求错误");
+    showErrorToast("连接请求错误", e && e.message, "请求未完成");
   } finally {
     await load();
   }
@@ -4302,10 +4325,10 @@ async function autoConnectChannel(channel) {
     });
     const result = await r.json();
     if (!result.ok) {
-      alert("自动切换失败: " + (result.error || "没有可用节点"));
+      showErrorToast("自动切换失败", result.error, "没有可用节点");
     }
   } catch (e) {
-    alert("自动切换请求错误");
+    showErrorToast("自动切换请求错误", e && e.message, "请求未完成");
   } finally {
     await load();
   }
@@ -4367,7 +4390,7 @@ async function setChannelCountry(event, channel, country) {
       currentChannel.asn_lock = previousAsnLock;
     }
     renderChannelCards();
-    alert("国家锁定保存失败");
+    showToast("国家锁定保存失败", "error");
   } finally {
     await load();
   }
@@ -4392,7 +4415,7 @@ async function setChannelAsn(channel, asn) {
     if (currentChannel) currentChannel.asn_lock = normalizeAsnLocks(result.asn_lock);
     renderChannelCards();
   } catch (e) {
-    alert("ASN锁定保存失败");
+    showToast("ASN锁定保存失败", "error");
     await load();
   }
 }
