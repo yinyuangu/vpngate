@@ -1655,7 +1655,7 @@ INDEX_HTML = r"""<!doctype html>
       padding: 14px;
       margin-bottom: 0;
       display: grid;
-      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      grid-template-columns: repeat(4, minmax(120px, 1fr)) auto;
       gap: 12px;
       align-items: center;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
@@ -1664,25 +1664,29 @@ INDEX_HTML = r"""<!doctype html>
     .toolbar-action {
       display: flex;
       justify-content: flex-end;
+      align-items: center;
       min-width: 0;
     }
 
     .filter-reset-btn {
-      width: 100%;
-      height: 38px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      background: linear-gradient(180deg, rgba(20, 31, 49, 0.72), rgba(10, 18, 31, 0.84));
-      color: #cbd5e1;
-      font-size: 13px;
+      width: auto;
+      min-width: 72px;
+      height: 30px;
+      border-radius: 8px;
+      padding: 0 12px;
+      border: 1px solid rgba(129, 140, 248, 0.28);
+      background: rgba(79, 70, 229, 0.08);
+      color: #a5b4fc;
+      font-size: 12px;
       font-weight: 750;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      box-shadow: none;
     }
 
     .filter-reset-btn:hover {
-      border-color: rgba(99, 102, 241, 0.36);
-      color: #eef2ff;
-      background: linear-gradient(180deg, rgba(29, 42, 67, 0.8), rgba(13, 22, 38, 0.9));
+      background: var(--primary-gradient);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
     }
 
 
@@ -2671,7 +2675,7 @@ INDEX_HTML = r"""<!doctype html>
       border-radius: 14px 14px 0 0;
       background: linear-gradient(180deg, rgba(18, 27, 45, 0.74), rgba(10, 18, 31, 0.76));
       display: grid;
-      grid-template-columns: repeat(5, minmax(118px, 1fr));
+      grid-template-columns: repeat(4, minmax(118px, 1fr)) auto;
       gap: 12px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0, 0, 0, 0.12);
     }
@@ -2790,7 +2794,7 @@ INDEX_HTML = r"""<!doctype html>
       }
 
       .toolbar-action {
-        justify-content: stretch;
+        justify-content: flex-end;
       }
 
       .channel-card {
@@ -2976,7 +2980,7 @@ INDEX_HTML = r"""<!doctype html>
       <div id="asn_filter_menu" class="filter-list-menu multi-select-menu asn-wide-menu"></div>
     </div>
     <div class="toolbar-action">
-      <button type="button" class="filter-reset-btn" onclick="clearNodeFilters()">清除筛选</button>
+      <button type="button" class="filter-reset-btn" onclick="clearNodeFilters()">清除</button>
     </div>
   </section>
   <div class="table-wrapper">
