@@ -3806,7 +3806,7 @@ function countryLockOptions(channel, currentValue) {
     const active = country === normalized ? " active" : "";
     const sample = nodes.find(n => n.country === country && n.country_short);
     const flag = countryFlag(sample && sample.country_short);
-    return `<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(${channel}, decodeURIComponent('${encodeURIComponent(country)}')); return false;">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country, sample && sample.country_short))}</span></button>`;
+    return `<button type="button" class="country-lock-option${active}" onclick="setChannelCountry(event, ${channel}, decodeURIComponent('${encodeURIComponent(country)}')); return false;">${flag ? `<span>${flag}</span>` : ""}<span>${esc(translateCountry(country, sample && sample.country_short))}</span></button>`;
   }).join("");
 }
 
@@ -4310,8 +4310,13 @@ async function disconnectChannel(channel) {
   }
 }
 
-async function setChannelCountry(channel, country) {
+async function setChannelCountry(event, channel, country) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
   const currentChannel = state.channels && state.channels.find(ch => (ch.index || 0) === channel);
+  const previousCountry = currentChannel ? String(currentChannel.country_lock || "") : "";
   const normalizedCountry = String(country || "").trim();
   const nextCountry = currentChannel && currentChannel.country_lock === normalizedCountry ? "" : normalizedCountry;
   if (currentChannel) currentChannel.country_lock = nextCountry;
@@ -4325,9 +4330,10 @@ async function setChannelCountry(channel, country) {
     const result = await response.json().catch(() => ({}));
     if (!response.ok || result.ok === false) throw new Error("save failed");
     if (currentChannel) currentChannel.country_lock = String(result.country_lock || "");
-    const select = $(`country_select_${channel}`);
-    if (select) closeFloatingMenu(select);
+    renderChannelCards();
   } catch (e) {
+    if (currentChannel) currentChannel.country_lock = previousCountry;
+    renderChannelCards();
     alert("国家锁定保存失败");
   } finally {
     await load();
