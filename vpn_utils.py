@@ -322,6 +322,56 @@ def save_ip_cache(cache: dict[str, dict[str, Any]]) -> None:
         except Exception:
             pass
 
+IP_INFO_FIELDS = "status,message,query,country,regionName,city,isp,org,as,asname,proxy,hosting,mobile"
+
+def _build_ip_info_entry(item: dict[str, Any], cached_at: float) -> dict[str, Any] | None:
+    if item.get("status") != "success":
+        return None
+    query_ip = item.get("query")
+    if not query_ip:
+        return None
+
+    ip_type = "residential"
+    if item.get("mobile"):
+        ip_type = "mobile"
+    elif item.get("proxy"):
+        ip_type = "proxy"
+    elif item.get("hosting"):
+        ip_type = "hosting"
+
+    quality = "normal"
+    if item.get("proxy"):
+        quality = "proxy"
+    elif item.get("hosting"):
+        quality = "datacenter"
+    elif item.get("mobile"):
+        quality = "mobile"
+
+    loc = " ".join(part for part in [item.get("country"), item.get("regionName"), item.get("city")] if part)
+    return {
+        "owner": item.get("org") or item.get("isp") or "",
+        "asn": item.get("as") or "",
+        "as_name": item.get("asname") or "",
+        "location": loc,
+        "ip_type": ip_type,
+        "quality": quality,
+        "cached_at": cached_at,
+    }
+
+def _query_single_ip_info(ip: str, cached_at: float) -> dict[str, Any] | None:
+    request = urllib.request.Request(
+        f"http://ip-api.com/json/{urllib.parse.quote(ip)}?lang=zh-CN&fields={IP_INFO_FIELDS}",
+        headers={"User-Agent": "vpngate-manager/2.2"},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            item = json.loads(response.read().decode("utf-8", errors="replace"))
+            return _build_ip_info_entry(item, cached_at)
+    except Exception as e:
+        print(f"[enrich_ip_info] Single query failed for {ip}: {e}", flush=True)
+        return None
+
 def enrich_ip_info(nodes: list[dict[str, Any]]) -> None:
     # 1. Read cache thread-safely
     with ip_cache_lock:
@@ -356,50 +406,39 @@ def enrich_ip_info(nodes: list[dict[str, Any]]) -> None:
         chunk = ips_to_query[i : i + chunk_size]
         payload = json.dumps(chunk).encode("utf-8")
         request = urllib.request.Request(
-            "http://ip-api.com/batch?lang=zh-CN&fields=status,message,query,country,regionName,city,isp,org,as,asname,proxy,hosting,mobile",
+            f"http://ip-api.com/batch?lang=zh-CN&fields={IP_INFO_FIELDS}",
             data=payload,
             headers={"Content-Type": "application/json", "User-Agent": "vpngate-manager/2.2"},
             method="POST",
         )
-        try:
-            with urllib.request.urlopen(request, timeout=15) as response:
-                data = json.loads(response.read().decode("utf-8", errors="replace"))
-                for item in data:
-                    if item.get("status") != "success":
-                        continue
-                    query_ip = item.get("query")
-                    if not query_ip:
-                        continue
+        for attempt in range(3):
+            try:
+                with urllib.request.urlopen(request, timeout=15) as response:
+                    data = json.loads(response.read().decode("utf-8", errors="replace"))
+                    for item in data:
+                        entry = _build_ip_info_entry(item, now)
+                        if not entry:
+                            continue
+                        query_ip = item.get("query")
+                        if query_ip:
+                            new_entries[query_ip] = entry
+                    break
+            except Exception as e:
+                if attempt == 2:
+                    print(f"[enrich_ip_info] Batch query failed: {e}", flush=True)
+                else:
+                    time.sleep(0.5 * (attempt + 1))
 
-                    ip_type = "residential"
-                    if item.get("mobile"):
-                        ip_type = "mobile"
-                    elif item.get("proxy"):
-                        ip_type = "proxy"
-                    elif item.get("hosting"):
-                        ip_type = "hosting"
-
-                    quality = "normal"
-                    if item.get("proxy"):
-                        quality = "proxy"
-                    elif item.get("hosting"):
-                        quality = "datacenter"
-                    elif item.get("mobile"):
-                        quality = "mobile"
-
-                    loc = " ".join(part for part in [item.get("country"), item.get("regionName"), item.get("city")] if part)
-
-                    new_entries[query_ip] = {
-                        "owner": item.get("org") or item.get("isp") or "",
-                        "asn": item.get("as") or "",
-                        "as_name": item.get("asname") or "",
-                        "location": loc,
-                        "ip_type": ip_type,
-                        "quality": quality,
-                        "cached_at": now,
-                    }
-        except Exception as e:
-            print(f"[enrich_ip_info] Query failed: {e}", flush=True)
+    unresolved_ips = [ip for ip in ips_to_query if ip not in new_entries]
+    for ip in unresolved_ips:
+        entry = None
+        for attempt in range(2):
+            entry = _query_single_ip_info(ip, now)
+            if entry:
+                break
+            time.sleep(0.3 * (attempt + 1))
+        if entry:
+            new_entries[ip] = entry
 
     if not new_entries:
         return

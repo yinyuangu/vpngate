@@ -210,6 +210,58 @@ def read_json(path: Path, default: Any) -> Any:
         except (OSError, json.JSONDecodeError):
             return default
 
+NODE_METADATA_FIELDS = ("owner", "asn", "as_name", "location", "ip_type", "quality")
+
+def copy_node_metadata(source: dict[str, Any] | None) -> dict[str, Any]:
+    source = source or {}
+    return {field: source.get(field, "") for field in NODE_METADATA_FIELDS}
+
+def merge_node_metadata(target: dict[str, Any], source: dict[str, Any] | None) -> None:
+    if not source:
+        return
+    for field in NODE_METADATA_FIELDS:
+        value = source.get(field, "")
+        if value not in ("", None):
+            target[field] = value
+
+def node_metadata_complete(node: dict[str, Any] | None) -> bool:
+    if not node:
+        return False
+    return bool(str(node.get("asn") or "").strip()) and bool(str(node.get("ip_type") or "").strip())
+
+def backfill_available_node_metadata(nodes: list[dict[str, Any]]) -> bool:
+    pending = [
+        {
+            "ip": n.get("ip"),
+            "remote_host": n.get("remote_host"),
+            **copy_node_metadata(n),
+        }
+        for n in nodes
+        if n.get("probe_status") == "available" and not node_metadata_complete(n)
+    ]
+    if not pending:
+        return False
+
+    vpn_utils.enrich_ip_info(pending)
+    enriched_by_ip: dict[str, dict[str, Any]] = {}
+    for item in pending:
+        ip = str(item.get("ip") or item.get("remote_host") or "").strip()
+        if ip:
+            enriched_by_ip[ip] = item
+
+    changed = False
+    for node in nodes:
+        if node.get("probe_status") != "available" or node_metadata_complete(node):
+            continue
+        ip = str(node.get("ip") or node.get("remote_host") or "").strip()
+        enriched = enriched_by_ip.get(ip)
+        before = tuple(node.get(field, "") for field in NODE_METADATA_FIELDS)
+        merge_node_metadata(node, enriched)
+        after = tuple(node.get(field, "") for field in NODE_METADATA_FIELDS)
+        if before != after:
+            changed = True
+    return changed
+
 import hashlib
 import ipaddress
 import random
@@ -808,12 +860,7 @@ def test_node_by_id(node_id: str) -> dict[str, Any]:
         "ip": h,
         "remote_host": h,
         "remote_port": p,
-        "owner": "",
-        "asn": "",
-        "as_name": "",
-        "location": "",
-        "ip_type": "",
-        "quality": "",
+        **copy_node_metadata(node),
     }
     if ok:
         vpn_utils.enrich_ip_info([temp_node])
@@ -827,12 +874,7 @@ def test_node_by_id(node_id: str) -> dict[str, Any]:
             node["probe_message"] = message
             node["probed_at"] = time.time()
             if ok:
-                node["owner"] = temp_node["owner"]
-                node["asn"] = temp_node["asn"]
-                node["as_name"] = temp_node["as_name"]
-                node["location"] = temp_node["location"]
-                node["ip_type"] = temp_node["ip_type"]
-                node["quality"] = temp_node["quality"]
+                merge_node_metadata(node, temp_node)
             
             sorted_nodes = sort_all_nodes(nodes)
             write_json(NODES_FILE, sorted_nodes)
@@ -882,23 +924,13 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
             "probe_status": "available" if ok else "unavailable",
             "probe_message": message,
             "probed_at": time.time(),
-            "owner": "",
-            "asn": "",
-            "as_name": "",
-            "location": "",
-            "ip_type": "",
-            "quality": "",
+            **copy_node_metadata(n_info),
         }
         if ok:
             ip_to_enrich = {
                 "ip": n_info.get("ip"),
                 "remote_host": h,
-                "owner": "",
-                "asn": "",
-                "as_name": "",
-                "location": "",
-                "ip_type": "",
-                "quality": "",
+                **copy_node_metadata(n_info),
             }
             vpn_utils.enrich_ip_info([ip_to_enrich])
             temp_node.update(ip_to_enrich)
@@ -927,6 +959,8 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
             nid = n.get("id")
             if nid in updated_nodes_map:
                 n.update(updated_nodes_map[nid])
+    backfill_available_node_metadata(current_nodes)
+    with lock:
         sorted_nodes = sort_all_nodes(current_nodes)
         write_json(NODES_FILE, sorted_nodes)
         
@@ -1180,6 +1214,15 @@ def maintain_valid_nodes(force: bool = False) -> str:
             if active_ids:
                 current_nodes = read_json(NODES_FILE, [])
                 active_nodes = [n for n in current_nodes if n.get("id") in active_ids]
+            else:
+                current_nodes = read_json(NODES_FILE, [])
+
+            existing_by_id = {str(n.get("id") or ""): n for n in current_nodes}
+            existing_by_ip = {}
+            for n in current_nodes:
+                ip_key = str(n.get("ip") or n.get("remote_host") or "").strip()
+                if ip_key:
+                    existing_by_ip[ip_key] = n
                 
             merged: list[dict[str, Any]] = []
             seen_ids: set[str] = set()
@@ -1189,6 +1232,11 @@ def maintain_valid_nodes(force: bool = False) -> str:
                 seen_ids.add(active_node["id"])
                 
             for cand in candidates:
+                previous = existing_by_id.get(str(cand.get("id") or ""))
+                if previous is None:
+                    ip_key = str(cand.get("ip") or cand.get("remote_host") or "").strip()
+                    previous = existing_by_ip.get(ip_key) if ip_key else None
+                merge_node_metadata(cand, previous)
                 if cand["id"] not in seen_ids:
                     merged.append(cand)
                     seen_ids.add(cand["id"])
@@ -1222,6 +1270,12 @@ def maintain_valid_nodes(force: bool = False) -> str:
         
         with lock:
             merged = read_json(NODES_FILE, [])
+        if backfill_available_node_metadata(merged):
+            with lock:
+                sorted_nodes = sort_all_nodes(merged)
+                write_json(NODES_FILE, sorted_nodes)
+                merged = sorted_nodes
+        with lock:
             if not active_openvpn_running():
                 available_candidates = [n for n in merged if n.get("probe_status") == "available"]
                 if available_candidates:
