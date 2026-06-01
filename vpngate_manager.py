@@ -1284,14 +1284,48 @@ LOGIN_HTML = r"""<!DOCTYPE html>
       padding: 0;
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+      background-image:
+        radial-gradient(circle at 14% 18%, rgba(75, 118, 255, 0.28), transparent 34%),
+        radial-gradient(circle at 85% 16%, rgba(143, 92, 255, 0.24), transparent 30%),
+        radial-gradient(circle at 76% 58%, rgba(46, 212, 191, 0.08), transparent 26%),
+        linear-gradient(90deg, rgba(38, 87, 212, 0.12) 0%, transparent 34%, transparent 64%, rgba(136, 84, 255, 0.12) 100%),
+        linear-gradient(180deg, #070c16 0%, #0a1020 56%, #070b14 100%);
       height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(180deg, rgba(255,255,255,0.04), transparent 180px),
+        repeating-linear-gradient(to right, rgba(148, 163, 184, 0.06) 0 1px, transparent 1px 58px),
+        repeating-linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 0 1px, transparent 1px 58px);
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.34) 28%, transparent 52%);
+      -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.34) 28%, transparent 52%);
+      opacity: 0.34;
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -12%;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 10% 22%, rgba(84, 122, 255, 0.22), transparent 24%),
+        radial-gradient(circle at 88% 18%, rgba(151, 97, 255, 0.2), transparent 22%),
+        radial-gradient(circle at 55% 70%, rgba(34, 211, 238, 0.05), transparent 24%);
+      filter: blur(34px);
+      opacity: 0.95;
+      z-index: 0;
     }
 
     .login-container {
@@ -1299,6 +1333,8 @@ LOGIN_HTML = r"""<!DOCTYPE html>
       max-width: 400px;
       padding: 24px;
       box-sizing: border-box;
+      position: relative;
+      z-index: 1;
     }
 
     .login-card {
@@ -1550,25 +1586,58 @@ INDEX_HTML = r"""<!doctype html>
       margin: 0;
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 48%),
-        radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.08) 0, transparent 46%),
-        radial-gradient(circle at 50% 110%, rgba(56, 189, 248, 0.06), transparent 34%),
-        linear-gradient(180deg, #090d16 0%, #07111b 56%, #050911 100%);
+      background-image:
+        radial-gradient(circle at 14% 18%, rgba(75, 118, 255, 0.28), transparent 34%),
+        radial-gradient(circle at 85% 16%, rgba(143, 92, 255, 0.24), transparent 30%),
+        radial-gradient(circle at 76% 58%, rgba(46, 212, 191, 0.08), transparent 26%),
+        linear-gradient(90deg, rgba(38, 87, 212, 0.12) 0%, transparent 34%, transparent 64%, rgba(136, 84, 255, 0.12) 100%),
+        linear-gradient(180deg, #070c16 0%, #0a1020 56%, #070b14 100%);
       background-attachment: fixed;
       color: var(--text-primary);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
       font-feature-settings: "kern" 1;
+      position: relative;
+      isolation: isolate;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(180deg, rgba(255,255,255,0.04), transparent 180px),
+        repeating-linear-gradient(to right, rgba(148, 163, 184, 0.06) 0 1px, transparent 1px 58px),
+        repeating-linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 0 1px, transparent 1px 58px);
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.34) 28%, transparent 52%);
+      -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.34) 28%, transparent 52%);
+      opacity: 0.34;
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -12%;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 10% 22%, rgba(84, 122, 255, 0.22), transparent 24%),
+        radial-gradient(circle at 88% 18%, rgba(151, 97, 255, 0.2), transparent 22%),
+        radial-gradient(circle at 55% 70%, rgba(34, 211, 238, 0.05), transparent 24%);
+      filter: blur(34px);
+      opacity: 0.95;
+      z-index: 0;
     }
 
     header {
       padding: 16px 32px;
-      background: rgba(9, 13, 22, 0.72);
+      background: linear-gradient(180deg, rgba(8, 12, 22, 0.78), rgba(8, 13, 24, 0.64));
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
       display: flex;
       justify-content: space-between;
       gap: 16px;
@@ -1576,6 +1645,7 @@ INDEX_HTML = r"""<!doctype html>
       position: sticky;
       top: 0;
       z-index: 100;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
     .brand {
@@ -1643,6 +1713,8 @@ INDEX_HTML = r"""<!doctype html>
       padding: 24px 32px;
       max-width: 1400px;
       margin: 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
     .toolbar {
