@@ -2294,7 +2294,7 @@ INDEX_HTML = r"""<!doctype html>
 
     .asn-cell {
       display: inline-block;
-      max-width: 190px;
+      max-width: 152px;
       line-height: 1.35;
       white-space: normal;
       overflow-wrap: anywhere;
@@ -2401,10 +2401,10 @@ INDEX_HTML = r"""<!doctype html>
 
     .channels-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(332px, 1fr));
-      gap: 7px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
       align-items: start;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .channel-card {
@@ -2416,7 +2416,7 @@ INDEX_HTML = r"""<!doctype html>
         linear-gradient(180deg, rgba(17, 24, 39, 0.58), rgba(9, 16, 28, 0.76)),
         rgba(15, 23, 42, 0.5);
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255,255,255,0.035);
-      padding: 9px;
+      padding: 8px;
       min-height: 0;
     }
 
@@ -2436,7 +2436,7 @@ INDEX_HTML = r"""<!doctype html>
         rgba(15, 23, 42, 0.56);
       border: 2px solid rgba(16, 185, 129, 0.86);
       box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), 0 20px 42px rgba(0, 0, 0, 0.22), 0 0 24px rgba(16, 185, 129, 0.08);
-      padding: 9px;
+      padding: 8px;
     }
 
     .channel-card.connecting {
@@ -2526,9 +2526,9 @@ INDEX_HTML = r"""<!doctype html>
 
     .channel-metrics {
       display: grid;
-      grid-template-columns: minmax(92px, 0.84fr) minmax(168px, 1.36fr) minmax(64px, 0.45fr);
+      grid-template-columns: minmax(84px, 0.9fr) minmax(138px, 1.1fr) minmax(56px, 0.42fr);
       gap: 4px;
-      padding: 6px 7px;
+      padding: 5px 6px;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.07);
       background: rgba(9, 16, 28, 0.48);
@@ -2638,7 +2638,7 @@ INDEX_HTML = r"""<!doctype html>
     .channel-options {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
       margin-top: 4px;
     }
@@ -2675,13 +2675,13 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .country-lock-btn {
-      min-width: 148px;
-      max-width: 148px;
+      min-width: 132px;
+      max-width: 132px;
     }
 
     .asn-lock-btn {
-      min-width: 272px;
-      max-width: 288px;
+      min-width: 214px;
+      max-width: 228px;
     }
 
     .lock-mode-btn:hover {
@@ -2924,7 +2924,7 @@ INDEX_HTML = r"""<!doctype html>
     .channels-grid,
     .toolbar,
     .table-wrapper {
-      max-width: 1120px;
+      max-width: 1036px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -2936,11 +2936,11 @@ INDEX_HTML = r"""<!doctype html>
       background: transparent;
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
       justify-content: flex-start;
       width: 100%;
-      max-width: 1120px;
+      max-width: 1036px;
     }
 
     .toolbar-action {
@@ -2973,7 +2973,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .toolbar > .filter-menu:nth-child(4) {
-      width: 320px;
+      width: 236px;
     }
 
     .table-wrapper {
@@ -3008,34 +3008,34 @@ INDEX_HTML = r"""<!doctype html>
 
     td:nth-child(7),
     th:nth-child(7) {
-      min-width: 82px;
+      min-width: 78px;
       white-space: nowrap;
       word-break: keep-all;
     }
 
     td:nth-child(6),
     th:nth-child(6) {
-      min-width: 172px;
+      min-width: 128px;
     }
 
     td:nth-child(2),
     th:nth-child(2) {
-      min-width: 64px;
+      min-width: 58px;
     }
 
     td:nth-child(3),
     th:nth-child(3) {
-      min-width: 96px;
+      min-width: 84px;
     }
 
     td:nth-child(4),
     th:nth-child(4) {
-      min-width: 48px;
+      min-width: 42px;
     }
 
     td:nth-child(5),
     th:nth-child(5) {
-      min-width: 46px;
+      min-width: 42px;
     }
 
     @media (max-width: 1100px) {
