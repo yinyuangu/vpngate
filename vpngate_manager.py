@@ -155,6 +155,11 @@ def normalize_asn_locks(value: Any) -> list[str]:
             result.append(asn)
     return result
 
+def node_asn_value(node: dict[str, Any] | None) -> str:
+    if not node:
+        return ""
+    return str(node.get("as_name") or "").strip()
+
 def filter_asn_locks_for_country(asn_locks: Any, country_lock: str = "", nodes: list[dict[str, Any]] | None = None) -> list[str]:
     normalized = normalize_asn_locks(asn_locks)
     country = str(country_lock or "").strip()
@@ -162,9 +167,9 @@ def filter_asn_locks_for_country(asn_locks: Any, country_lock: str = "", nodes: 
         return normalized
     scoped_nodes = nodes if nodes is not None else read_json(NODES_FILE, [])
     valid_asns = {
-        str(n.get("asn") or "").strip()
+        node_asn_value(n)
         for n in scoped_nodes
-        if (n.get("country") == country or n.get("country_short") == country) and str(n.get("asn") or "").strip()
+        if (n.get("country") == country or n.get("country_short") == country) and node_asn_value(n)
     }
     if not valid_asns:
         return []
@@ -257,7 +262,7 @@ def clear_unavailable_node_metadata(nodes: list[dict[str, Any]]) -> bool:
 def node_metadata_complete(node: dict[str, Any] | None) -> bool:
     if not node:
         return False
-    return bool(str(node.get("asn") or "").strip()) and bool(str(node.get("ip_type") or "").strip())
+    return bool(node_asn_value(node)) and bool(str(node.get("ip_type") or "").strip())
 
 def backfill_available_node_metadata(nodes: list[dict[str, Any]]) -> bool:
     pending = [
@@ -1060,7 +1065,7 @@ def best_node_for_channel(channel_index: int) -> dict[str, Any] | None:
     def matches_locks(n: dict[str, Any]) -> bool:
         if country_lock and n.get("country") != country_lock and n.get("country_short") != country_lock:
             return False
-        if asn_locks and str(n.get("asn") or "") not in asn_locks:
+        if asn_locks and node_asn_value(n) not in asn_locks:
             return False
         return True
     candidates = [
@@ -3553,18 +3558,18 @@ function getLatencyClass(ms) {
 }
 
 function asnDisplay(asn, asName) {
-  const cleanAsn = String(asn || "").trim();
+  const cleanAsn = String(asName || "").trim();
   if (!cleanAsn) return {short: "-", full: "-"};
   return {short: cleanAsn, full: cleanAsn};
 }
 
 function nodeAsnLabel(node) {
   if (!node) return "-";
-  return asnDisplay(node.asn).full;
+  return asnDisplay(node.asn, node.as_name).full;
 }
 
 function asnOptionLabel(asn, scopedNodes) {
-  return asnDisplay(asn).full;
+  return asnDisplay("", asn).full;
 }
 
 function countryOptionLabel(country) {
@@ -3915,7 +3920,7 @@ function updateAsnFilter() {
   const selectedValues = selectedFilterValues("asn_filter");
   const selectedCountries = selectedFilterValues("country_filter");
   const scopedNodes = selectedCountries.length ? nodes.filter(n => selectedCountries.includes(n.country)) : nodes;
-  const asns = Array.from(new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean))).sort();
+  const asns = Array.from(new Set(scopedNodes.map(n => String(n.as_name || "").trim()).filter(Boolean))).sort();
   const validSelected = selectedValues.filter(asn => asns.includes(asn));
   input.value = serializeSelections(validSelected);
   const selectedSet = new Set(validSelected);
@@ -3938,7 +3943,7 @@ function getFilteredNodes() {
     if (selectedCountries.length && !selectedCountries.includes(n.country)) {
       return false;
     }
-    if (selectedAsns.length && !selectedAsns.includes(String(n.asn || ""))) {
+    if (selectedAsns.length && !selectedAsns.includes(String(n.as_name || ""))) {
       return false;
     }
     if (selectedStatuses.length && !selectedStatuses.includes(n.probe_status || "not_checked")) {
@@ -4022,7 +4027,7 @@ function asnCheckboxOptions(channel, currentValue) {
   const channelData = state.channels && state.channels.find(ch => (ch.index || 0) === channel);
   const country = channelData && channelData.country_lock ? channelData.country_lock : "";
   const scopedNodes = country ? nodes.filter(n => n.country === country || n.country_short === country) : nodes;
-  const currentAsns = new Set(scopedNodes.map(n => String(n.asn || "").trim()).filter(Boolean));
+  const currentAsns = new Set(scopedNodes.map(n => String(n.as_name || "").trim()).filter(Boolean));
   const asns = Array.from(new Set([...selected, ...currentAsns])).sort();
   if (!asns.length) return '<div class="asn-check-option" style="color: var(--text-secondary); cursor: default;">暂无 ASN</div>';
   return asns.map(asn => {
@@ -4040,7 +4045,7 @@ function filterAsnLocksForCountry(country, asnLocks) {
   const validAsns = new Set(
     nodes
       .filter(n => n.country === targetCountry || n.country_short === targetCountry)
-      .map(n => String(n.asn || "").trim())
+      .map(n => String(n.as_name || "").trim())
       .filter(Boolean)
   );
   if (!validAsns.size) return [];
