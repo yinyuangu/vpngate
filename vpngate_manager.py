@@ -2151,6 +2151,7 @@ INDEX_HTML = r"""<!doctype html>
       gap: 5px;
       border: 1px solid transparent;
       white-space: nowrap;
+      word-break: keep-all;
     }
 
     .badge-pulse {
@@ -2282,11 +2283,13 @@ INDEX_HTML = r"""<!doctype html>
     .type-cell.empty {
       color: var(--text-secondary);
       font-weight: 560;
+      min-height: 0;
+      line-height: 1;
     }
 
     .asn-cell {
       display: inline-block;
-      max-width: 176px;
+      max-width: 190px;
       line-height: 1.35;
       white-space: normal;
       overflow-wrap: anywhere;
@@ -2296,6 +2299,13 @@ INDEX_HTML = r"""<!doctype html>
       font-weight: 650;
       font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
       vertical-align: middle;
+    }
+
+    .asn-cell.empty {
+      max-width: none;
+      line-height: 1;
+      color: var(--text-secondary);
+      font-weight: 560;
     }
 
     .latency-val {
@@ -2665,8 +2675,8 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .asn-lock-btn {
-      min-width: 236px;
-      max-width: 252px;
+      min-width: 272px;
+      max-width: 288px;
     }
 
     .lock-mode-btn:hover {
@@ -2958,7 +2968,7 @@ INDEX_HTML = r"""<!doctype html>
     }
 
     .toolbar > .filter-menu:nth-child(4) {
-      width: 286px;
+      width: 320px;
     }
 
     .table-wrapper {
@@ -3000,7 +3010,7 @@ INDEX_HTML = r"""<!doctype html>
 
     td:nth-child(6),
     th:nth-child(6) {
-      min-width: 152px;
+      min-width: 172px;
     }
 
     td:nth-child(2),
@@ -3112,8 +3122,10 @@ INDEX_HTML = r"""<!doctype html>
         min-width: 0;
       }
 
+      .toolbar > .filter-menu:nth-child(1),
+      .toolbar > .filter-menu:nth-child(2),
+      .toolbar > .filter-menu:nth-child(3),
       .toolbar > .filter-menu:nth-child(4) {
-        grid-column: 1 / -1;
         width: 100%;
       }
 
@@ -3164,7 +3176,7 @@ INDEX_HTML = r"""<!doctype html>
 
       .channel-options {
         display: grid;
-        grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+        grid-template-columns: minmax(122px, 0.72fr) minmax(188px, 1.28fr);
         gap: 5px;
       }
 
@@ -3222,11 +3234,13 @@ INDEX_HTML = r"""<!doctype html>
       .badge {
         min-width: 42px;
         justify-content: center;
-        padding: 3px 7px;
+        padding: 3px 6px;
+        white-space: nowrap;
+        word-break: keep-all;
       }
 
       .type-cell.empty,
-      .asn-cell[title="-"] {
+      .asn-cell.empty {
         line-height: 1;
         min-height: 0;
       }
@@ -3280,7 +3294,7 @@ INDEX_HTML = r"""<!doctype html>
       th,
       td {
         font-size: 11px;
-        padding: 8px 8px;
+        padding: 7px 7px;
       }
 
       .mono,
@@ -4161,6 +4175,7 @@ function render(){
       const asnLabel = showNodeMetadata ? nodeAsnLabel(n) : "-";
       const typeLabel = showNodeMetadata ? translateIpType(n.ip_type) : "-";
       const typeClass = typeLabel === "-" ? "type-cell empty" : "type-cell";
+      const asnClass = asnLabel === "-" ? "asn-cell empty" : "asn-cell";
       const isTesting = testingNodeIds.has(n.id);
       const connectLabel = isActive ? "已连接" : "连接";
       const connectDisabled = state.is_connecting || n.probe_status === "unavailable" ? "disabled" : "";
@@ -4172,7 +4187,7 @@ function render(){
         <td class="mono ip-cell">${esc(n.ip||n.remote_host)}</td>
         <td><span class="${typeClass}">${esc(typeLabel)}</span></td>
         <td>${latencyText}</td>
-        <td><span class="asn-cell" title="${esc(asnLabel)}">${esc(asnLabel)}</span></td>
+        <td><span class="${asnClass}" title="${esc(asnLabel)}">${esc(asnLabel)}</span></td>
         <td>
           <div class="table-actions">
             <button class="test-btn" ${isTesting ? "disabled" : ""} onclick="testNode(this, '${esc(n.id)}', event)">${testBtnText}</button>
@@ -4407,10 +4422,8 @@ function toggleLockMenu(kind, channel) {
   const trigger = $(`${kind}_lock_btn_${channel}`);
   if (!select) return;
   const triggerWidth = trigger ? trigger.getBoundingClientRect().width : 0;
-  const viewportWidth = Math.max(0, window.innerWidth || 0);
-  const asnMenuWidth = Math.min(Math.max(triggerWidth, 280), Math.max(160, viewportWidth - 24));
   toggleFloatingMenu(select, trigger, {
-    minWidth: kind === "asn" ? asnMenuWidth : triggerWidth,
+    minWidth: triggerWidth,
     maxHeight: 240
   });
 }
