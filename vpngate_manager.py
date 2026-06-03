@@ -966,6 +966,26 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
         }
         return temp_node
 
+    def apply_test_result(result: dict[str, Any]) -> dict[str, Any]:
+        node_id = str(result.get("id") or "")
+        if not node_id:
+            return result
+        with lock:
+            current_nodes = read_json(NODES_FILE, [])
+            updated_node: dict[str, Any] | None = None
+            for n in current_nodes:
+                if n.get("id") != node_id:
+                    continue
+                n.update(result)
+                if n.get("probe_status") == "unavailable":
+                    clear_node_metadata(n)
+                updated_node = n
+                break
+            clear_unavailable_node_metadata(current_nodes)
+            sorted_nodes = sort_all_nodes(current_nodes)
+            write_json(NODES_FILE, sorted_nodes)
+            return next((item for item in sorted_nodes if item.get("id") == node_id), updated_node or result)
+
     updated_nodes_map = {}
     max_workers = max(1, min(NODE_PROBE_WORKERS, len(to_test)))
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -974,14 +994,15 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
             nid = futures[future]
             try:
                 res = future.result()
-                updated_nodes_map[nid] = res
             except Exception as e:
-                updated_nodes_map[nid] = {
+                res = {
                     "id": nid,
                     "probe_status": "unavailable",
                     "probe_message": f"Test exception: {e}",
-                    "latency_ms": 0
+                    "latency_ms": 0,
+                    "probed_at": time.time(),
                 }
+            updated_nodes_map[nid] = apply_test_result(res)
                 
     with lock:
         current_nodes = read_json(NODES_FILE, [])
