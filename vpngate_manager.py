@@ -4041,7 +4041,14 @@ function activeIndexesForNode(node) {
 }
 
 function countryLockOptions(channel, currentValue) {
-  const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
+  const countries = Array.from(
+    new Set(
+      nodes
+        .filter(n => n.probe_status === "available")
+        .map(n => n.country)
+        .filter(Boolean)
+    )
+  ).sort();
   const normalized = currentValue || "";
   if (!countries.length) {
     return '<div class="country-lock-option" style="color: var(--text-secondary); cursor: default;">暂无国家</div>';
