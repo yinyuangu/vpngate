@@ -43,12 +43,13 @@ OPENVPN_TEST_TIMEOUT_SECONDS = int(os.environ.get("OPENVPN_TEST_TIMEOUT_SECONDS"
 NODE_PROBE_TIMEOUT_SECONDS = int(os.environ.get("NODE_PROBE_TIMEOUT_SECONDS", "7"))
 MAX_BATCH_TEST_NODES = int(os.environ.get("MAX_BATCH_TEST_NODES", "20"))
 NODE_PROBE_WORKERS = int(os.environ.get("NODE_PROBE_WORKERS", "10"))
+CHANNEL_RECONNECT_RETRY_SECONDS = int(os.environ.get("CHANNEL_RECONNECT_RETRY_SECONDS", "15"))
 OPENVPN_CMD = os.environ.get("OPENVPN_CMD", "openvpn")
 OPENVPN_AUTH_USER = os.environ.get("OPENVPN_AUTH_USER", "vpn")
 OPENVPN_AUTH_PASS = os.environ.get("OPENVPN_AUTH_PASS", "vpn")
 LOCAL_PROXY_HOST = os.environ.get("LOCAL_PROXY_HOST", "127.0.0.1")
 LOCAL_PROXY_PORT = int(os.environ.get("LOCAL_PROXY_PORT", "7928"))
-CHANNEL_COUNT = max(1, int(os.environ.get("CHANNEL_COUNT", "6")))
+CHANNEL_COUNT = max(1, int(os.environ.get("CHANNEL_COUNT", "4")))
 PROXY_BASE_PORT = int(os.environ.get("PROXY_BASE_PORT", str(LOCAL_PROXY_PORT)))
 UI_HOST = os.environ.get("UI_HOST", "0.0.0.0")
 UI_PORT = int(os.environ.get("UI_PORT", "8787"))
@@ -90,6 +91,8 @@ def get_channel(index: int) -> dict[str, Any]:
                 "node_id": "",
                 "process": None,
                 "is_connecting": False,
+                "desired_connected": False,
+                "last_reconnect_attempt": 0.0,
                 "last_ping_time": 0.0,
                 "last_latency": 0,
                 "auto_switch": True,
@@ -194,6 +197,7 @@ def serialize_channels(nodes: list[dict[str, Any]] | None = None) -> list[dict[s
                 "node_id": node_id,
                 "is_connecting": bool(channel.get("is_connecting")),
                 "running": running,
+                "desired_connected": bool(channel.get("desired_connected")),
                 "auto_switch": bool(channel.get("auto_switch", True)),
                 "country_lock": channel.get("country_lock", ""),
                 "asn_lock": normalize_asn_locks(channel.get("asn_lock")),
@@ -825,6 +829,41 @@ def channel_running(channel_index: int) -> bool:
     process = get_channel(channel_index).get("process")
     return process is not None and process.poll() is None
 
+def channel_should_auto_reconnect(channel_index: int) -> bool:
+    channel = get_channel(channel_index)
+    return bool(
+        channel.get("desired_connected")
+        and not channel.get("is_connecting")
+        and not channel_running(channel_index)
+    )
+
+def schedule_channel_reconnect(channel_index: int, reason: str = "") -> bool:
+    channel = get_channel(channel_index)
+    now = time.time()
+    last_attempt = float(channel.get("last_reconnect_attempt") or 0.0)
+    if now - last_attempt < CHANNEL_RECONNECT_RETRY_SECONDS:
+        return False
+    channel["last_reconnect_attempt"] = now
+    channel["last_message"] = "正在自动恢复连接..."
+    if reason:
+        print(f"[自动补连] 通道 {channel_index} {reason}", flush=True)
+
+    def reconnect_worker() -> None:
+        try:
+            if not channel_should_auto_reconnect(channel_index):
+                return
+            auto_switch_node(0, channel_index)
+        except Exception as exc:
+            print(f"[自动补连] 通道 {channel_index} 自动恢复失败: {exc}", flush=True)
+
+    threading.Thread(target=reconnect_worker, daemon=True).start()
+    return True
+
+def schedule_pending_channel_reconnects(reason: str = "") -> None:
+    for idx in range(CHANNEL_COUNT):
+        if channel_should_auto_reconnect(idx):
+            schedule_channel_reconnect(idx, reason)
+
 def stop_active_openvpn() -> None:
     global active_openvpn_process, active_openvpn_node_id
     stop_channel_openvpn(0)
@@ -1044,6 +1083,8 @@ def test_nodes_in_batches(node_ids: list[str]) -> list[dict[str, Any]]:
     return all_results
 
 def auto_switch_node(attempt: int = 0, channel_index: int = 0) -> None:
+    if not get_channel(channel_index).get("desired_connected"):
+        return
     if attempt >= 3:
         print("[自动切换] 连续切换失败已达 3 次，停止切换以防止主线程死锁，将在后台重新加载节点...", flush=True)
         return
@@ -1226,6 +1267,8 @@ def connect_channel_node(channel_index: int, node_id: str) -> str:
         latency_str = f"{channel['last_latency']} ms" if channel["last_latency"] > 0 else "检测超时"
         channel["last_message"] = f"Connected {node_id}"
         channel["is_connecting"] = False
+        channel["desired_connected"] = True
+        channel["last_reconnect_attempt"] = 0.0
         sync_legacy_channel0()
         if channel_index == 0:
             set_state(active_openvpn_node_id=node_id, is_connecting=False, last_check_message=channel["last_message"], active_node_latency=latency_str)
@@ -1246,17 +1289,8 @@ def maintain_valid_nodes(force: bool = False) -> str:
         if force:
             with lock:
                 stop_active_openvpn()
-        elif not active_openvpn_running():
-            has_active_id = False
-            with lock:
-                if active_openvpn_node_id:
-                    has_active_id = True
-                    stop_active_openvpn()
-            if has_active_id:
-                print("[维护线程] 检测到当前 OpenVPN 进程已意外退出，准备自动切换节点", flush=True)
-                is_connecting = False
-                auto_switch_node()
-                is_connecting = True
+        else:
+            schedule_pending_channel_reconnects("检测到通道掉线，准备按锁定条件自动恢复")
 
         try:
             set_state(is_connecting=True, last_check_message="正在拉取最新的免费 VPN 节点列表...")
@@ -4141,7 +4175,7 @@ function renderChannelCards() {
   if (activeLockMenu && activeLockMenu.parentNode === document.body) {
     closeFloatingMenu(activeLockMenu);
   }
-  const count = state.channel_count || 6;
+  const count = state.channel_count || 4;
   const channels = state.channels && state.channels.length
     ? state.channels
     : Array.from({length: count}, (_, index) => ({index, port: (state.proxy_base_port || 7928) + index, device: `tun${index}`, auto_switch: true}));
@@ -4435,14 +4469,14 @@ function buildChannelChooser(nodeId) {
 
 function nodeChannelButtonText(nodeId) {
   const channels = state.channels || [];
-  const count = state.channel_count || 6;
+  const count = state.channel_count || 4;
   const current = Number.isInteger(selectedManualChannels[nodeId]) ? selectedManualChannels[nodeId] : null;
   return current === null ? "选择通道" : `通道 ${current}`;
 }
 
 function renderNodeChannelOptions(nodeId) {
   const channels = state.channels || [];
-  const count = state.channel_count || 6;
+  const count = state.channel_count || 4;
   const list = channels.length ? channels : Array.from({length: count}, (_, index) => ({index}));
   const current = Number.isInteger(selectedManualChannels[nodeId]) ? selectedManualChannels[nodeId] : null;
   const options = list.map(ch => {
@@ -4842,6 +4876,16 @@ def background_proxy_checker() -> None:
             log_to_json("ERROR", "Proxy", f"检测守护线程发生异常: {e}")
         time.sleep(30)
 
+def channel_reconnect_watcher() -> None:
+    time.sleep(3)
+    while True:
+        try:
+            if not is_connecting:
+                schedule_pending_channel_reconnects("连接已意外断开，准备自动补连")
+        except Exception as e:
+            print(f"[错误] 自动补连守护线程发生异常: {e}", flush=True)
+        time.sleep(10)
+
 def active_node_pinger() -> None:
     global active_openvpn_node_id, is_connecting
     while True:
@@ -5180,6 +5224,9 @@ class Handler(BaseHTTPRequestHandler):
                 payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
                 channel_index = parse_int(payload.get("channel"))
                 stop_channel_openvpn(channel_index)
+                channel = get_channel(channel_index)
+                channel["desired_connected"] = False
+                channel["last_reconnect_attempt"] = 0.0
                 if channel_index == 0:
                     set_state(active_openvpn_node_id="", last_check_message="手动断开连接", active_node_latency="无活动连接")
                 self.send_json({"ok": True})
@@ -5233,6 +5280,9 @@ class Handler(BaseHTTPRequestHandler):
         elif effective_path == "/api/disconnect":
             try:
                 stop_active_openvpn()
+                channel0 = get_channel(0)
+                channel0["desired_connected"] = False
+                channel0["last_reconnect_attempt"] = 0.0
                 with lock:
                     nodes = read_json(NODES_FILE, [])
                     for item in nodes:
@@ -5363,6 +5413,7 @@ def main() -> None:
 
     threading.Thread(target=collector_loop, daemon=True).start()
     threading.Thread(target=background_proxy_checker, daemon=True).start()
+    threading.Thread(target=channel_reconnect_watcher, daemon=True).start()
     threading.Thread(target=active_node_pinger, daemon=True).start()
     
     ui_cfg = load_ui_config()
