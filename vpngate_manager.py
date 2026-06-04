@@ -252,9 +252,16 @@ def clear_unavailable_node_metadata(nodes: list[dict[str, Any]]) -> bool:
     changed = False
     for node in nodes:
         if node.get("probe_status") == "unavailable":
-            before = tuple(node.get(field, "") for field in NODE_METADATA_FIELDS)
+            before = (
+                tuple(node.get(field, "") for field in NODE_METADATA_FIELDS),
+                parse_int(node.get("latency_ms")),
+            )
             clear_node_metadata(node)
-            after = tuple(node.get(field, "") for field in NODE_METADATA_FIELDS)
+            node["latency_ms"] = 0
+            after = (
+                tuple(node.get(field, "") for field in NODE_METADATA_FIELDS),
+                parse_int(node.get("latency_ms")),
+            )
             if before != after:
                 changed = True
     return changed
@@ -904,7 +911,7 @@ def test_node_by_id(node_id: str) -> dict[str, Any]:
         nodes = read_json(NODES_FILE, [])
         node = next((item for item in nodes if item.get("id") == node_id), None)
         if node:
-            node["latency_ms"] = latency
+            node["latency_ms"] = latency if ok else 0
             node["probe_status"] = "available" if ok else "unavailable"
             node["probe_message"] = message
             node["probed_at"] = time.time()
@@ -958,7 +965,7 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
             
         temp_node = {
             "id": node_id,
-            "latency_ms": latency,
+            "latency_ms": latency if ok else 0,
             "probe_status": "available" if ok else "unavailable",
             "probe_message": message,
             "probed_at": time.time(),
@@ -1151,6 +1158,7 @@ def connect_channel_node(channel_index: int, node_id: str) -> str:
         if not ok or process is None:
             node["probe_status"] = "unavailable"
             node["probe_message"] = message
+            node["latency_ms"] = 0
             clear_node_metadata(node)
             for item in nodes:
                 active_indexes = [idx for idx in item.get("active_channels", []) if idx != channel_index]
@@ -4195,9 +4203,10 @@ function render(){
       const rowClass = isActive ? 'class="active-row"' : '';
       const badgeClass = isActive ? 'available' : (n.probe_status || 'not_checked');
       const badgeText = isActive ? `<span class="badge-pulse"></span>通道 ${activeIndexes.join(",")}` : translateStatus(n.probe_status);
-      const latencyClass = getLatencyClass(n.latency_ms);
-      const latencyText = n.latency_ms ? `<span class="latency-val ${latencyClass}">${n.latency_ms} ms</span>` : "-";
       const showNodeMetadata = isActive || n.probe_status === "available";
+      const latencyValue = showNodeMetadata ? Number(n.latency_ms || 0) : 0;
+      const latencyClass = getLatencyClass(latencyValue);
+      const latencyText = latencyValue ? `<span class="latency-val ${latencyClass}">${latencyValue} ms</span>` : "-";
       const asnLabel = showNodeMetadata ? nodeAsnLabel(n) : "-";
       const typeLabel = showNodeMetadata ? translateIpType(n.ip_type) : "-";
       const typeClass = typeLabel === "-" ? "type-cell empty" : "type-cell";
@@ -4783,6 +4792,7 @@ def background_proxy_checker() -> None:
                         if active_node:
                             mark_blacklisted(active_node, f"通道 {idx} 代理连通性检测失败: {error_msg}")
                             active_node["probe_status"] = "unavailable"
+                            active_node["latency_ms"] = 0
                             clear_node_metadata(active_node)
                             write_json(NODES_FILE, nodes)
                     try:
