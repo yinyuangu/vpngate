@@ -3901,23 +3901,54 @@ function clearNodeFilters() {
   render();
 }
 
+function getFilteredNodesExcluding(excludedKey = "") {
+  const selectedCountries = excludedKey === "country_filter" ? [] : selectedFilterValues("country_filter");
+  const selectedAsns = excludedKey === "asn_filter" ? [] : selectedFilterValues("asn_filter");
+  const selectedStatuses = excludedKey === "status_filter" ? [] : selectedFilterValues("status_filter");
+  const selectedTypes = excludedKey === "type_filter" ? [] : selectedFilterValues("type_filter");
+  return nodes.filter(n => {
+    if (selectedCountries.length && !selectedCountries.includes(n.country)) return false;
+    if (selectedAsns.length && !selectedAsns.includes(String(n.as_name || "").trim())) return false;
+    if (selectedStatuses.length && !selectedStatuses.includes(n.probe_status || "not_checked")) return false;
+    if (selectedTypes.length && !selectedTypes.includes(String(n.ip_type || "").trim())) return false;
+    return true;
+  });
+}
+
 function updateStaticFilterMenus() {
   const selectedStatuses = selectedFilterValues("status_filter");
-  renderMultiFilterMenu("status_filter", [
-    {value: "available", label: "可用"},
-    {value: "not_checked", label: "待检测"},
-    {value: "unavailable", label: "不可用"},
-  ], selectedStatuses, statusButtonLabel(selectedStatuses));
-  $("status_filter").value = serializeSelections(selectedStatuses);
+  const scopedStatusNodes = getFilteredNodesExcluding("status_filter");
+  const availableStatuses = Array.from(new Set(scopedStatusNodes.map(n => n.probe_status || "not_checked"))).sort((a, b) => {
+    const order = {available: 0, not_checked: 1, unavailable: 2};
+    return (order[a] ?? 99) - (order[b] ?? 99);
+  });
+  const validSelectedStatuses = selectedStatuses.filter(status => availableStatuses.includes(status));
+  renderMultiFilterMenu(
+    "status_filter",
+    availableStatuses.map(status => ({value: status, label: translateStatus(status)})),
+    validSelectedStatuses,
+    statusButtonLabel(validSelectedStatuses)
+  );
+  $("status_filter").value = serializeSelections(validSelectedStatuses);
 
   const selectedTypes = selectedFilterValues("type_filter");
-  renderMultiFilterMenu("type_filter", [
-    {value: "residential", label: "住宅 IP"},
-    {value: "hosting", label: "机房 IP"},
-    {value: "mobile", label: "移动网"},
-    {value: "proxy", label: "代理 IP"},
-  ], selectedTypes, typeButtonLabel(selectedTypes));
-  $("type_filter").value = serializeSelections(selectedTypes);
+  const scopedTypeNodes = getFilteredNodesExcluding("type_filter");
+  const availableTypes = Array.from(
+    new Set(scopedTypeNodes.map(n => String(n.ip_type || "").trim()).filter(Boolean))
+  );
+  const typeOrder = {residential: 0, hosting: 1, mobile: 2, proxy: 3};
+  availableTypes.sort((a, b) => {
+    const rankDiff = (typeOrder[a] ?? 99) - (typeOrder[b] ?? 99);
+    return rankDiff || a.localeCompare(b);
+  });
+  const validSelectedTypes = selectedTypes.filter(type => availableTypes.includes(type));
+  renderMultiFilterMenu(
+    "type_filter",
+    availableTypes.map(type => ({value: type, label: translateIpType(type)})),
+    validSelectedTypes,
+    typeButtonLabel(validSelectedTypes)
+  );
+  $("type_filter").value = serializeSelections(validSelectedTypes);
 
   renderFilterMenu("page_size", [
     {value: "25", label: "每页 25"},
@@ -3930,7 +3961,8 @@ function updateCountryFilter() {
   const input = $("country_filter");
   if (!input) return;
   const selectedValues = selectedFilterValues("country_filter");
-  const countries = Array.from(new Set(nodes.map(n => n.country).filter(Boolean))).sort();
+  const scopedCountryNodes = getFilteredNodesExcluding("country_filter");
+  const countries = Array.from(new Set(scopedCountryNodes.map(n => n.country).filter(Boolean))).sort();
   const validSelected = selectedValues.filter(country => countries.includes(country));
   input.value = serializeSelections(validSelected);
   renderMultiFilterMenu(
@@ -3947,8 +3979,7 @@ function updateAsnFilter() {
   const button = $("asn_filter_btn");
   if (!input || !menu || !button) return;
   const selectedValues = selectedFilterValues("asn_filter");
-  const selectedCountries = selectedFilterValues("country_filter");
-  const scopedNodes = selectedCountries.length ? nodes.filter(n => selectedCountries.includes(n.country)) : nodes;
+  const scopedNodes = getFilteredNodesExcluding("asn_filter");
   const asns = Array.from(new Set(scopedNodes.map(n => String(n.as_name || "").trim()).filter(Boolean))).sort();
   const validSelected = selectedValues.filter(asn => asns.includes(asn));
   input.value = serializeSelections(validSelected);
