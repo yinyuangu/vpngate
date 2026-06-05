@@ -736,8 +736,6 @@ def run_openvpn_until_ready(config_file: str, keep_alive: bool, route_nopull: bo
         if line:
             tail.append(line)
             tail = tail[-8:]
-            if keep_alive:
-                print(f"[OpenVPN] {line}", flush=True)
         lower = line.lower()
         if keep_alive:
             update_handshake_status(lower)
