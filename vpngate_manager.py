@@ -163,6 +163,41 @@ def node_asn_value(node: dict[str, Any] | None) -> str:
         return ""
     return str(node.get("as_name") or "").strip()
 
+def node_ip_type_value(node: dict[str, Any] | None) -> str:
+    if not node:
+        return ""
+    return str(node.get("ip_type") or "").strip()
+
+PREFERRED_RECONNECT_IP_TYPES = {"residential", "mobile"}
+
+def rank_channel_candidates(
+    candidates: list[dict[str, Any]],
+    prefer_consumer_types: bool = False,
+) -> tuple[list[dict[str, Any]], str]:
+    ranked = list(candidates)
+    strategy = "all"
+    if prefer_consumer_types:
+        # 自动补连时优先在住宅 IP / 移动网中挑最低延迟节点；
+        # 若当前锁定范围内没有这两类节点，再回退到全部匹配的可用节点。
+        preferred_candidates = [
+            node for node in ranked
+            if node_ip_type_value(node) in PREFERRED_RECONNECT_IP_TYPES
+        ]
+        if preferred_candidates:
+            ranked = preferred_candidates
+            strategy = "preferred_consumer"
+        else:
+            strategy = "fallback_all"
+    ranked.sort(key=lambda n: (parse_int(n.get("latency_ms")) or 999999, -parse_int(n.get("score"))))
+    return ranked, strategy
+
+def describe_channel_selection_strategy(strategy: str) -> str:
+    if strategy == "preferred_consumer":
+        return "已命中住宅IP/移动网优先池"
+    if strategy == "fallback_all":
+        return "住宅IP/移动网优先池为空，已回退到全部可用节点"
+    return "按全部可用节点排序"
+
 def filter_asn_locks_for_country(asn_locks: Any, country_lock: str = "", nodes: list[dict[str, Any]] | None = None) -> list[str]:
     normalized = normalize_asn_locks(asn_locks)
     country = str(country_lock or "").strip()
@@ -1087,9 +1122,17 @@ def auto_switch_node(attempt: int = 0, channel_index: int = 0) -> None:
         print("[自动切换] 连续切换失败已达 3 次，停止切换以防止主线程死锁，将在后台重新加载节点...", flush=True)
         return
 
-    next_node = best_node_for_channel(channel_index)
+    ranked_candidates, selection_strategy = select_channel_candidates(
+        channel_index,
+        prefer_consumer_types=True,
+    )
+    next_node = ranked_candidates[0] if ranked_candidates else None
     if next_node:
-        msg = f"通道 {channel_index} 当前连接已失效或代理连通性检测失败，正在按锁定条件切换至最低延迟可用节点: {next_node['id']}"
+        msg = (
+            f"通道 {channel_index} 当前连接已失效或代理连通性检测失败，"
+            f"{describe_channel_selection_strategy(selection_strategy)}，"
+            f"正在按锁定条件切换至最低延迟可用节点: {next_node['id']}"
+        )
         print(f"[自动切换] {msg}", flush=True)
         log_to_json("INFO", "VPN", msg)
         try:
@@ -1123,7 +1166,10 @@ def auto_switch_node(attempt: int = 0, channel_index: int = 0) -> None:
         
         threading.Thread(target=bg_fetch_and_switch, daemon=True).start()
 
-def best_node_for_channel(channel_index: int) -> dict[str, Any] | None:
+def select_channel_candidates(
+    channel_index: int,
+    prefer_consumer_types: bool = False,
+) -> tuple[list[dict[str, Any]], str]:
     channel = get_channel(channel_index)
     country_lock = str(channel.get("country_lock") or "")
     asn_locks = set(normalize_asn_locks(channel.get("asn_lock")))
@@ -1141,13 +1187,32 @@ def best_node_for_channel(channel_index: int) -> dict[str, Any] | None:
         and n.get("id") not in active_ids
         and matches_locks(n)
     ]
-    candidates.sort(key=lambda n: (parse_int(n.get("latency_ms")) or 999999, -parse_int(n.get("score"))))
+    return rank_channel_candidates(
+        candidates,
+        prefer_consumer_types=prefer_consumer_types,
+    )
+
+def best_node_for_channel(channel_index: int, prefer_consumer_types: bool = False) -> dict[str, Any] | None:
+    candidates, _ = select_channel_candidates(
+        channel_index,
+        prefer_consumer_types=prefer_consumer_types,
+    )
     return candidates[0] if candidates else None
 
-def auto_connect_channel(channel_index: int) -> str:
-    node = best_node_for_channel(channel_index)
+def auto_connect_channel(channel_index: int, prefer_consumer_types: bool = False) -> str:
+    candidates, selection_strategy = select_channel_candidates(
+        channel_index,
+        prefer_consumer_types=prefer_consumer_types,
+    )
+    node = candidates[0] if candidates else None
     if not node:
         raise RuntimeError("没有找到符合条件的可用节点")
+    if prefer_consumer_types:
+        log_to_json(
+            "INFO",
+            "VPN",
+            f"通道 {channel_index} 自动选择节点策略: {describe_channel_selection_strategy(selection_strategy)}，目标节点 {node['id']}",
+        )
     return connect_channel_node(channel_index, str(node["id"]))
 
 def connect_channel_node(channel_index: int, node_id: str) -> str:
@@ -4913,7 +4978,7 @@ def background_proxy_checker() -> None:
                             clear_node_metadata(active_node)
                             write_json(NODES_FILE, nodes)
                     try:
-                        auto_connect_channel(idx)
+                        auto_connect_channel(idx, prefer_consumer_types=True)
                     except Exception as switch_error:
                         log_to_json("WARNING", "Proxy", f"通道 {idx} 自动切换失败: {switch_error}")
         except Exception as e:
