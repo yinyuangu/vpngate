@@ -3854,6 +3854,55 @@ function serializeSelections(values) {
   return JSON.stringify(normalizeStringSelections(values));
 }
 
+let filterScopeCache = null;
+
+function invalidateFilterScopeCache() {
+  filterScopeCache = null;
+}
+
+function computeFilterScopes() {
+  if (filterScopeCache) return filterScopeCache;
+
+  const selectedCountries = selectedFilterValues("country_filter");
+  const selectedAsns = selectedFilterValues("asn_filter");
+  const selectedStatuses = selectedFilterValues("status_filter");
+  const selectedTypes = selectedFilterValues("type_filter");
+
+  const countrySet = new Set(selectedCountries);
+  const asnSet = new Set(selectedAsns);
+  const statusSet = new Set(selectedStatuses);
+  const typeSet = new Set(selectedTypes);
+
+  const scopes = {
+    all: [],
+    status: [],
+    country: [],
+    type: [],
+    asn: [],
+  };
+
+  for (const n of nodes) {
+    const country = n.country;
+    const asn = String(n.as_name || "").trim();
+    const status = n.probe_status || "not_checked";
+    const type = String(n.ip_type || "").trim();
+
+    const matchCountry = !countrySet.size || countrySet.has(country);
+    const matchAsn = !asnSet.size || asnSet.has(asn);
+    const matchStatus = !statusSet.size || statusSet.has(status);
+    const matchType = !typeSet.size || typeSet.has(type);
+
+    if (matchCountry && matchAsn && matchType) scopes.status.push(n);
+    if (matchStatus && matchAsn && matchType) scopes.country.push(n);
+    if (matchCountry && matchAsn && matchStatus) scopes.type.push(n);
+    if (matchCountry && matchStatus && matchType) scopes.asn.push(n);
+    if (matchCountry && matchAsn && matchStatus && matchType) scopes.all.push(n);
+  }
+
+  filterScopeCache = scopes;
+  return scopes;
+}
+
 function setRefreshButtonLabel(text) {
   const btn = $("refresh");
   if (!btn) return;
@@ -3873,12 +3922,15 @@ function setFilterValue(key, value) {
     pageSize = parseInt(input.value, 10) || 100;
     currentPage = 1;
     updateStaticFilterMenus();
-    render();
+    renderNodePool();
     return;
   }
   currentPage = 1;
+  invalidateFilterScopeCache();
   updateStaticFilterMenus();
-  render();
+  updateCountryFilter();
+  updateAsnFilter();
+  renderNodePool();
 }
 
 function setMultiFilterValue(key, value) {
@@ -3890,10 +3942,12 @@ function setMultiFilterValue(key, value) {
   else selected.add(value);
   input.value = serializeSelections(Array.from(selected));
   currentPage = 1;
-  if (key === "country_filter") updateCountryFilter();
-  updateStaticFilterMenus();
-  updateAsnFilter();
-  render();
+  invalidateFilterScopeCache();
+  const scopes = computeFilterScopes();
+  updateStaticFilterMenus(scopes);
+  updateCountryFilter(scopes);
+  updateAsnFilter(scopes);
+  renderNodePool();
   if (menu && menu.classList.contains("open") && menu.__triggerEl) {
     positionFloatingMenu(menu, menu.__triggerEl, menu.__menuOptions || {});
   }
@@ -3929,10 +3983,12 @@ function clearNodeFilters() {
   });
   currentPage = 1;
   closeAllMenus();
-  updateStaticFilterMenus();
-  updateCountryFilter();
-  updateAsnFilter();
-  render();
+  invalidateFilterScopeCache();
+  const scopes = computeFilterScopes();
+  updateStaticFilterMenus(scopes);
+  updateCountryFilter(scopes);
+  updateAsnFilter(scopes);
+  renderNodePool();
 }
 
 function getFilteredNodesExcluding(excludedKey = "") {
@@ -3949,9 +4005,9 @@ function getFilteredNodesExcluding(excludedKey = "") {
   });
 }
 
-function updateStaticFilterMenus() {
+function updateStaticFilterMenus(scopes = computeFilterScopes()) {
   const selectedStatuses = selectedFilterValues("status_filter");
-  const scopedStatusNodes = getFilteredNodesExcluding("status_filter");
+  const scopedStatusNodes = scopes.status;
   const availableStatuses = Array.from(new Set(scopedStatusNodes.map(n => n.probe_status || "not_checked"))).sort((a, b) => {
     const order = {available: 0, not_checked: 1, unavailable: 2};
     return (order[a] ?? 99) - (order[b] ?? 99);
@@ -3966,7 +4022,7 @@ function updateStaticFilterMenus() {
   $("status_filter").value = serializeSelections(validSelectedStatuses);
 
   const selectedTypes = selectedFilterValues("type_filter");
-  const scopedTypeNodes = getFilteredNodesExcluding("type_filter");
+  const scopedTypeNodes = scopes.type;
   const availableTypes = Array.from(
     new Set(scopedTypeNodes.map(n => String(n.ip_type || "").trim()).filter(Boolean))
   );
@@ -3991,11 +4047,11 @@ function updateStaticFilterMenus() {
   ], $("page_size") ? $("page_size").value : "100");
 }
 
-function updateCountryFilter() {
+function updateCountryFilter(scopes = computeFilterScopes()) {
   const input = $("country_filter");
   if (!input) return;
   const selectedValues = selectedFilterValues("country_filter");
-  const scopedCountryNodes = getFilteredNodesExcluding("country_filter");
+  const scopedCountryNodes = scopes.country;
   const countries = Array.from(new Set(scopedCountryNodes.map(n => n.country).filter(Boolean))).sort();
   const validSelected = selectedValues.filter(country => countries.includes(country));
   input.value = serializeSelections(validSelected);
@@ -4007,13 +4063,13 @@ function updateCountryFilter() {
   );
 }
 
-function updateAsnFilter() {
+function updateAsnFilter(scopes = computeFilterScopes()) {
   const input = $("asn_filter");
   const menu = $("asn_filter_menu");
   const button = $("asn_filter_btn");
   if (!input || !menu || !button) return;
   const selectedValues = selectedFilterValues("asn_filter");
-  const scopedNodes = getFilteredNodesExcluding("asn_filter");
+  const scopedNodes = scopes.asn;
   const asns = Array.from(new Set(scopedNodes.map(n => String(n.as_name || "").trim()).filter(Boolean))).sort();
   const validSelected = selectedValues.filter(asn => asns.includes(asn));
   input.value = serializeSelections(validSelected);
@@ -4029,26 +4085,7 @@ function updateAsnFilter() {
 }
 
 function getFilteredNodes() {
-  const selectedCountries = selectedFilterValues("country_filter");
-  const selectedAsns = selectedFilterValues("asn_filter");
-  const selectedStatuses = selectedFilterValues("status_filter");
-  const selectedTypes = selectedFilterValues("type_filter");
-  const filtered = nodes.filter(n => {
-    if (selectedCountries.length && !selectedCountries.includes(n.country)) {
-      return false;
-    }
-    if (selectedAsns.length && !selectedAsns.includes(String(n.as_name || ""))) {
-      return false;
-    }
-    if (selectedStatuses.length && !selectedStatuses.includes(n.probe_status || "not_checked")) {
-      return false;
-    }
-    if (selectedTypes.length && !selectedTypes.includes(String(n.ip_type || ""))) {
-      return false;
-    }
-    return true;
-  });
-  return filtered;
+  return computeFilterScopes().all;
 }
 
 function stableSortNodes() {
@@ -4247,8 +4284,7 @@ function renderChannelCards() {
   }
 }
 
-function render(){
-  renderChannelCards();
+function renderNodePool(){
   const rowsEl = $("rows");
   if (activeFloatingMenu &&
       activeFloatingMenu.parentNode === document.body &&
@@ -4316,7 +4352,11 @@ function render(){
   $("btn_prev_page").disabled = currentPage === 1;
   $("btn_next_page").disabled = currentPage === totalPages;
   $("btn_last_page").disabled = currentPage === totalPages;
+}
 
+function render(){
+  renderChannelCards();
+  renderNodePool();
 }
 
 // Hook up page buttons events
@@ -4355,7 +4395,12 @@ async function testNode(btn, id, event){
   } catch (e) {
   } finally {
     testingNodeIds.delete(id);
-    render();
+    invalidateFilterScopeCache();
+    const scopes = computeFilterScopes();
+    updateStaticFilterMenus(scopes);
+    updateCountryFilter(scopes);
+    updateAsnFilter(scopes);
+    renderNodePool();
   }
 }
 
@@ -4682,9 +4727,11 @@ async function load(){
   state=d.state||{}; 
   
   stableSortNodes();
-  updateStaticFilterMenus();
-  updateCountryFilter();
-  updateAsnFilter();
+  invalidateFilterScopeCache();
+  const scopes = computeFilterScopes();
+  updateStaticFilterMenus(scopes);
+  updateCountryFilter(scopes);
+  updateAsnFilter(scopes);
   render();
 
   if (state.is_connecting) {
