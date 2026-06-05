@@ -685,12 +685,12 @@ def openvpn_command(config_file: str, route_nopull: bool, dev: str = "tun0") -> 
         command.append("--route-nopull")
     return command
 
-def stop_process(process: subprocess.Popen[str] | None) -> None:
+def stop_process(process: subprocess.Popen[str] | None, wait_timeout: float = 8) -> None:
     if process is None or process.poll() is not None:
         return
     process.terminate()
     try:
-        process.wait(timeout=8)
+        process.wait(timeout=wait_timeout)
     except subprocess.TimeoutExpired:
         process.kill()
 
@@ -791,7 +791,8 @@ def run_openvpn_until_ready(config_file: str, keep_alive: bool, route_nopull: bo
         message = tail[-1][-220:]
     startup_done[0] = True
     if not keep_alive or not ok:
-        stop_process(process)
+        # 探测模式只需要尽快回收失败/超时的 OpenVPN 进程，避免整批检测尾部被长时间阻塞。
+        stop_process(process, wait_timeout=2)
         process = None
     return ok, message, process
 
@@ -911,6 +912,10 @@ def sort_all_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
         [n for n in nodes if n.get("probe_status") == "available" or n.get("active")],
         key=lambda n: (parse_int(n.get("latency_ms")) or 999999, -parse_int(n.get("score")))
     )
+    probing_nodes = sorted(
+        [n for n in nodes if n.get("probe_status") == "probing" and not n.get("active")],
+        key=lambda n: (-parse_int(n.get("score")), parse_int(n.get("ping")))
+    )
     untested_nodes = sorted(
         [n for n in nodes if n.get("probe_status") == "not_checked" and not n.get("active")],
         key=lambda n: (-parse_int(n.get("score")), parse_int(n.get("ping")))
@@ -919,7 +924,25 @@ def sort_all_nodes(nodes: list[dict[str, Any]]) -> list[dict[str, Any]]:
         [n for n in nodes if n.get("probe_status") == "unavailable" and not n.get("active")],
         key=lambda n: (-parse_int(n.get("score")), -float(n.get("probed_at", 0)))
     )
-    return available_nodes + untested_nodes + unavailable_nodes
+    return available_nodes + probing_nodes + untested_nodes + unavailable_nodes
+
+def mark_nodes_as_probing(node_ids: list[str], message: str = "批量检测中") -> None:
+    target_ids = {str(node_id or "").strip() for node_id in node_ids if str(node_id or "").strip()}
+    if not target_ids:
+        return
+    with lock:
+        nodes = read_json(NODES_FILE, [])
+        changed = False
+        for node in nodes:
+            if str(node.get("id") or "") not in target_ids:
+                continue
+            node["probe_status"] = "probing"
+            node["probe_message"] = message
+            node["latency_ms"] = 0
+            clear_node_metadata(node)
+            changed = True
+        if changed:
+            write_json(NODES_FILE, sort_all_nodes(nodes))
 
 active_test_indexes = set()
 test_indexes_lock = threading.Lock()
@@ -937,6 +960,7 @@ def release_test_index(idx: int) -> None:
         active_test_indexes.discard(idx)
 
 def test_node_by_id(node_id: str) -> dict[str, Any]:
+    mark_nodes_as_probing([node_id], message="单节点检测中")
     with lock:
         nodes = read_json(NODES_FILE, [])
         node = next((item for item in nodes if item.get("id") == node_id), None)
@@ -1005,6 +1029,7 @@ def test_multiple_nodes(node_ids: list[str]) -> list[dict[str, Any]]:
         nodes = read_json(NODES_FILE, [])
         limited_ids = set(node_ids[:MAX_BATCH_TEST_NODES])
         to_test = [n for n in nodes if n.get("id") in limited_ids]
+    mark_nodes_as_probing([n["id"] for n in to_test], message="批量检测中")
         
     def test_worker(args: tuple[int, dict[str, Any]]) -> dict[str, Any]:
         idx, n_info = args
@@ -2321,6 +2346,12 @@ INDEX_HTML = r"""<!doctype html>
       background: rgba(245, 158, 11, 0.1);
       color: #fbbf24;
       border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    .probing {
+      background: rgba(59, 130, 246, 0.12);
+      color: #7dd3fc;
+      border-color: rgba(59, 130, 246, 0.24);
     }
 
     .current-badge {
@@ -3672,7 +3703,7 @@ function countryFlag(code) {
 }
 
 const translateStatus = s => {
-  const dict = {"available": "可用", "unavailable": "不可用", "not_checked": "待检测"};
+  const dict = {"available": "可用", "unavailable": "不可用", "not_checked": "待检测", "probing": "检测中"};
   return dict[s] || s || "待检测";
 };
 
@@ -4072,7 +4103,7 @@ function updateStaticFilterMenus(scopes = computeFilterScopes()) {
   const selectedStatuses = selectedFilterValues("status_filter");
   const scopedStatusNodes = scopes.status;
   const availableStatuses = Array.from(new Set(scopedStatusNodes.map(n => n.probe_status || "not_checked"))).sort((a, b) => {
-    const order = {available: 0, not_checked: 1, unavailable: 2};
+    const order = {available: 0, probing: 1, not_checked: 2, unavailable: 3};
     return (order[a] ?? 99) - (order[b] ?? 99);
   });
   const validSelectedStatuses = selectedStatuses.filter(status => availableStatuses.includes(status));
