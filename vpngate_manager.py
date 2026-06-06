@@ -215,6 +215,31 @@ def filter_asn_locks_for_country(asn_locks: Any, country_lock: str = "", nodes: 
         return []
     return [asn for asn in normalized if asn in valid_asns]
 
+def get_channel_lock_scope(
+    channel_index: int,
+    nodes: list[dict[str, Any]] | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], bool]:
+    channel = get_channel(channel_index)
+    country_lock = str(channel.get("country_lock") or "")
+    asn_locks = set(normalize_asn_locks(channel.get("asn_lock")))
+    has_lock = bool(country_lock or asn_locks)
+    scoped_nodes = nodes if nodes is not None else read_json(NODES_FILE, [])
+    active_ids = {str(get_channel(idx).get("node_id") or "") for idx in range(CHANNEL_COUNT)}
+
+    def matches_locks(node: dict[str, Any]) -> bool:
+        if country_lock and node.get("country") != country_lock and node.get("country_short") != country_lock:
+            return False
+        if asn_locks and node_asn_value(node) not in asn_locks:
+            return False
+        return True
+
+    matching_nodes = [node for node in scoped_nodes if matches_locks(node)]
+    available_nodes = [
+        node for node in matching_nodes
+        if node.get("probe_status") == "available" and str(node.get("id") or "") not in active_ids
+    ]
+    return matching_nodes, available_nodes, has_lock
+
 def serialize_channels(nodes: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     node_map = {str(n.get("id")): n for n in (nodes or read_json(NODES_FILE, []))}
     data = []
@@ -1188,6 +1213,26 @@ def auto_switch_node(attempt: int = 0, channel_index: int = 0) -> None:
             log_to_json("WARNING", "VPN", err_msg)
             auto_switch_node(attempt + 1, channel_index)
     else:
+        matching_nodes, available_scope_nodes, has_lock = get_channel_lock_scope(channel_index)
+        if has_lock and not available_scope_nodes:
+            if matching_nodes:
+                msg = f"通道 {channel_index} 锁定范围内节点当前全部不可用，已自动断开，不触发自动刷新，请手动刷新后重试..."
+            else:
+                msg = f"通道 {channel_index} 当前节点池中不存在锁定范围节点，已自动断开，不触发自动刷新，请手动刷新后重试..."
+            print(f"[自动切换] {msg}", flush=True)
+            log_to_json("WARNING", "VPN", msg)
+            stop_channel_openvpn(channel_index)
+            with lock:
+                nodes = read_json(NODES_FILE, [])
+                for item in nodes:
+                    active_indexes = [idx for idx in item.get("active_channels", []) if idx != channel_index]
+                    item["active_channels"] = active_indexes
+                    item["active"] = 0 in active_indexes
+                write_json(NODES_FILE, nodes)
+            if channel_index == 0:
+                set_state(active_openvpn_node_id="", last_check_message="锁定范围暂无可用节点，等待手动刷新")
+            return
+
         if auto_refresh_paused:
             msg = f"通道 {channel_index} 没有符合锁定条件的可用备选节点，且当前节点池已无可用节点，已暂停自动刷新，等待手动刷新..."
             print(f"[自动切换] {msg}", flush=True)
