@@ -63,10 +63,12 @@ STATE_FILE = DATA_DIR / "state.json"
 AUTH_FILE = DATA_DIR / "vpngate_auth.txt"
 
 lock = threading.RLock()
+maintenance_run_lock = threading.Lock()
 active_sessions: dict[str, float] = {}
 active_openvpn_process: subprocess.Popen[str] | None = None
 active_openvpn_node_id = ""
 is_connecting = True
+auto_refresh_paused = False
 last_active_ping_time = 0.0
 last_active_latency = 0
 channels: dict[int, dict[str, Any]] = {}
@@ -456,12 +458,25 @@ def set_state(**updates: Any) -> None:
     state.update(updates)
     write_json(STATE_FILE, state)
 
+def maintenance_in_progress() -> bool:
+    return maintenance_run_lock.locked()
+
+def set_auto_refresh_paused(paused: bool, reason: str = "") -> None:
+    global auto_refresh_paused
+    auto_refresh_paused = paused
+    set_state(auto_refresh_paused=paused, auto_refresh_pause_reason=reason)
+
+def available_nodes_count(nodes: list[dict[str, Any]] | None = None) -> int:
+    scoped_nodes = nodes if nodes is not None else read_json(NODES_FILE, [])
+    return sum(1 for node in scoped_nodes if node.get("probe_status") == "available")
+
 def get_state() -> dict[str, Any]:
-    global active_openvpn_node_id, is_connecting
+    global active_openvpn_node_id, is_connecting, auto_refresh_paused
     sync_legacy_channel0()
     state = read_json(STATE_FILE, {})
     state["active_openvpn_node_id"] = active_openvpn_node_id
     state["is_connecting"] = is_connecting
+    state["auto_refresh_paused"] = auto_refresh_paused
     state["channel_count"] = CHANNEL_COUNT
     state["proxy_base_port"] = PROXY_BASE_PORT
     state["channels"] = serialize_channels()
@@ -473,6 +488,7 @@ def get_state() -> dict[str, Any]:
     state.setdefault("last_fetch_status", "not_started")
     state.setdefault("last_check_message", "")
     state.setdefault("blacklisted_nodes", 0)
+    state.setdefault("auto_refresh_pause_reason", "")
     
     # Pre-populate settings inputs in UI
     ui_cfg = load_ui_config()
@@ -872,6 +888,8 @@ def channel_should_auto_reconnect(channel_index: int) -> bool:
     )
 
 def schedule_channel_reconnect(channel_index: int, reason: str = "") -> bool:
+    if auto_refresh_paused:
+        return False
     channel = get_channel(channel_index)
     now = time.time()
     last_attempt = float(channel.get("last_reconnect_attempt") or 0.0)
@@ -894,6 +912,8 @@ def schedule_channel_reconnect(channel_index: int, reason: str = "") -> bool:
     return True
 
 def schedule_pending_channel_reconnects(reason: str = "") -> None:
+    if auto_refresh_paused:
+        return
     for idx in range(CHANNEL_COUNT):
         if channel_should_auto_reconnect(idx):
             schedule_channel_reconnect(idx, reason)
@@ -1168,6 +1188,38 @@ def auto_switch_node(attempt: int = 0, channel_index: int = 0) -> None:
             log_to_json("WARNING", "VPN", err_msg)
             auto_switch_node(attempt + 1, channel_index)
     else:
+        if auto_refresh_paused:
+            msg = f"通道 {channel_index} 没有符合锁定条件的可用备选节点，且当前节点池已无可用节点，已暂停自动刷新，等待手动刷新..."
+            print(f"[自动切换] {msg}", flush=True)
+            log_to_json("WARNING", "VPN", msg)
+            stop_channel_openvpn(channel_index)
+            with lock:
+                nodes = read_json(NODES_FILE, [])
+                for item in nodes:
+                    active_indexes = [idx for idx in item.get("active_channels", []) if idx != channel_index]
+                    item["active_channels"] = active_indexes
+                    item["active"] = 0 in active_indexes
+                write_json(NODES_FILE, nodes)
+            if channel_index == 0:
+                set_state(active_openvpn_node_id="", last_check_message="节点池暂无可用节点，已暂停自动刷新")
+            return
+
+        if maintenance_in_progress():
+            msg = f"通道 {channel_index} 没有符合锁定条件的可用备选节点，后台已在刷新节点，本次不重复触发拉取..."
+            print(f"[自动切换] {msg}", flush=True)
+            log_to_json("INFO", "VPN", msg)
+            stop_channel_openvpn(channel_index)
+            with lock:
+                nodes = read_json(NODES_FILE, [])
+                for item in nodes:
+                    active_indexes = [idx for idx in item.get("active_channels", []) if idx != channel_index]
+                    item["active_channels"] = active_indexes
+                    item["active"] = 0 in active_indexes
+                write_json(NODES_FILE, nodes)
+            if channel_index == 0:
+                set_state(active_openvpn_node_id="", last_check_message="后台正在刷新节点，等待可用节点恢复")
+            return
+
         msg = f"通道 {channel_index} 没有符合锁定条件的可用备选节点，将自动断开并在后台异步获取新节点..."
         print(f"[自动切换] {msg}", flush=True)
         log_to_json("WARNING", "VPN", msg)
@@ -1185,7 +1237,10 @@ def auto_switch_node(attempt: int = 0, channel_index: int = 0) -> None:
         def bg_fetch_and_switch():
             try:
                 maintain_valid_nodes(force=False)
-                auto_switch_node(0, channel_index)
+                if auto_refresh_paused or available_nodes_count() <= 0:
+                    return
+                if channel_should_auto_reconnect(channel_index):
+                    auto_switch_node(0, channel_index)
             except Exception as e:
                 print(f"[自动切换后台补齐] 获取并测试节点失败: {e}", flush=True)
         
@@ -1369,11 +1424,21 @@ def connect_channel_node(channel_index: int, node_id: str) -> str:
 def connect_node(node_id: str) -> str:
     return connect_channel_node(0, node_id)
 
-def maintain_valid_nodes(force: bool = False) -> str:
-    global active_openvpn_process, active_openvpn_node_id, is_connecting
+def maintain_valid_nodes(force: bool = False, manual: bool = False) -> str:
+    global active_openvpn_process, active_openvpn_node_id, is_connecting, auto_refresh_paused
+    if not maintenance_run_lock.acquire(blocking=False):
+        return "节点刷新已在进行中"
     ensure_dirs()
     is_connecting = True
     try:
+        if auto_refresh_paused and not (force or manual):
+            is_connecting = False
+            return "节点池已无可用节点，自动刷新已暂停，等待手动刷新"
+
+        if manual:
+            auto_refresh_paused = False
+            set_state(auto_refresh_paused=False, auto_refresh_pause_reason="")
+
         if force:
             with lock:
                 stop_active_openvpn()
@@ -1389,6 +1454,15 @@ def maintain_valid_nodes(force: bool = False) -> str:
             candidates = []
 
         if not candidates:
+            current_valid_nodes = available_nodes_count()
+            if current_valid_nodes == 0:
+                auto_refresh_paused = True
+                set_state(
+                    auto_refresh_paused=True,
+                    auto_refresh_pause_reason="未拉取到新节点，且当前节点池没有可用节点，已暂停自动刷新，请手动刷新后恢复。",
+                    last_check_message="没有拉取到新节点，当前节点池无可用节点，已暂停自动刷新。",
+                    valid_nodes=0,
+                )
             is_connecting = False
             return "没有拉取到新节点"
 
@@ -1466,24 +1540,39 @@ def maintain_valid_nodes(force: bool = False) -> str:
                 sorted_nodes = sort_all_nodes(merged)
                 write_json(NODES_FILE, sorted_nodes)
                 merged = sorted_nodes
-        valid_nodes_count = len([n for n in merged if n.get("probe_status") == "available"])
+        valid_nodes_count = available_nodes_count(merged)
         message = f"Fetched {len(candidates)} nodes. Tested {len(tested_nodes)} nodes."
+        pause_reason = ""
+        if valid_nodes_count == 0:
+            auto_refresh_paused = True
+            pause_reason = "全量检测完成，但当前节点池没有可用节点，已暂停自动刷新，请手动刷新后恢复。"
+            message = f"{message} 当前没有可用节点，已暂停自动刷新。"
+        else:
+            auto_refresh_paused = False
         set_state(
             last_check_at=time.time(),
             last_check_message=message,
             active_openvpn_node_id=active_openvpn_node_id,
             valid_nodes=valid_nodes_count,
+            auto_refresh_paused=auto_refresh_paused,
+            auto_refresh_pause_reason=pause_reason,
         )
         return message
     except Exception as e:
         is_connecting = False
         raise e
+    finally:
+        is_connecting = False
+        maintenance_run_lock.release()
 
 
 def collector_loop() -> None:
     while True:
         success = False
         try:
+            if auto_refresh_paused:
+                time.sleep(CHECK_INTERVAL_SECONDS)
+                continue
             res = maintain_valid_nodes(force=False)
             if "没有拉取到新节点" not in res:
                 success = True
@@ -5145,12 +5234,19 @@ class Handler(BaseHTTPRequestHandler):
         print(f"[{self.log_date_time_string()}] {format % args}", flush=True)
 
     def send_bytes(self, body: bytes, content_type: str, status: HTTPStatus = HTTPStatus.OK) -> None:
-        self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.send_response(status)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            return
+        except OSError as exc:
+            if getattr(exc, "errno", None) in (32, 104):
+                return
+            raise
 
     def send_json(self, data: Any, status: HTTPStatus = HTTPStatus.OK) -> None:
         self.send_bytes(json.dumps(data, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8", status)
@@ -5400,13 +5496,16 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif effective_path == "/api/check":
             try:
-                self.send_json({"ok": True, "message": maintain_valid_nodes(force=True)})
+                self.send_json({"ok": True, "message": maintain_valid_nodes(force=True, manual=True)})
             except Exception as exc:
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif effective_path == "/api/refresh_nodes":
             try:
-                threading.Thread(target=maintain_valid_nodes, args=(False,), daemon=True).start()
-                self.send_json({"ok": True, "message": "已在后台启动节点刷新与全量可用性检测流程"})
+                if maintenance_in_progress():
+                    self.send_json({"ok": True, "message": "节点刷新已在进行中"})
+                else:
+                    threading.Thread(target=maintain_valid_nodes, kwargs={"force": False, "manual": True}, daemon=True).start()
+                    self.send_json({"ok": True, "message": "已在后台启动节点刷新与全量可用性检测流程"})
             except Exception as exc:
                 self.send_json({"ok": False, "error": str(exc)}, HTTPStatus.INTERNAL_SERVER_ERROR)
         elif effective_path == "/api/test_nodes":
